@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { createBlendComponent, normalizeBean, validateNewBean } from './beans';
+import {
+  createBlendComponent,
+  formatBeanChoiceLabel,
+  formatRoastStyle,
+  normalizeBean,
+  originFieldLabel,
+  originFieldPlaceholder,
+  validateNewBean,
+} from './beans';
 
 const baseInput = {
   name: 'Test Bean',
   roaster: 'Roaster',
   kind: 'single_origin' as const,
   originOrBlend: 'Ethiopia',
+  roastStyle: 'medium' as const,
   blendComponents: [] as ReturnType<typeof createBlendComponent>[],
   roastDate: '2026-05-01',
   purchaseDate: '2026-05-10',
@@ -49,6 +58,21 @@ describe('validateNewBean', () => {
   });
 });
 
+describe('bean field helpers', () => {
+  it('formats roaster and name for selectors', () => {
+    expect(
+      formatBeanChoiceLabel({ roaster: 'Northside', name: 'House Espresso' }),
+    ).toBe('Northside — House Espresso');
+  });
+
+  it('labels and placeholders depend on kind', () => {
+    expect(originFieldLabel('single_origin')).toBe('Origin');
+    expect(originFieldPlaceholder('single_origin')).toMatch(/Ethiopia/);
+    expect(originFieldLabel('blend')).toBe('Blend name');
+    expect(formatRoastStyle('dark')).toBe('Dark');
+  });
+});
+
 describe('normalizeBean', () => {
   it('fills defaults for legacy beans', () => {
     const legacy = {
@@ -66,5 +90,6 @@ describe('normalizeBean', () => {
     expect(normalized.bagSize).toBe('250g');
     expect(normalized.kind).toBe('single_origin');
     expect(normalized.blendComponents).toEqual([]);
+    expect(normalized.roastStyle).toBe('medium');
   });
 });

@@ -1,7 +1,9 @@
 import type { Photo } from '../types';
 
 export const MAX_PHOTOS_PER_ENTITY = 5;
-export const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+export const MAX_PHOTO_SIZE_LABEL = '5 MB';
 
 export const ACCEPTED_IMAGE_TYPES = [
   'image/jpeg',
@@ -42,7 +44,7 @@ export function validateImageFiles(
     if (file.size > MAX_PHOTO_BYTES) {
       return {
         ok: false,
-        error: `"${file.name}" exceeds the 2 MB size limit.`,
+        error: `"${file.name}" exceeds the ${MAX_PHOTO_SIZE_LABEL} size limit.`,
       };
     }
   }

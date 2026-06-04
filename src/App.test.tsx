@@ -70,7 +70,9 @@ describe('App', () => {
     const shotSection = screen.getByRole('heading', { name: 'Espresso shots' }).closest('section')!;
     const items = within(shotSection).getAllByRole('listitem');
 
-    expect(within(items[0]).getByRole('heading', { level: 3 })).toHaveTextContent('House Espresso');
+    expect(within(items[0]).getByRole('heading', { level: 3 })).toHaveTextContent(
+      'Northside Roasters — House Espresso',
+    );
     expect(within(items[0]).getByText('Great pull.')).toBeInTheDocument();
   });
 
@@ -90,7 +92,7 @@ describe('App', () => {
 
     await user.type(within(form).getByLabelText('Name'), 'Catalogue Test');
     await user.type(within(form).getByLabelText('Roaster'), 'Demo Roasters');
-    await user.type(within(form).getByLabelText('Origin / blend summary'), 'Guatemala');
+    await user.type(within(form).getByLabelText('Origin'), 'Huehuetenango, Guatemala');
     await user.type(within(form).getByLabelText('Roast date'), '2026-05-15');
     await user.clear(within(form).getByLabelText('Purchased'));
     await user.type(within(form).getByLabelText('Purchased'), '2026-05-16');

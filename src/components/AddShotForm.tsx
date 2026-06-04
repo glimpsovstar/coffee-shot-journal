@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { AddShotPayload, Bean, PhotoBlobInput } from '../types';
+import { formatBeanChoiceLabel } from '../utils/beans';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
@@ -155,7 +156,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
           >
             {beans.map((bean) => (
               <option key={bean.id} value={bean.id}>
-                {bean.name}
+                {formatBeanChoiceLabel(bean)}
               </option>
             ))}
           </select>

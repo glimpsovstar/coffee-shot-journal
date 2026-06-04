@@ -24,13 +24,14 @@ There is no backend or cloud upload. Clearing browser site data removes your jou
 | Name | Coffee name |
 | Roaster | Who roasted it |
 | Kind | Single origin or blend |
-| Origin / blend | Summary line (region or blend name) |
-| Blend composition | Named origins with % (must total 100 for blends) |
+| Origin / blend name | Region/country (single origin) or blend name on the bag — not roast level |
+| Roast style | Light, medium, or dark |
+| Blend breakdown | Named origins with % (must total 100 for blends) |
 | Roast date | When the beans were roasted |
 | Purchase date | When you bought the bag |
 | Bag size | `200g`, `250g`, `500g`, or `1kg` |
 | Tasting notes | Reference flavour notes |
-| Photos | Up to 5 images (JPEG, PNG, WebP, HEIC; 2 MB each) |
+| Photos | Up to 5 images (JPEG, PNG, WebP, HEIC; 5 MB each) |
 
 ### Shot fields
 

@@ -14,6 +14,8 @@ export type BagSize = '200g' | '250g' | '500g' | '1kg';
 
 export type BeanKind = 'single_origin' | 'blend';
 
+export type RoastStyle = 'light' | 'medium' | 'dark';
+
 export interface BlendComponent {
   id: string;
   name: string;
@@ -25,7 +27,9 @@ export interface Bean {
   name: string;
   roaster: string;
   kind: BeanKind;
+  /** Country/region (single origin) or marketing blend name — not the % breakdown. */
   originOrBlend: string;
+  roastStyle: RoastStyle;
   blendComponents: BlendComponent[];
   roastDate: string;
   purchaseDate: string;

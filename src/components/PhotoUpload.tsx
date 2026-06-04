@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import type { PhotoBlobInput } from '../types';
-import { filesToPhotos, validateImageFiles } from '../utils/photos';
+import { filesToPhotos, MAX_PHOTO_SIZE_LABEL, validateImageFiles } from '../utils/photos';
 
 interface PhotoUploadProps {
   existingCount: number;
@@ -51,7 +51,9 @@ export function PhotoUpload({
           onChange={handleChange}
         />
       </label>
-      <p className="photo-upload__hint">Up to 5 photos, 2 MB each (JPEG, PNG, WebP, HEIC)</p>
+      <p className="photo-upload__hint">
+        Up to 5 photos, {MAX_PHOTO_SIZE_LABEL} each (JPEG, PNG, WebP, HEIC)
+      </p>
 
       {error && (
         <p className="form-error" role="alert">

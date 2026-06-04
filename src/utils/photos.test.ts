@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ACCEPTED_IMAGE_TYPES,
   MAX_PHOTO_BYTES,
+  MAX_PHOTO_SIZE_LABEL,
   MAX_PHOTOS_PER_ENTITY,
   validateImageFiles,
 } from './photos';
@@ -43,8 +44,14 @@ describe('validateImageFiles', () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.error).toMatch(/2 MB/);
+      expect(result.error).toMatch(new RegExp(MAX_PHOTO_SIZE_LABEL, 'i'));
     }
+  });
+
+  it('accepts files up to the max size', () => {
+    const file = makeFile('iphone.jpg', 'image/jpeg', MAX_PHOTO_BYTES);
+    const result = validateImageFiles([file], 0);
+    expect(result.ok).toBe(true);
   });
 
   it('rejects when total would exceed max photos per entity', () => {
