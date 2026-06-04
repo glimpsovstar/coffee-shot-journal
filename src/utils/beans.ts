@@ -1,6 +1,25 @@
-import type { BagSize, Bean, BeanKind, BlendComponent, NewBean } from '../types';
+import type { BagSize, Bean, BeanKind, BlendComponent, NewBean, RoastStyle } from '../types';
 
 export const BAG_SIZES: BagSize[] = ['200g', '250g', '500g', '1kg'];
+export const ROAST_STYLES: RoastStyle[] = ['light', 'medium', 'dark'];
+
+const ROAST_STYLE_LABELS: Record<RoastStyle, string> = {
+  light: 'Light',
+  medium: 'Medium',
+  dark: 'Dark',
+};
+
+export function formatRoastStyle(style: RoastStyle): string {
+  return ROAST_STYLE_LABELS[style];
+}
+
+export function originFieldLabel(kind: BeanKind): string {
+  return kind === 'blend' ? 'Blend name' : 'Origin';
+}
+
+export function originFieldPlaceholder(kind: BeanKind): string {
+  return kind === 'blend' ? 'e.g. House espresso blend' : 'e.g. Yirgacheffe, Ethiopia';
+}
 
 const BLEND_PERCENT_TOLERANCE = 0.01;
 
@@ -34,6 +53,7 @@ export function normalizeBean(bean: Bean): Bean {
     kind,
     purchaseDate: bean.purchaseDate ?? bean.roastDate,
     bagSize: bean.bagSize ?? '250g',
+    roastStyle: bean.roastStyle ?? 'medium',
     blendComponents:
       kind === 'blend'
         ? (bean.blendComponents ?? []).map((c) => ({
@@ -55,6 +75,7 @@ export function validateNewBean(input: {
   roaster: string;
   kind: BeanKind;
   originOrBlend: string;
+  roastStyle: RoastStyle;
   blendComponents: BlendComponent[];
   roastDate: string;
   purchaseDate: string;
@@ -69,7 +90,16 @@ export function validateNewBean(input: {
     return { ok: false, error: 'Roaster is required.' };
   }
   if (!input.originOrBlend.trim()) {
-    return { ok: false, error: 'Origin or blend summary is required.' };
+    return {
+      ok: false,
+      error:
+        input.kind === 'blend'
+          ? 'Blend name is required.'
+          : 'Origin is required (country or region).',
+    };
+  }
+  if (!ROAST_STYLES.includes(input.roastStyle)) {
+    return { ok: false, error: 'Select a roast style.' };
   }
   if (!input.roastDate || Number.isNaN(new Date(input.roastDate + 'T12:00:00').getTime())) {
     return { ok: false, error: 'Roast date is required.' };
@@ -101,6 +131,7 @@ export function validateNewBean(input: {
         roaster: input.roaster.trim(),
         kind: input.kind,
         originOrBlend: input.originOrBlend.trim(),
+        roastStyle: input.roastStyle,
         blendComponents: [],
         roastDate: input.roastDate,
         purchaseDate: input.purchaseDate,
@@ -139,6 +170,7 @@ export function validateNewBean(input: {
       roaster: input.roaster.trim(),
       kind: 'blend',
       originOrBlend: input.originOrBlend.trim(),
+      roastStyle: input.roastStyle,
       blendComponents: components.map((c) => ({
         id: c.id || crypto.randomUUID(),
         name: c.name,
