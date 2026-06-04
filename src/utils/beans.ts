@@ -13,6 +13,11 @@ export function formatRoastStyle(style: RoastStyle): string {
   return ROAST_STYLE_LABELS[style];
 }
 
+/** Disambiguate beans in selects and shot cards when names repeat across roasters. */
+export function formatBeanChoiceLabel(bean: Pick<Bean, 'roaster' | 'name'>): string {
+  return `${bean.roaster} — ${bean.name}`;
+}
+
 export function originFieldLabel(kind: BeanKind): string {
   return kind === 'blend' ? 'Blend name' : 'Origin';
 }

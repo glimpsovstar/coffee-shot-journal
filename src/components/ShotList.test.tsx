@@ -25,7 +25,10 @@ describe('ShotList', () => {
       within(item).getByRole('heading', { level: 3 }).textContent,
     );
 
-    expect(headings).toEqual(['Test Ethiopia', 'Test Ethiopia']);
+    expect(headings).toEqual([
+      'Test Roasters — Test Ethiopia',
+      'Test Roasters — Test Ethiopia',
+    ]);
 
     const times = items.map((item) => within(item).getByRole('time'));
     expect(times[0]).toHaveAttribute('dateTime', mockShotNewer.brewedAt);

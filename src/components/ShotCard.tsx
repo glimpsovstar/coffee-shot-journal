@@ -1,4 +1,5 @@
 import type { Bean, PhotoDisplay, Shot } from '../types';
+import { formatBeanChoiceLabel } from '../utils/beans';
 import { formatBrewedAt, getBeanById, ratio } from '../utils/shots';
 import { PhotoGallery } from './PhotoGallery';
 import { StarRating } from './StarRating';
@@ -11,13 +12,13 @@ interface ShotCardProps {
 
 export function ShotCard({ shot, beans, photoItems }: ShotCardProps) {
   const bean = getBeanById(beans, shot.beanId);
-  const beanName = bean?.name ?? 'Unknown bean';
+  const beanLabel = bean ? formatBeanChoiceLabel(bean) : 'Unknown bean';
 
   return (
     <article className="card shot-card">
       <header className="shot-card__header">
         <div>
-          <h3 className="card__title">{beanName}</h3>
+          <h3 className="card__title">{beanLabel}</h3>
           <time className="shot-card__time" dateTime={shot.brewedAt}>
             {formatBrewedAt(shot.brewedAt)}
           </time>
