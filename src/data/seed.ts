@@ -8,6 +8,7 @@ export const seedBeans: Bean[] = [
     originOrBlend: 'Single origin — Yirgacheffe, Ethiopia',
     roastDate: '2026-05-18',
     tastingNotes: 'Floral, bergamot, light citrus. Best 7–21 days off roast.',
+    photos: [],
   },
   {
     id: 'bean-colombia',
@@ -16,6 +17,7 @@ export const seedBeans: Bean[] = [
     originOrBlend: 'Single origin — Huila, Colombia',
     roastDate: '2026-05-22',
     tastingNotes: 'Caramel, red apple, milk chocolate. Sweet and forgiving.',
+    photos: [],
   },
   {
     id: 'bean-house',
@@ -24,6 +26,7 @@ export const seedBeans: Bean[] = [
     originOrBlend: 'Blend — Brazil & Colombia',
     roastDate: '2026-05-25',
     tastingNotes: 'Nutty, cocoa, balanced body. Daily driver for milk drinks.',
+    photos: [],
   },
   {
     id: 'bean-kenya',
@@ -32,6 +35,7 @@ export const seedBeans: Bean[] = [
     originOrBlend: 'Single origin — Nyeri, Kenya',
     roastDate: '2026-05-20',
     tastingNotes: 'Blackcurrant, tomato acidity, syrupy. Shines as a ristretto.',
+    photos: [],
   },
 ];
 
@@ -47,6 +51,7 @@ export const seedShots: Shot[] = [
     extractionTime: 28,
     tastingNotes: 'Bright, slightly fast finish. Pleasant florals.',
     rating: 4,
+    photos: [],
   },
   {
     id: 'shot-2',
@@ -59,6 +64,7 @@ export const seedShots: Shot[] = [
     extractionTime: 30,
     tastingNotes: 'Smooth, chocolate-forward. Good for flat white.',
     rating: 5,
+    photos: [],
   },
   {
     id: 'shot-3',
@@ -71,6 +77,7 @@ export const seedShots: Shot[] = [
     extractionTime: 32,
     tastingNotes: 'A touch sour — grind may have been too coarse.',
     rating: 3,
+    photos: [],
   },
   {
     id: 'shot-4',
@@ -83,6 +90,7 @@ export const seedShots: Shot[] = [
     extractionTime: 26,
     tastingNotes: 'Intense berry, short ristretto-style pull.',
     rating: 5,
+    photos: [],
   },
   {
     id: 'shot-5',
@@ -95,6 +103,7 @@ export const seedShots: Shot[] = [
     extractionTime: 27,
     tastingNotes: 'More balanced than morning shot. Citrus opened up.',
     rating: 4,
+    photos: [],
   },
   {
     id: 'shot-6',
@@ -107,5 +116,6 @@ export const seedShots: Shot[] = [
     extractionTime: 29,
     tastingNotes: 'Consistent with yesterday. Slight nuttiness on the finish.',
     rating: 4,
+    photos: [],
   },
 ];

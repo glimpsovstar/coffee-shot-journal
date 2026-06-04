@@ -1,3 +1,15 @@
+export interface Photo {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  createdAt: string;
+}
+
+export interface PhotoDisplay {
+  photo: Photo;
+  url: string;
+}
+
 export interface Bean {
   id: string;
   name: string;
@@ -5,6 +17,7 @@ export interface Bean {
   originOrBlend: string;
   roastDate: string;
   tastingNotes: string;
+  photos: Photo[];
 }
 
 export interface Shot {
@@ -18,6 +31,17 @@ export interface Shot {
   extractionTime: number;
   tastingNotes: string;
   rating: 1 | 2 | 3 | 4 | 5;
+  photos: Photo[];
 }
 
 export type NewShot = Omit<Shot, 'id'>;
+
+export interface PhotoBlobInput {
+  photo: Photo;
+  blob: Blob;
+}
+
+export interface AddShotPayload {
+  shot: NewShot;
+  photoBlobs: PhotoBlobInput[];
+}

@@ -42,15 +42,19 @@ describe('AddShotForm', () => {
 
     expect(onAddShot).toHaveBeenCalledOnce();
     expect(onAddShot).toHaveBeenCalledWith({
-      beanId: 'bean-a',
-      brewedAt: new Date('2026-06-04T09:30').toISOString(),
-      grinder: 'Niche Zero',
-      grindSetting: '14.5',
-      doseIn: 18.2,
-      yieldOut: 36,
-      extractionTime: 28,
-      tastingNotes: 'Bright acidity.',
-      rating: 5,
+      shot: {
+        beanId: 'bean-a',
+        brewedAt: new Date('2026-06-04T09:30').toISOString(),
+        grinder: 'Niche Zero',
+        grindSetting: '14.5',
+        doseIn: 18.2,
+        yieldOut: 36,
+        extractionTime: 28,
+        tastingNotes: 'Bright acidity.',
+        rating: 5,
+        photos: [],
+      },
+      photoBlobs: [],
     });
   });
 

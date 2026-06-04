@@ -5,7 +5,7 @@ import { ShotList } from './ShotList';
 
 describe('ShotList', () => {
   it('shows empty state when there are no shots', () => {
-    render(<ShotList shots={[]} beans={mockBeans} />);
+    render(<ShotList shots={[]} beans={mockBeans} resolvePhotos={() => []} />);
 
     expect(screen.getByText(/No shots logged yet/)).toBeInTheDocument();
   });
@@ -15,6 +15,7 @@ describe('ShotList', () => {
       <ShotList
         shots={[mockShotOlder, mockShotNewer]}
         beans={mockBeans}
+        resolvePhotos={() => []}
       />,
     );
 

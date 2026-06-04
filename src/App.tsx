@@ -1,20 +1,35 @@
-import { useState } from 'react';
 import { AddShotForm } from './components/AddShotForm';
 import { BeanCatalogue } from './components/BeanCatalogue';
 import { ShotList } from './components/ShotList';
-import { seedBeans, seedShots } from './data/seed';
-import type { NewShot, Shot } from './types';
+import { useJournal } from './hooks/useJournal';
 
 function App() {
-  const beans = seedBeans;
-  const [shots, setShots] = useState<Shot[]>(seedShots);
+  const {
+    beans,
+    shots,
+    loading,
+    error,
+    resolvePhotos,
+    addShot,
+    addBeanPhotos,
+    removeBeanPhoto,
+  } = useJournal();
 
-  const handleAddShot = (shot: NewShot) => {
-    setShots((current) => [
-      { ...shot, id: crypto.randomUUID() },
-      ...current,
-    ]);
-  };
+  if (loading) {
+    return (
+      <div className="app app--loading">
+        <p>Loading your journal…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="app app--error">
+        <p role="alert">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -25,11 +40,16 @@ function App() {
 
       <div className="app-layout">
         <main className="app-main">
-          <ShotList shots={shots} beans={beans} />
-          <AddShotForm beans={beans} onAddShot={handleAddShot} />
+          <ShotList shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
+          <AddShotForm beans={beans} onAddShot={addShot} />
         </main>
         <aside className="app-sidebar">
-          <BeanCatalogue beans={beans} />
+          <BeanCatalogue
+            beans={beans}
+            resolvePhotos={resolvePhotos}
+            onAddBeanPhotos={addBeanPhotos}
+            onRemoveBeanPhoto={removeBeanPhoto}
+          />
         </aside>
       </div>
     </div>

@@ -286,3 +286,89 @@ dl {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
+.app--loading,
+.app--error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 2rem;
+}
+
+.app--error p {
+  color: var(--error);
+}
+
+.photo-gallery {
+  margin-top: 0.75rem;
+}
+
+.photo-gallery__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.photo-gallery__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.photo-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.photo-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.photo-upload__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.photo-upload__input {
+  font-size: 0.8rem;
+}
+
+.photo-upload__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.photo-remove {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.photo-remove:hover {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.bean-card .photo-upload {
+  margin-top: 0.75rem;
+}

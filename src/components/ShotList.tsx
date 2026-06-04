@@ -1,13 +1,14 @@
-import type { Bean, Shot } from '../types';
+import type { Bean, PhotoDisplay, Shot } from '../types';
 import { sortShotsNewestFirst } from '../utils/shots';
 import { ShotCard } from './ShotCard';
 
 interface ShotListProps {
   shots: Shot[];
   beans: Bean[];
+  resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
 }
 
-export function ShotList({ shots, beans }: ShotListProps) {
+export function ShotList({ shots, beans, resolvePhotos }: ShotListProps) {
   const sorted = sortShotsNewestFirst(shots);
 
   return (
@@ -20,7 +21,11 @@ export function ShotList({ shots, beans }: ShotListProps) {
         <ul className="card-list">
           {sorted.map((shot) => (
             <li key={shot.id}>
-              <ShotCard shot={shot} beans={beans} />
+              <ShotCard
+                shot={shot}
+                beans={beans}
+                photoItems={resolvePhotos(shot.photos)}
+              />
             </li>
           ))}
         </ul>

@@ -1,11 +1,21 @@
-import type { Bean } from '../types';
+import type { Bean, PhotoBlobInput, PhotoDisplay } from '../types';
 import { formatRoastDate } from '../utils/shots';
+import { PhotoGalleryEditable } from './PhotoGalleryEditable';
+import { PhotoUpload } from './PhotoUpload';
 
 interface BeanCardProps {
   bean: Bean;
+  photoItems: PhotoDisplay[];
+  onAddPhotos: (beanId: string, inputs: PhotoBlobInput[]) => void;
+  onRemovePhoto: (beanId: string, photoId: string) => void;
 }
 
-export function BeanCard({ bean }: BeanCardProps) {
+export function BeanCard({
+  bean,
+  photoItems,
+  onAddPhotos,
+  onRemovePhoto,
+}: BeanCardProps) {
   return (
     <article className="card bean-card">
       <h3 className="card__title">{bean.name}</h3>
@@ -27,6 +37,16 @@ export function BeanCard({ bean }: BeanCardProps) {
           <dd>{bean.tastingNotes}</dd>
         </div>
       </dl>
+      <PhotoGalleryEditable
+        items={photoItems}
+        label={`Photos for ${bean.name}`}
+        onRemove={(photoId) => onRemovePhoto(bean.id, photoId)}
+      />
+      <PhotoUpload
+        existingCount={bean.photos.length}
+        onPhotosAdded={(inputs) => onAddPhotos(bean.id, inputs)}
+        label="Add bean photos"
+      />
     </article>
   );
 }

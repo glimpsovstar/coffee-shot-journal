@@ -1,10 +1,17 @@
-import { useState, type FormEvent } from 'react';
-import type { Bean, NewShot } from '../types';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import type { AddShotPayload, Bean, PhotoBlobInput } from '../types';
+import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
+import { PhotoGalleryEditable } from './PhotoGalleryEditable';
+import { PhotoUpload } from './PhotoUpload';
 import { StarRating } from './StarRating';
 
 interface AddShotFormProps {
   beans: Bean[];
-  onAddShot: (shot: NewShot) => void;
+  onAddShot: (payload: AddShotPayload) => void;
+}
+
+interface PendingPhoto extends PhotoBlobInput {
+  previewUrl: string;
 }
 
 function toDatetimeLocalValue(date: Date): string {
@@ -24,9 +31,42 @@ const defaultFormState = (beans: Bean[]) => ({
   rating: 4 as 1 | 2 | 3 | 4 | 5,
 });
 
+function clearPendingPhotos(pending: PendingPhoto[]) {
+  for (const item of pending) {
+    revokePhotoObjectUrl(item.previewUrl);
+  }
+}
+
 export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
   const [form, setForm] = useState(() => defaultFormState(beans));
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
+  const pendingPhotosRef = useRef(pendingPhotos);
+  pendingPhotosRef.current = pendingPhotos;
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      clearPendingPhotos(pendingPhotosRef.current);
+    };
+  }, []);
+
+  const handlePhotosAdded = (inputs: PhotoBlobInput[]) => {
+    setPendingPhotos((current) => [
+      ...current,
+      ...inputs.map((input) => ({
+        ...input,
+        previewUrl: createPhotoObjectUrl(input.blob),
+      })),
+    ]);
+  };
+
+  const handleRemovePending = (photoId: string) => {
+    setPendingPhotos((current) => {
+      const target = current.find((p) => p.photo.id === photoId);
+      if (target) revokePhotoObjectUrl(target.previewUrl);
+      return current.filter((p) => p.photo.id !== photoId);
+    });
+  };
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -68,17 +108,23 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
     }
 
     onAddShot({
-      beanId: form.beanId,
-      brewedAt: brewedAt.toISOString(),
-      grinder: form.grinder.trim(),
-      grindSetting: form.grindSetting.trim(),
-      doseIn,
-      yieldOut,
-      extractionTime,
-      tastingNotes: form.tastingNotes.trim(),
-      rating: form.rating,
+      shot: {
+        beanId: form.beanId,
+        brewedAt: brewedAt.toISOString(),
+        grinder: form.grinder.trim(),
+        grindSetting: form.grindSetting.trim(),
+        doseIn,
+        yieldOut,
+        extractionTime,
+        tastingNotes: form.tastingNotes.trim(),
+        rating: form.rating,
+        photos: pendingPhotos.map((p) => p.photo),
+      },
+      photoBlobs: pendingPhotos.map(({ photo, blob }) => ({ photo, blob })),
     });
 
+    clearPendingPhotos(pendingPhotos);
+    setPendingPhotos([]);
     setForm(defaultFormState(beans));
   };
 
@@ -89,6 +135,11 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       </section>
     );
   }
+
+  const pendingDisplay = pendingPhotos.map(({ photo, previewUrl }) => ({
+    photo,
+    url: previewUrl,
+  }));
 
   return (
     <section className="panel" aria-labelledby="add-shot-heading">
@@ -194,6 +245,17 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
             placeholder="Optional — acidity, body, what to try next…"
           />
         </div>
+
+        <PhotoUpload
+          existingCount={pendingPhotos.length}
+          onPhotosAdded={handlePhotosAdded}
+          label="Shot photos"
+        />
+        <PhotoGalleryEditable
+          items={pendingDisplay}
+          label="Photos to attach"
+          onRemove={handleRemovePending}
+        />
 
         <StarRating
           value={form.rating}

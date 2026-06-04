@@ -1,13 +1,15 @@
-import type { Bean, Shot } from '../types';
+import type { Bean, PhotoDisplay, Shot } from '../types';
 import { formatBrewedAt, getBeanById, ratio } from '../utils/shots';
+import { PhotoGallery } from './PhotoGallery';
 import { StarRating } from './StarRating';
 
 interface ShotCardProps {
   shot: Shot;
   beans: Bean[];
+  photoItems: PhotoDisplay[];
 }
 
-export function ShotCard({ shot, beans }: ShotCardProps) {
+export function ShotCard({ shot, beans, photoItems }: ShotCardProps) {
   const bean = getBeanById(beans, shot.beanId);
   const beanName = bean?.name ?? 'Unknown bean';
 
@@ -22,6 +24,7 @@ export function ShotCard({ shot, beans }: ShotCardProps) {
         </div>
         <StarRating value={shot.rating} />
       </header>
+      <PhotoGallery items={photoItems} label="Shot photos" />
       <dl className="detail-list detail-list--inline">
         <div>
           <dt>Grinder</dt>

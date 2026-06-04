@@ -14,6 +14,15 @@ describe('seed data', () => {
     }
   });
 
+  it('initializes empty photo arrays on beans and shots', () => {
+    for (const bean of seedBeans) {
+      expect(bean.photos).toEqual([]);
+    }
+    for (const shot of seedShots) {
+      expect(shot.photos).toEqual([]);
+    }
+  });
+
   it('uses valid ratings and positive recipe numbers', () => {
     for (const shot of seedShots) {
       expect(shot.rating).toBeGreaterThanOrEqual(1);

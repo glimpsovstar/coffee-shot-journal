@@ -5,7 +5,7 @@ import { ShotCard } from './ShotCard';
 
 describe('ShotCard', () => {
   it('renders bean name, recipe, and tasting notes', () => {
-    render(<ShotCard shot={mockShot} beans={mockBeans} />);
+    render(<ShotCard shot={mockShot} beans={mockBeans} photoItems={[]} />);
 
     expect(screen.getByRole('heading', { name: 'Test Ethiopia' })).toBeInTheDocument();
     expect(screen.getByText(/18g in → 36g out \(1:2\.0\)/)).toBeInTheDocument();
@@ -16,15 +16,27 @@ describe('ShotCard', () => {
 
   it('shows unknown bean when bean id is missing', () => {
     render(
-      <ShotCard shot={{ ...mockShot, beanId: 'missing' }} beans={mockBeans} />,
+      <ShotCard shot={{ ...mockShot, beanId: 'missing' }} beans={mockBeans} photoItems={[]} />,
     );
 
     expect(screen.getByRole('heading', { name: 'Unknown bean' })).toBeInTheDocument();
   });
 
+  it('renders photo gallery when items are provided', () => {
+    render(
+      <ShotCard
+        shot={{ ...mockShot, photos: [{ id: 'p1', fileName: 'cup.jpg', mimeType: 'image/jpeg', createdAt: '' }] }}
+        beans={mockBeans}
+        photoItems={[{ photo: { id: 'p1', fileName: 'cup.jpg', mimeType: 'image/jpeg', createdAt: '' }, url: 'blob:test' }]}
+      />,
+    );
+
+    expect(screen.getByRole('img', { name: 'cup.jpg' })).toBeInTheDocument();
+  });
+
   it('omits tasting notes section when empty', () => {
     const { container } = render(
-      <ShotCard shot={{ ...mockShot, tastingNotes: '' }} beans={mockBeans} />,
+      <ShotCard shot={{ ...mockShot, tastingNotes: '' }} beans={mockBeans} photoItems={[]} />,
     );
 
     const labels = Array.from(container.querySelectorAll('dt')).map((dt) => dt.textContent);
