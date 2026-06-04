@@ -54,6 +54,27 @@ describe('journalRepository', () => {
     expect(await loaded?.text()).toBe('fake-image');
   });
 
+  it('normalizes legacy beans missing v3 fields on load', async () => {
+    await loadJournal();
+    const legacy = {
+      id: 'legacy-bean',
+      name: 'Legacy',
+      roaster: 'Old Roaster',
+      originOrBlend: 'Kenya',
+      roastDate: '2026-04-01',
+      tastingNotes: 'Bright',
+      photos: [],
+    };
+    await saveBeans([legacy as unknown as (typeof seedBeans)[0]]);
+
+    const reloaded = await loadJournal();
+    const bean = reloaded.beans.find((b) => b.id === 'legacy-bean');
+    expect(bean?.purchaseDate).toBe('2026-04-01');
+    expect(bean?.bagSize).toBe('250g');
+    expect(bean?.kind).toBe('single_origin');
+    expect(bean?.blendComponents).toEqual([]);
+  });
+
   it('deletes photo blobs', async () => {
     const blob = new Blob(['x'], { type: 'image/png' });
     await putPhotoBlob('photo-del', blob);

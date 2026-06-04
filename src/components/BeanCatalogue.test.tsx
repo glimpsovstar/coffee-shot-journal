@@ -9,11 +9,13 @@ describe('BeanCatalogue', () => {
       <BeanCatalogue
         beans={mockBeans}
         resolvePhotos={() => []}
+        onAddBean={vi.fn()}
         onAddBeanPhotos={vi.fn()}
         onRemoveBeanPhoto={vi.fn()}
       />,
     );
 
+    expect(screen.getByRole('heading', { name: 'Add a bean' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Bean catalogue' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Test Ethiopia' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Test House' })).toBeInTheDocument();

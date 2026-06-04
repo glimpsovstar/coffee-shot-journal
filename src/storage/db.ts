@@ -2,7 +2,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Bean, Shot } from '../types';
 
 export const DB_NAME = 'coffee-shot-journal';
-export const DB_VERSION = 1;
+export const DB_VERSION = 3;
 export const JOURNAL_KEY = 'journal' as const;
 
 export interface JournalDB extends DBSchema {
@@ -36,6 +36,9 @@ export function getDb(): Promise<IDBPDatabase<JournalDB>> {
           db.createObjectStore('photoBlobs');
         }
       },
+    }).catch((err) => {
+      dbPromise = null;
+      throw err;
     });
   }
   return dbPromise;

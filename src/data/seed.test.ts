@@ -23,6 +23,19 @@ describe('seed data', () => {
     }
   });
 
+  it('beans have v3 catalogue fields', () => {
+    for (const bean of seedBeans) {
+      expect(['single_origin', 'blend']).toContain(bean.kind);
+      expect(bean.purchaseDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(['200g', '250g', '500g', '1kg']).toContain(bean.bagSize);
+      if (bean.kind === 'blend') {
+        expect(bean.blendComponents.length).toBeGreaterThan(0);
+      } else {
+        expect(bean.blendComponents).toEqual([]);
+      }
+    }
+  });
+
   it('uses valid ratings and positive recipe numbers', () => {
     for (const shot of seedShots) {
       expect(shot.rating).toBeGreaterThanOrEqual(1);

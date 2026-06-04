@@ -8,7 +8,9 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 
 ## What the app does today
 
-- **Bean catalogue** — seed beans with attachable bag/label photos (up to 5 per bean)
+- **Bean catalogue** — seed beans plus **add bean** (manual entry, bag/label photos)
+- **Bean metadata** — purchase date, bag size, single origin vs blend with composition %
+- **Label scan (demo)** — optional OpenAI vision prefill from a bag photo when `VITE_OPENAI_API_KEY` is set in `.env.local` (see [CONTRIBUTING.md](CONTRIBUTING.md); production should use a backend proxy — tracked as a high-priority security issue)
 - **Shot history** — espresso pulls sorted newest first, with optional puck/cup photos
 - **Add-shot form** — log a new pull with photos; it appears at the top of the list
 - **IndexedDB persistence** — beans, shots, and image blobs survive refresh (on-device only)
@@ -21,8 +23,12 @@ There is no backend or cloud upload. Clearing browser site data removes your jou
 |-------|-------------|
 | Name | Coffee name |
 | Roaster | Who roasted it |
-| Origin / blend | Single origin or blend description |
+| Kind | Single origin or blend |
+| Origin / blend | Summary line (region or blend name) |
+| Blend composition | Named origins with % (must total 100 for blends) |
 | Roast date | When the beans were roasted |
+| Purchase date | When you bought the bag |
+| Bag size | `200g`, `250g`, `500g`, or `1kg` |
 | Tasting notes | Reference flavour notes |
 | Photos | Up to 5 images (JPEG, PNG, WebP, HEIC; 2 MB each) |
 
@@ -41,7 +47,8 @@ There is no backend or cloud upload. Clearing browser site data removes your jou
 
 ## What I want to add later
 
-- **Bean CRUD** — add, edit, and retire beans in the UI (not just photos)
+- **Edit / retire beans** — update or archive catalogue entries (add is done)
+- **Secure label scanning** — backend proxy so API keys are not in the browser (see GitHub issues labeled `security`)
 - **Filters & search** — by bean, rating, or date range
 - **Charts** — dose/yield/time trends over time
 - **Export** — CSV or JSON for backup and analysis
@@ -79,6 +86,10 @@ npm run dev
 
 Open the URL shown in the terminal (usually `http://localhost:5173`).
 
+Optional label scan (demo only): copy [`.env.example`](.env.example) to `.env.local`, set `VITE_OPENAI_API_KEY`, restart the dev server. Never commit `.env.local`.
+
+Contributing and SDLC (issues → branch → PR): see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 Production build:
 
 ```bash
@@ -98,7 +109,7 @@ npm run test:coverage
 
 | Layer | What is covered |
 |-------|-----------------|
-| Unit | `src/utils/shots.ts`, `src/utils/photos.ts` |
+| Unit | `src/utils/shots.ts`, `src/utils/photos.ts`, `src/utils/beans.ts`, `src/services/labelVision.ts` |
 | Storage | `src/storage/journalRepository.ts` (IndexedDB via `fake-indexeddb` in tests) |
 | Data | `src/data/seed.ts` — referential integrity and valid fields |
 | Component | Forms, photo upload/gallery, cards, catalogue |

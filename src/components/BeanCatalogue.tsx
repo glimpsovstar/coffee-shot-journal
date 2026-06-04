@@ -1,9 +1,11 @@
-import type { Bean, PhotoBlobInput, PhotoDisplay } from '../types';
+import type { AddBeanPayload, Bean, PhotoBlobInput, PhotoDisplay } from '../types';
+import { AddBeanForm } from './AddBeanForm';
 import { BeanCard } from './BeanCard';
 
 interface BeanCatalogueProps {
   beans: Bean[];
   resolvePhotos: (photos: Bean['photos']) => PhotoDisplay[];
+  onAddBean: (payload: AddBeanPayload) => void;
   onAddBeanPhotos: (beanId: string, inputs: PhotoBlobInput[]) => void;
   onRemoveBeanPhoto: (beanId: string, photoId: string) => void;
 }
@@ -11,11 +13,14 @@ interface BeanCatalogueProps {
 export function BeanCatalogue({
   beans,
   resolvePhotos,
+  onAddBean,
   onAddBeanPhotos,
   onRemoveBeanPhoto,
 }: BeanCatalogueProps) {
   return (
-    <section className="panel" aria-labelledby="bean-catalogue-heading">
+    <>
+      <AddBeanForm onAddBean={onAddBean} />
+      <section className="panel" aria-labelledby="bean-catalogue-heading">
       <h2 id="bean-catalogue-heading">Bean catalogue</h2>
       <p className="panel__intro">Reference beans for your shots — attach bag or label photos.</p>
       <ul className="card-list">
@@ -31,5 +36,6 @@ export function BeanCatalogue({
         ))}
       </ul>
     </section>
+    </>
   );
 }

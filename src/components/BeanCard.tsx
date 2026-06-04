@@ -1,4 +1,5 @@
 import type { Bean, PhotoBlobInput, PhotoDisplay } from '../types';
+import { formatBlendSummary } from '../utils/beans';
 import { formatRoastDate } from '../utils/shots';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
@@ -25,12 +26,30 @@ export function BeanCard({
           <dd>{bean.roaster}</dd>
         </div>
         <div>
+          <dt>Kind</dt>
+          <dd>{bean.kind === 'blend' ? 'Blend' : 'Single origin'}</dd>
+        </div>
+        <div>
           <dt>Origin / blend</dt>
           <dd>{bean.originOrBlend}</dd>
         </div>
+        {bean.kind === 'blend' && bean.blendComponents.length > 0 && (
+          <div>
+            <dt>Composition</dt>
+            <dd>{formatBlendSummary(bean.blendComponents)}</dd>
+          </div>
+        )}
         <div>
           <dt>Roast date</dt>
           <dd>{formatRoastDate(bean.roastDate)}</dd>
+        </div>
+        <div>
+          <dt>Purchased</dt>
+          <dd>{formatRoastDate(bean.purchaseDate)}</dd>
+        </div>
+        <div>
+          <dt>Bag size</dt>
+          <dd>{bean.bagSize}</dd>
         </div>
         <div>
           <dt>Tasting notes</dt>
