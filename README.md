@@ -83,8 +83,26 @@ npm run build
 npm run preview
 ```
 
+## Testing
+
+The project uses [Vitest](https://vitest.dev/) and [React Testing Library](https://testing-library.com/react).
+
+```bash
+npm run test        # watch mode
+npm run test:run    # single run (CI)
+npm run test:coverage
+```
+
+| Layer | What is covered |
+|-------|-----------------|
+| Unit | `src/utils/shots.ts` — ratio, sorting, bean lookup, date helpers |
+| Data | `src/data/seed.ts` — referential integrity and valid shot fields |
+| Component | Form validation, shot list order, cards, bean catalogue |
+| Integration | `App.tsx` — seed UI and adding a shot end-to-end |
+
 ## Tech stack
 
 - [Vite](https://vite.dev/) + [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) for tests
 - Plain CSS (no component library)
 - Local React state only
