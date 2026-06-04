@@ -73,4 +73,31 @@ describe('App', () => {
     expect(within(items[0]).getByRole('heading', { level: 3 })).toHaveTextContent('House Espresso');
     expect(within(items[0]).getByText('Great pull.')).toBeInTheDocument();
   });
+
+  it('adds a new bean to the catalogue', async () => {
+    vi.stubGlobal('crypto', {
+      randomUUID: () => 'new-bean-id',
+    });
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Add a bean' })).toBeInTheDocument();
+    });
+
+    const form = screen.getByRole('heading', { name: 'Add a bean' }).closest('section')!;
+
+    await user.type(within(form).getByLabelText('Name'), 'Catalogue Test');
+    await user.type(within(form).getByLabelText('Roaster'), 'Demo Roasters');
+    await user.type(within(form).getByLabelText('Origin / blend summary'), 'Guatemala');
+    await user.type(within(form).getByLabelText('Roast date'), '2026-05-15');
+    await user.clear(within(form).getByLabelText('Purchased'));
+    await user.type(within(form).getByLabelText('Purchased'), '2026-05-16');
+    await user.click(within(form).getByRole('button', { name: 'Add bean' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Catalogue Test' })).toBeInTheDocument();
+    });
+  });
 });

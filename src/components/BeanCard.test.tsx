@@ -5,6 +5,20 @@ import { createMockImageFile, mockBeans } from '../test/fixtures';
 import { BeanCard } from './BeanCard';
 
 describe('BeanCard', () => {
+  it('shows blend composition for blend beans', () => {
+    render(
+      <BeanCard
+        bean={mockBeans[1]!}
+        photoItems={[]}
+        onAddPhotos={vi.fn()}
+        onRemovePhoto={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Brazil 60% · Colombia 40%')).toBeInTheDocument();
+    expect(screen.getByText('500g')).toBeInTheDocument();
+  });
+
   it('invokes onAddPhotos when images are uploaded', async () => {
     const user = userEvent.setup();
     const onAddPhotos = vi.fn();

@@ -7,7 +7,15 @@ import {
   saveBeans,
   saveShots,
 } from '../storage/journalRepository';
-import type { AddShotPayload, Bean, Photo, PhotoBlobInput, PhotoDisplay, Shot } from '../types';
+import type {
+  AddBeanPayload,
+  AddShotPayload,
+  Bean,
+  Photo,
+  PhotoBlobInput,
+  PhotoDisplay,
+  Shot,
+} from '../types';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 
 export type { PhotoDisplay };
@@ -106,6 +114,24 @@ export function useJournal() {
     [photoUrls],
   );
 
+  const addBean = useCallback(
+    async (payload: AddBeanPayload) => {
+      for (const { photo, blob } of payload.photoBlobs) {
+        await putPhotoBlob(photo.id, blob);
+      }
+
+      const bean: Bean = {
+        ...payload.bean,
+        id: crypto.randomUUID(),
+      };
+      const nextBeans = [bean, ...beans];
+      await saveBeans(nextBeans);
+      registerPhotoUrls(payload.photoBlobs);
+      setBeans(nextBeans);
+    },
+    [beans, registerPhotoUrls],
+  );
+
   const addShot = useCallback(
     async (payload: AddShotPayload) => {
       for (const { photo, blob } of payload.photoBlobs) {
@@ -165,6 +191,7 @@ export function useJournal() {
     error,
     resolvePhotos,
     addShot,
+    addBean,
     addBeanPhotos,
     removeBeanPhoto,
   };

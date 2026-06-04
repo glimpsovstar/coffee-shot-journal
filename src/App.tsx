@@ -11,6 +11,7 @@ function App() {
     error,
     resolvePhotos,
     addShot,
+    addBean,
     addBeanPhotos,
     removeBeanPhoto,
   } = useJournal();
@@ -47,6 +48,7 @@ function App() {
           <BeanCatalogue
             beans={beans}
             resolvePhotos={resolvePhotos}
+            onAddBean={addBean}
             onAddBeanPhotos={addBeanPhotos}
             onRemoveBeanPhoto={removeBeanPhoto}
           />
