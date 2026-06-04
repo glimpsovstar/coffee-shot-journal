@@ -12,7 +12,8 @@ describe('AddBeanForm', () => {
 
     await user.type(screen.getByLabelText('Name'), 'New Ethiopia');
     await user.type(screen.getByLabelText('Roaster'), 'Test Roasters');
-    await user.type(screen.getByLabelText('Origin / blend summary'), 'Yirgacheffe');
+    await user.type(screen.getByLabelText('Origin'), 'Yirgacheffe, Ethiopia');
+    await user.selectOptions(screen.getByLabelText('Roast style'), 'light');
     await user.type(screen.getByLabelText('Roast date'), '2026-05-01');
     await user.clear(screen.getByLabelText('Purchased'));
     await user.type(screen.getByLabelText('Purchased'), '2026-05-02');
@@ -26,6 +27,16 @@ describe('AddBeanForm', () => {
     expect(payload.bean.name).toBe('New Ethiopia');
     expect(payload.bean.kind).toBe('single_origin');
     expect(payload.bean.blendComponents).toEqual([]);
+    expect(payload.bean.roastStyle).toBe('light');
+  });
+
+  it('shows blend name label and placeholder when kind is blend', async () => {
+    const user = userEvent.setup();
+    render(<AddBeanForm onAddBean={vi.fn()} />);
+    expect(screen.getByPlaceholderText(/Yirgacheffe/)).toBeInTheDocument();
+    await user.click(screen.getByLabelText('Blend'));
+    expect(screen.getByLabelText('Blend name')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/House espresso/)).toBeInTheDocument();
   });
 
   it('shows validation error when blend percents do not total 100', async () => {
@@ -37,7 +48,7 @@ describe('AddBeanForm', () => {
     await user.click(screen.getByLabelText('Blend'));
     await user.type(screen.getByLabelText('Name'), 'Bad Blend');
     await user.type(screen.getByLabelText('Roaster'), 'Test');
-    await user.type(screen.getByLabelText('Origin / blend summary'), 'Mix');
+    await user.type(screen.getByLabelText('Blend name'), 'House mix');
     await user.type(screen.getByLabelText('Roast date'), '2026-05-01');
 
     const nameInputs = screen.getAllByPlaceholderText('Origin name');

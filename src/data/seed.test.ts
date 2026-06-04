@@ -28,6 +28,7 @@ describe('seed data', () => {
       expect(['single_origin', 'blend']).toContain(bean.kind);
       expect(bean.purchaseDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(['200g', '250g', '500g', '1kg']).toContain(bean.bagSize);
+      expect(['light', 'medium', 'dark']).toContain(bean.roastStyle);
       if (bean.kind === 'blend') {
         expect(bean.blendComponents.length).toBeGreaterThan(0);
       } else {

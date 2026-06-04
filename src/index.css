@@ -237,6 +237,11 @@ dl {
   color: var(--text);
 }
 
+.form-row input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
 .form-row input:focus,
 .form-row select:focus,
 .form-row textarea:focus {

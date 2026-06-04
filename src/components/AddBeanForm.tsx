@@ -1,6 +1,22 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import type { AddBeanPayload, BagSize, BeanDraft, BeanKind, BlendComponent, PhotoBlobInput } from '../types';
-import { BAG_SIZES, createBlendComponent, validateNewBean } from '../utils/beans';
+import type {
+  AddBeanPayload,
+  BagSize,
+  BeanDraft,
+  BeanKind,
+  BlendComponent,
+  PhotoBlobInput,
+  RoastStyle,
+} from '../types';
+import {
+  BAG_SIZES,
+  ROAST_STYLES,
+  createBlendComponent,
+  formatRoastStyle,
+  originFieldLabel,
+  originFieldPlaceholder,
+  validateNewBean,
+} from '../utils/beans';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 import { BlendCompositionEditor } from './BlendCompositionEditor';
 import { LabelScanButton } from './LabelScanButton';
@@ -20,6 +36,7 @@ interface BeanFormState {
   roaster: string;
   kind: BeanKind;
   originOrBlend: string;
+  roastStyle: RoastStyle;
   blendComponents: BlendComponent[];
   roastDate: string;
   purchaseDate: string;
@@ -32,6 +49,7 @@ const defaultFormState = (): BeanFormState => ({
   roaster: '',
   kind: 'single_origin',
   originOrBlend: '',
+  roastStyle: 'medium',
   blendComponents: [],
   roastDate: '',
   purchaseDate: new Date().toISOString().slice(0, 10),
@@ -85,6 +103,7 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
       roaster: draft.roaster ?? current.roaster,
       kind: draft.kind ?? current.kind,
       originOrBlend: draft.originOrBlend ?? current.originOrBlend,
+      roastStyle: draft.roastStyle ?? current.roastStyle,
       roastDate: draft.roastDate ?? current.roastDate,
       purchaseDate: draft.purchaseDate ?? current.purchaseDate,
       bagSize: draft.bagSize ?? current.bagSize,
@@ -214,10 +233,28 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
         </fieldset>
 
         <div className="form-row">
-          <label htmlFor="beanOrigin">Origin / blend summary</label>
+          <label htmlFor="beanRoastStyle">Roast style</label>
+          <select
+            id="beanRoastStyle"
+            value={form.roastStyle}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, roastStyle: e.target.value as RoastStyle }))
+            }
+          >
+            {ROAST_STYLES.map((style) => (
+              <option key={style} value={style}>
+                {formatRoastStyle(style)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-row">
+          <label htmlFor="beanOrigin">{originFieldLabel(form.kind)}</label>
           <input
             id="beanOrigin"
             value={form.originOrBlend}
+            placeholder={originFieldPlaceholder(form.kind)}
             onChange={(e) => setForm((f) => ({ ...f, originOrBlend: e.target.value }))}
             required
           />

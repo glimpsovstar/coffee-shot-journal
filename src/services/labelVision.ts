@@ -1,5 +1,5 @@
-import type { BagSize, BeanDraft, BeanKind } from '../types';
-import { BAG_SIZES } from '../utils/beans';
+import type { BagSize, BeanDraft, BeanKind, RoastStyle } from '../types';
+import { BAG_SIZES, ROAST_STYLES } from '../utils/beans';
 
 export interface LabelScanResult {
   draft: BeanDraft;
@@ -28,6 +28,17 @@ function parseBagSize(value: unknown): BagSize | undefined {
   return match;
 }
 
+function parseRoastStyle(value: unknown): RoastStyle | undefined {
+  if (typeof value !== 'string') return undefined;
+  const normalized = value.trim().toLowerCase();
+  const match = ROAST_STYLES.find((s) => s === normalized);
+  if (match) return match;
+  if (normalized.includes('light')) return 'light';
+  if (normalized.includes('dark')) return 'dark';
+  if (normalized.includes('medium')) return 'medium';
+  return undefined;
+}
+
 function parseKind(value: unknown, originText: string): BeanKind | undefined {
   if (value === 'single_origin' || value === 'blend') return value;
   const lower = originText.toLowerCase();
@@ -51,6 +62,7 @@ function parseDraftFromJson(raw: unknown): LabelScanResult {
     roaster: typeof obj.roaster === 'string' ? obj.roaster : undefined,
     kind,
     originOrBlend: originOrBlend || undefined,
+    roastStyle: parseRoastStyle(obj.roastStyle),
     roastDate: typeof obj.roastDate === 'string' ? obj.roastDate : undefined,
     purchaseDate: typeof obj.purchaseDate === 'string' ? obj.purchaseDate : undefined,
     bagSize: parseBagSize(obj.bagSize),
@@ -99,7 +111,7 @@ export async function scanLabelFromBlob(blob: Blob): Promise<LabelScanResult> {
         {
           role: 'system',
           content:
-            'You extract coffee bag label fields for an espresso journal. Return JSON only with keys: name, roaster, kind ("single_origin"|"blend"), originOrBlend, blendComponents (array of {name, percent} when blend), roastDate (YYYY-MM-DD), purchaseDate (YYYY-MM-DD if unknown use roastDate), bagSize ("200g"|"250g"|"500g"|"1kg"), tastingNotes. Use null for unknown fields.',
+            'You extract coffee bag label fields for an espresso journal. Return JSON only with keys: name, roaster, kind ("single_origin"|"blend"), originOrBlend (region/country for single origin OR blend marketing name — not roast level), roastStyle ("light"|"medium"|"dark"), blendComponents (array of {name, percent} when blend), roastDate (YYYY-MM-DD), purchaseDate (YYYY-MM-DD if unknown use roastDate), bagSize ("200g"|"250g"|"500g"|"1kg"), tastingNotes. Use null for unknown fields.',
         },
         {
           role: 'user',

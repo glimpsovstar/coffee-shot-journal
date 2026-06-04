@@ -90,7 +90,7 @@ describe('App', () => {
 
     await user.type(within(form).getByLabelText('Name'), 'Catalogue Test');
     await user.type(within(form).getByLabelText('Roaster'), 'Demo Roasters');
-    await user.type(within(form).getByLabelText('Origin / blend summary'), 'Guatemala');
+    await user.type(within(form).getByLabelText('Origin'), 'Huehuetenango, Guatemala');
     await user.type(within(form).getByLabelText('Roast date'), '2026-05-15');
     await user.clear(within(form).getByLabelText('Purchased'));
     await user.type(within(form).getByLabelText('Purchased'), '2026-05-16');

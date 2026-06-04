@@ -73,6 +73,7 @@ describe('journalRepository', () => {
     expect(bean?.bagSize).toBe('250g');
     expect(bean?.kind).toBe('single_origin');
     expect(bean?.blendComponents).toEqual([]);
+    expect(bean?.roastStyle).toBe('medium');
   });
 
   it('deletes photo blobs', async () => {
