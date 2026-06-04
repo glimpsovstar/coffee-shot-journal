@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { AddShotPayload, Bean, PhotoBlobInput } from '../types';
 import { formatBeanChoiceLabel } from '../utils/beans';
+import { toDatetimeLocalValue } from '../utils/datetime';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
 import { StarRating } from './StarRating';
+import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFromPhotoButton';
 
 interface AddShotFormProps {
   beans: Bean[];
@@ -15,14 +17,10 @@ interface PendingPhoto extends PhotoBlobInput {
   previewUrl: string;
 }
 
-function toDatetimeLocalValue(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
 const defaultFormState = (beans: Bean[]) => ({
   beanId: beans[0]?.id ?? '',
   brewedAt: toDatetimeLocalValue(new Date()),
+  brewedLocation: '',
   grinder: 'Niche Zero',
   grindSetting: '',
   doseIn: '18',
@@ -108,10 +106,13 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       return;
     }
 
+    const location = form.brewedLocation.trim();
+
     onAddShot({
       shot: {
         beanId: form.beanId,
         brewedAt: brewedAt.toISOString(),
+        ...(location ? { brewedLocation: location } : {}),
         grinder: form.grinder.trim(),
         grindSetting: form.grindSetting.trim(),
         doseIn,
@@ -142,6 +143,16 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
     url: previewUrl,
   }));
 
+  const firstPhotoBlob = pendingPhotos[0]?.blob ?? null;
+
+  const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate, _messages: string[]) => {
+    setForm((f) => ({
+      ...f,
+      brewedAt: patch.brewedAt ?? f.brewedAt,
+      brewedLocation: patch.brewedLocation ?? f.brewedLocation,
+    }));
+  };
+
   return (
     <section className="panel" aria-labelledby="add-shot-heading">
       <h2 id="add-shot-heading">Log a shot</h2>
@@ -162,15 +173,27 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
           </select>
         </div>
 
-        <div className="form-row">
-          <label htmlFor="brewedAt">Brewed</label>
-          <input
-            id="brewedAt"
-            type="datetime-local"
-            value={form.brewedAt}
-            onChange={(e) => setForm((f) => ({ ...f, brewedAt: e.target.value }))}
-            required
-          />
+        <div className="form-row form-row--pair">
+          <div>
+            <label htmlFor="brewedAt">Brewed</label>
+            <input
+              id="brewedAt"
+              type="datetime-local"
+              value={form.brewedAt}
+              onChange={(e) => setForm((f) => ({ ...f, brewedAt: e.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="brewedLocation">Location</label>
+            <input
+              id="brewedLocation"
+              type="text"
+              value={form.brewedLocation}
+              placeholder="e.g. from photo GPS or your kitchen"
+              onChange={(e) => setForm((f) => ({ ...f, brewedLocation: e.target.value }))}
+            />
+          </div>
         </div>
 
         <div className="form-row form-row--pair">
@@ -257,6 +280,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
           label="Photos to attach"
           onRemove={handleRemovePending}
         />
+        <UpdateFromPhotoButton imageBlob={firstPhotoBlob} onUpdate={applyMetadataFromPhoto} />
 
         <StarRating
           value={form.rating}

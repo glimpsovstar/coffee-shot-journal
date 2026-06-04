@@ -40,6 +40,12 @@ export function ShotCard({ shot, beans, photoItems }: ShotCardProps) {
             {shot.extractionTime}s
           </dd>
         </div>
+        {shot.brewedLocation && (
+          <div>
+            <dt>Location</dt>
+            <dd>{shot.brewedLocation}</dd>
+          </div>
+        )}
         {shot.tastingNotes && (
           <div>
             <dt>Tasting notes</dt>

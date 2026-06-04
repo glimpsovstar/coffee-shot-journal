@@ -451,7 +451,8 @@ dl {
   color: var(--text-muted);
 }
 
-.label-scan {
+.label-scan,
+.photo-metadata-update {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;

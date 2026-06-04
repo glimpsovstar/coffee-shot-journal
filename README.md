@@ -39,6 +39,7 @@ There is no backend or cloud upload. Clearing browser site data removes your jou
 |-------|-------------|
 | Bean | Which bean was used |
 | Brewed | Date and time of the pull |
+| Location | Optional — manual or from photo GPS via **Update from photo** |
 | Grinder & grind setting | Equipment and setting |
 | Dose in / yield out | Input and output in grams |
 | Extraction time | Pull time in seconds |

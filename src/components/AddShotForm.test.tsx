@@ -1,10 +1,20 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mockBeans } from '../test/fixtures';
+import * as photoExif from '../utils/photoExif';
 import { AddShotForm } from './AddShotForm';
 
+vi.mock('../utils/photoExif', async (importOriginal) => {
+  const actual = await importOriginal<typeof photoExif>();
+  return { ...actual, extractShotMetadataFromBlob: vi.fn() };
+});
+
 describe('AddShotForm', () => {
+  afterEach(() => {
+    vi.mocked(photoExif.extractShotMetadataFromBlob).mockReset();
+  });
+
   it('lists beans as roaster and name in the selector', () => {
     render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
     const select = screen.getByLabelText('Bean');
@@ -63,6 +73,31 @@ describe('AddShotForm', () => {
         photos: [],
       },
       photoBlobs: [],
+    });
+  });
+
+  it('updates brewed time and location from photo metadata', async () => {
+    const user = userEvent.setup();
+    vi.mocked(photoExif.extractShotMetadataFromBlob).mockResolvedValue({
+      brewedAt: new Date('2026-06-04T09:30:00'),
+      location: '33.86880° S, 151.20930° E',
+      messages: ['Set brewed date and time from photo.', 'Set location from photo GPS.'],
+    });
+
+    render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
+    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+
+    const file = new File([new Uint8Array(64)], 'shot.jpg', { type: 'image/jpeg' });
+    const input = within(form).getByLabelText('Shot photos').parentElement!.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    await user.upload(input, file);
+
+    await user.click(within(form).getByRole('button', { name: 'Update from photo' }));
+
+    await waitFor(() => {
+      expect(within(form).getByLabelText('Brewed')).toHaveValue('2026-06-04T09:30');
+      expect(within(form).getByLabelText('Location')).toHaveValue('33.86880° S, 151.20930° E');
     });
   });
 

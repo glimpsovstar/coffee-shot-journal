@@ -42,6 +42,8 @@ export interface Shot {
   id: string;
   beanId: string;
   brewedAt: string;
+  /** GPS or place from photo EXIF, when available. */
+  brewedLocation?: string;
   grinder: string;
   grindSetting: string;
   doseIn: number;
