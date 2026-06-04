@@ -1,0 +1,30 @@
+---
+description: Commit frequently with small, reviewable changes and clear PRs
+alwaysApply: true
+---
+
+# Commit often; keep PRs easy to review
+
+## Commits
+
+1. **Commit frequently** — after each logical slice (feature, fix, tests, docs), not only at the end of a large session.
+2. **One concern per commit** when practical: app code, tests, and docs/rules can be separate commits.
+3. Write **clear commit messages** (imperative mood, 1–2 sentences on *why*).
+4. Only commit when the user asks, unless they have explicitly asked you to commit often as part of the task.
+5. Run `npm run test:run` (and `npm run build` for substantial changes) before committing app code.
+
+## Pull requests
+
+When creating or updating PRs:
+
+1. Keep PRs **focused** — one feature or theme per PR when possible.
+2. Use a **Summary** (2–4 bullets: what changed and why) and a **Test plan** checklist.
+3. Mention **breaking changes**, migrations (e.g. IndexedDB schema), and anything reviewers should try manually.
+4. Avoid mixing unrelated refactors with feature work; split follow-up PRs if needed.
+5. Link to `.prompts-history.md` when the PR is part of the AI-assisted demo workflow.
+
+## Reviewer-friendly diffs
+
+- Prefer small, named files over large single-file dumps.
+- Update README when behavior visible to users changes.
+- Include or update tests in the same PR as the behavior change.

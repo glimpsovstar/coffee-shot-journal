@@ -1,0 +1,17 @@
+---
+description: Require tests when adding or changing app behavior
+alwaysApply: true
+---
+
+# Tests required for behavior changes
+
+When you add or change runtime behavior under `src/`:
+
+1. Add or update automated tests in the same change.
+2. Run `npm run test:run` before considering the work done.
+3. Prefer unit tests for `src/utils/**` and `src/storage/**` (use `fake-indexeddb` for IndexedDB).
+4. Use React Testing Library for components; extend `src/test/fixtures.ts` for shared mocks.
+5. Mock `URL.createObjectURL` / `revokeObjectURL` when testing photo UI if needed.
+6. Avoid tests that only assert CSS class names or other implementation details without user-visible behavior.
+
+If a change is docs-only or comment-only, tests are not required.

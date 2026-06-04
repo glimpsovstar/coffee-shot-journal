@@ -1,0 +1,15 @@
+---
+description: Ask clarifying questions when requirements or scope are unclear
+alwaysApply: true
+---
+
+# Ask when unclear
+
+Before implementing non-trivial changes:
+
+1. If requirements, scope, or trade-offs are ambiguous, **ask the user 1–2 focused questions** instead of guessing.
+2. Prefer the **AskQuestion** tool (or a short numbered list in chat) when there are concrete options—e.g. persistence mechanism, public vs private repo, edit vs read-only behavior.
+3. Do not block on questions for obvious fixes (typos, clear bug reports, or explicit instructions).
+4. After the user answers, proceed with the chosen approach and mention the decision briefly in the summary.
+
+When planning large features, surface important forks early (storage, auth, scope limits) before writing substantial code.
