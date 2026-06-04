@@ -1,0 +1,217 @@
+import { useState, type FormEvent } from 'react';
+import type { Bean, NewShot } from '../types';
+import { StarRating } from './StarRating';
+
+interface AddShotFormProps {
+  beans: Bean[];
+  onAddShot: (shot: NewShot) => void;
+}
+
+function toDatetimeLocalValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+const defaultFormState = (beans: Bean[]) => ({
+  beanId: beans[0]?.id ?? '',
+  brewedAt: toDatetimeLocalValue(new Date()),
+  grinder: 'Niche Zero',
+  grindSetting: '',
+  doseIn: '18',
+  yieldOut: '36',
+  extractionTime: '28',
+  tastingNotes: '',
+  rating: 4 as 1 | 2 | 3 | 4 | 5,
+});
+
+export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
+  const [form, setForm] = useState(() => defaultFormState(beans));
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+
+    if (!form.beanId) {
+      setError('Please select a bean.');
+      return;
+    }
+
+    const doseIn = parseFloat(form.doseIn);
+    const yieldOut = parseFloat(form.yieldOut);
+    const extractionTime = parseFloat(form.extractionTime);
+
+    if (!form.grindSetting.trim()) {
+      setError('Grind setting is required.');
+      return;
+    }
+
+    if (Number.isNaN(doseIn) || doseIn <= 0) {
+      setError('Dose must be a positive number.');
+      return;
+    }
+
+    if (Number.isNaN(yieldOut) || yieldOut <= 0) {
+      setError('Yield must be a positive number.');
+      return;
+    }
+
+    if (Number.isNaN(extractionTime) || extractionTime <= 0) {
+      setError('Extraction time must be a positive number.');
+      return;
+    }
+
+    const brewedAt = new Date(form.brewedAt);
+    if (Number.isNaN(brewedAt.getTime())) {
+      setError('Please enter a valid date and time.');
+      return;
+    }
+
+    onAddShot({
+      beanId: form.beanId,
+      brewedAt: brewedAt.toISOString(),
+      grinder: form.grinder.trim(),
+      grindSetting: form.grindSetting.trim(),
+      doseIn,
+      yieldOut,
+      extractionTime,
+      tastingNotes: form.tastingNotes.trim(),
+      rating: form.rating,
+    });
+
+    setForm(defaultFormState(beans));
+  };
+
+  if (beans.length === 0) {
+    return (
+      <section className="panel">
+        <p className="empty-state">Add beans to the catalogue before logging shots.</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="panel" aria-labelledby="add-shot-heading">
+      <h2 id="add-shot-heading">Log a shot</h2>
+      <form className="shot-form" onSubmit={handleSubmit} noValidate>
+        <div className="form-row">
+          <label htmlFor="beanId">Bean</label>
+          <select
+            id="beanId"
+            value={form.beanId}
+            onChange={(e) => setForm((f) => ({ ...f, beanId: e.target.value }))}
+            required
+          >
+            {beans.map((bean) => (
+              <option key={bean.id} value={bean.id}>
+                {bean.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-row">
+          <label htmlFor="brewedAt">Brewed</label>
+          <input
+            id="brewedAt"
+            type="datetime-local"
+            value={form.brewedAt}
+            onChange={(e) => setForm((f) => ({ ...f, brewedAt: e.target.value }))}
+            required
+          />
+        </div>
+
+        <div className="form-row form-row--pair">
+          <div>
+            <label htmlFor="grinder">Grinder</label>
+            <input
+              id="grinder"
+              type="text"
+              value={form.grinder}
+              onChange={(e) => setForm((f) => ({ ...f, grinder: e.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="grindSetting">Grind setting</label>
+            <input
+              id="grindSetting"
+              type="text"
+              value={form.grindSetting}
+              onChange={(e) => setForm((f) => ({ ...f, grindSetting: e.target.value }))}
+              placeholder="e.g. 14.5"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="form-row form-row--triple">
+          <div>
+            <label htmlFor="doseIn">Dose in (g)</label>
+            <input
+              id="doseIn"
+              type="number"
+              min="0.1"
+              step="0.1"
+              value={form.doseIn}
+              onChange={(e) => setForm((f) => ({ ...f, doseIn: e.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="yieldOut">Yield out (g)</label>
+            <input
+              id="yieldOut"
+              type="number"
+              min="0.1"
+              step="0.1"
+              value={form.yieldOut}
+              onChange={(e) => setForm((f) => ({ ...f, yieldOut: e.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="extractionTime">Time (s)</label>
+            <input
+              id="extractionTime"
+              type="number"
+              min="1"
+              step="1"
+              value={form.extractionTime}
+              onChange={(e) => setForm((f) => ({ ...f, extractionTime: e.target.value }))}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <label htmlFor="tastingNotes">Tasting notes</label>
+          <textarea
+            id="tastingNotes"
+            rows={3}
+            value={form.tastingNotes}
+            onChange={(e) => setForm((f) => ({ ...f, tastingNotes: e.target.value }))}
+            placeholder="Optional — acidity, body, what to try next…"
+          />
+        </div>
+
+        <StarRating
+          value={form.rating}
+          onChange={(rating) => setForm((f) => ({ ...f, rating }))}
+          name="shot-rating"
+          label="Rating"
+        />
+
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <button type="submit" className="btn-primary">
+          Add shot
+        </button>
+      </form>
+    </section>
+  );
+}
