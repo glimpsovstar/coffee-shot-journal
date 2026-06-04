@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mockBeans } from '../test/fixtures';
 import * as photoExif from '../utils/photoExif';
+import * as weather from '../services/weather';
 import { AddShotForm } from './AddShotForm';
 
 vi.mock('../utils/photoExif', async (importOriginal) => {
@@ -10,9 +11,14 @@ vi.mock('../utils/photoExif', async (importOriginal) => {
   return { ...actual, extractShotMetadataFromBlob: vi.fn() };
 });
 
+vi.mock('../services/weather', () => ({
+  fetchWeatherAt: vi.fn(),
+}));
+
 describe('AddShotForm', () => {
   afterEach(() => {
     vi.mocked(photoExif.extractShotMetadataFromBlob).mockReset();
+    vi.mocked(weather.fetchWeatherAt).mockReset();
   });
 
   it('lists beans as roaster and name in the selector', () => {
@@ -76,12 +82,12 @@ describe('AddShotForm', () => {
     });
   });
 
-  it('updates brewed time and location from photo metadata', async () => {
+  it('updates brewed time and nearest suburb from photo metadata', async () => {
     const user = userEvent.setup();
     vi.mocked(photoExif.extractShotMetadataFromBlob).mockResolvedValue({
       brewedAt: new Date('2026-06-04T09:30:00'),
-      location: '33.86880° S, 151.20930° E',
-      messages: ['Set brewed date and time from photo.', 'Set location from photo GPS.'],
+      gps: { latitude: -37.8136, longitude: 144.9631 },
+      messages: ['Set brewed date and time from photo.', 'GPS found — pick the nearest suburb from suggestions.'],
     });
 
     render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
@@ -97,8 +103,39 @@ describe('AddShotForm', () => {
 
     await waitFor(() => {
       expect(within(form).getByLabelText('Brewed')).toHaveValue('2026-06-04T09:30');
-      expect(within(form).getByLabelText('Location')).toHaveValue('33.86880° S, 151.20930° E');
+      expect(within(form).getByLabelText('Suburb')).toHaveValue('Melbourne, VIC, Australia');
     });
+  });
+
+  it('fetches weather when suburb is selected on submit', async () => {
+    const user = userEvent.setup();
+    const onAddShot = vi.fn();
+    vi.mocked(weather.fetchWeatherAt).mockResolvedValue({
+      temperatureC: 18,
+      humidityPercent: 60,
+      description: 'Partly cloudy',
+      source: 'open-meteo',
+      observedAt: '2026-06-04T09:00',
+    });
+
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+
+    const suburbInput = within(form).getByLabelText('Suburb');
+    await user.click(suburbInput);
+    await user.type(suburbInput, 'Fitz');
+    await user.keyboard('{Enter}');
+    await user.type(within(form).getByLabelText('Grind setting'), '14');
+    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
+
+    await waitFor(() => {
+      expect(weather.fetchWeatherAt).toHaveBeenCalled();
+      expect(onAddShot).toHaveBeenCalled();
+    });
+
+    const payload = onAddShot.mock.calls[0]![0];
+    expect(payload.shot.weather?.description).toBe('Partly cloudy');
+    expect(payload.shot.brewSuburb?.label).toMatch(/Fitzroy/);
   });
 
   it('rejects non-positive dose', async () => {

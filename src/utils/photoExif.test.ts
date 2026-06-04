@@ -33,7 +33,7 @@ describe('extractShotMetadataFromBlob', () => {
     const result = await extractShotMetadataFromBlob(new Blob(['x'], { type: 'image/jpeg' }));
 
     expect(result.brewedAt).toEqual(taken);
-    expect(result.location).toMatch(/33\.87000° S/);
+    expect(result.gps?.latitude).toBeCloseTo(-33.87, 1);
     expect(result.messages.some((m) => m.includes('date and time'))).toBe(true);
     expect(result.messages.some((m) => m.includes('GPS'))).toBe(true);
   });
@@ -44,7 +44,7 @@ describe('extractShotMetadataFromBlob', () => {
     const result = await extractShotMetadataFromBlob(new Blob(['x']));
 
     expect(result.brewedAt).toBeUndefined();
-    expect(result.location).toBeUndefined();
+    expect(result.gps).toBeUndefined();
     expect(result.messages[0]).toMatch(/No metadata/);
   });
 });

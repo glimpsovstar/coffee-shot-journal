@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import type { SuburbEntry } from '../data/auNzSuburbs';
 import type { AddShotPayload, Bean, PhotoBlobInput } from '../types';
+import { fetchWeatherAt } from '../services/weather';
 import { formatBeanChoiceLabel } from '../utils/beans';
 import { toDatetimeLocalValue } from '../utils/datetime';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
+import { toStoredSuburb } from '../utils/suburbs';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
 import { StarRating } from './StarRating';
+import { SuburbAutocomplete } from './SuburbAutocomplete';
 import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFromPhotoButton';
 
 interface AddShotFormProps {
@@ -20,7 +24,6 @@ interface PendingPhoto extends PhotoBlobInput {
 const defaultFormState = (beans: Bean[]) => ({
   beanId: beans[0]?.id ?? '',
   brewedAt: toDatetimeLocalValue(new Date()),
-  brewedLocation: '',
   grinder: 'Niche Zero',
   grindSetting: '',
   doseIn: '18',
@@ -41,7 +44,11 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const pendingPhotosRef = useRef(pendingPhotos);
   pendingPhotosRef.current = pendingPhotos;
+  const [selectedSuburb, setSelectedSuburb] = useState<SuburbEntry | null>(null);
+  const [suburbQuery, setSuburbQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -67,9 +74,10 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
     });
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
+    setStatusMessage(null);
 
     if (!form.beanId) {
       setError('Please select a bean.');
@@ -106,28 +114,58 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       return;
     }
 
-    const location = form.brewedLocation.trim();
+    if (suburbQuery.trim() && !selectedSuburb) {
+      setError('Choose a suburb from the list (Australia or New Zealand only).');
+      return;
+    }
 
-    onAddShot({
-      shot: {
-        beanId: form.beanId,
-        brewedAt: brewedAt.toISOString(),
-        ...(location ? { brewedLocation: location } : {}),
-        grinder: form.grinder.trim(),
-        grindSetting: form.grindSetting.trim(),
-        doseIn,
-        yieldOut,
-        extractionTime,
-        tastingNotes: form.tastingNotes.trim(),
-        rating: form.rating,
-        photos: pendingPhotos.map((p) => p.photo),
-      },
-      photoBlobs: pendingPhotos.map(({ photo, blob }) => ({ photo, blob })),
-    });
+    setSubmitting(true);
+    try {
+      let weather;
+      if (selectedSuburb) {
+        setStatusMessage('Fetching weather for this brew…');
+        try {
+          weather = await fetchWeatherAt({
+            latitude: selectedSuburb.latitude,
+            longitude: selectedSuburb.longitude,
+            at: brewedAt,
+          });
+        } catch (err) {
+          setStatusMessage(
+            err instanceof Error
+              ? `${err.message} Shot will be saved without weather.`
+              : 'Weather unavailable. Shot will be saved without weather.',
+          );
+        }
+      }
 
-    clearPendingPhotos(pendingPhotos);
-    setPendingPhotos([]);
-    setForm(defaultFormState(beans));
+      onAddShot({
+        shot: {
+          beanId: form.beanId,
+          brewedAt: brewedAt.toISOString(),
+          ...(selectedSuburb ? { brewSuburb: toStoredSuburb(selectedSuburb) } : {}),
+          ...(weather ? { weather } : {}),
+          grinder: form.grinder.trim(),
+          grindSetting: form.grindSetting.trim(),
+          doseIn,
+          yieldOut,
+          extractionTime,
+          tastingNotes: form.tastingNotes.trim(),
+          rating: form.rating,
+          photos: pendingPhotos.map((p) => p.photo),
+        },
+        photoBlobs: pendingPhotos.map(({ photo, blob }) => ({ photo, blob })),
+      });
+
+      clearPendingPhotos(pendingPhotos);
+      setPendingPhotos([]);
+      setSelectedSuburb(null);
+      setSuburbQuery('');
+      setForm(defaultFormState(beans));
+      setStatusMessage(null);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (beans.length === 0) {
@@ -149,8 +187,13 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
     setForm((f) => ({
       ...f,
       brewedAt: patch.brewedAt ?? f.brewedAt,
-      brewedLocation: patch.brewedLocation ?? f.brewedLocation,
     }));
+    if (patch.suburb !== undefined) {
+      setSelectedSuburb(patch.suburb);
+    }
+    if (patch.suburbQuery !== undefined) {
+      setSuburbQuery(patch.suburbQuery);
+    }
   };
 
   return (
@@ -185,13 +228,13 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="brewedLocation">Location</label>
-            <input
-              id="brewedLocation"
-              type="text"
-              value={form.brewedLocation}
-              placeholder="e.g. from photo GPS or your kitchen"
-              onChange={(e) => setForm((f) => ({ ...f, brewedLocation: e.target.value }))}
+            <SuburbAutocomplete
+              id="brewSuburb"
+              label="Suburb"
+              value={selectedSuburb}
+              inputValue={suburbQuery}
+              onInputChange={setSuburbQuery}
+              onSelect={setSelectedSuburb}
             />
           </div>
         </div>
@@ -289,14 +332,20 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
           label="Rating"
         />
 
+        {statusMessage && (
+          <p className="photo-upload__hint" aria-live="polite">
+            {statusMessage}
+          </p>
+        )}
+
         {error && (
           <p className="form-error" role="alert">
             {error}
           </p>
         )}
 
-        <button type="submit" className="btn-primary">
-          Add shot
+        <button type="submit" className="btn-primary" disabled={submitting}>
+          {submitting ? 'Saving…' : 'Add shot'}
         </button>
       </form>
     </section>

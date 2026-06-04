@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import type { SuburbEntry } from '../data/auNzSuburbs';
 import { toDatetimeLocalValue } from '../utils/datetime';
 import { extractShotMetadataFromBlob } from '../utils/photoExif';
+import { findNearestSuburb, formatSuburbLabel } from '../utils/suburbs';
 
 export interface ShotFormMetadataUpdate {
   brewedAt?: string;
-  brewedLocation?: string;
+  suburb?: SuburbEntry | null;
+  suburbQuery?: string;
 }
 
 interface UpdateFromPhotoButtonProps {
@@ -27,14 +30,20 @@ export function UpdateFromPhotoButton({ imageBlob, onUpdate }: UpdateFromPhotoBu
     setError(null);
     setLoading(true);
     try {
-      const { brewedAt, location, messages } = await extractShotMetadataFromBlob(imageBlob);
+      const { brewedAt, gps, messages } = await extractShotMetadataFromBlob(imageBlob);
       const patch: ShotFormMetadataUpdate = {};
 
       if (brewedAt) {
         patch.brewedAt = toDatetimeLocalValue(brewedAt);
       }
-      if (location) {
-        patch.brewedLocation = location;
+      if (gps) {
+        const nearest = findNearestSuburb(gps.latitude, gps.longitude);
+        if (nearest) {
+          patch.suburb = nearest;
+          patch.suburbQuery = formatSuburbLabel(nearest);
+        } else {
+          messages.push('GPS is outside the AU/NZ suburb list — search manually.');
+        }
       }
 
       onUpdate(patch, messages);

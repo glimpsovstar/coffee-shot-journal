@@ -1,4 +1,4 @@
-import type { Bean } from '../types';
+import type { Bean, Shot, ShotWeather } from '../types';
 
 export function getBeanById(beans: Bean[], id: string): Bean | undefined {
   return beans.find((bean) => bean.id === id);
@@ -15,6 +15,14 @@ export function formatRoastDate(isoDate: string): string {
   return new Date(isoDate + 'T12:00:00').toLocaleDateString(undefined, {
     dateStyle: 'medium',
   });
+}
+
+export function formatShotWeather(weather: ShotWeather): string {
+  return `${weather.temperatureC}°C · ${weather.humidityPercent}% humidity · ${weather.description}`;
+}
+
+export function getShotLocationLabel(shot: Shot): string | undefined {
+  return shot.brewSuburb?.label ?? shot.brewedLocation;
 }
 
 export function ratio(doseIn: number, yieldOut: number): string {

@@ -2,7 +2,7 @@ import exifr from 'exifr';
 
 export interface ShotPhotoMetadata {
   brewedAt?: Date;
-  location?: string;
+  gps?: { latitude: number; longitude: number };
   messages: string[];
 }
 
@@ -70,14 +70,14 @@ export async function extractShotMetadataFromBlob(blob: Blob): Promise<ShotPhoto
   }
 
   if (hasGps) {
-    messages.push('Set location from photo GPS.');
+    messages.push('GPS found — pick the nearest suburb from suggestions.');
   } else {
-    messages.push('No GPS location in photo (enable Location when taking iPhone photos).');
+    messages.push('No GPS in photo (enable Location when taking iPhone photos).');
   }
 
   return {
     brewedAt,
-    location: hasGps ? formatGpsLocation(lat!, lon!) : undefined,
+    gps: hasGps ? { latitude: lat!, longitude: lon! } : undefined,
     messages,
   };
 }

@@ -27,6 +27,12 @@ function normalizeShots(shots: Shot[]): Shot[] {
     if (!normalized.brewedLocation?.trim()) {
       delete normalized.brewedLocation;
     }
+    if (!normalized.brewSuburb?.id) {
+      delete normalized.brewSuburb;
+    }
+    if (!normalized.weather?.description) {
+      delete normalized.weather;
+    }
     return normalized;
   });
 }

@@ -1,6 +1,6 @@
 import type { Bean, PhotoDisplay, Shot } from '../types';
 import { formatBeanChoiceLabel } from '../utils/beans';
-import { formatBrewedAt, getBeanById, ratio } from '../utils/shots';
+import { formatBrewedAt, formatShotWeather, getBeanById, getShotLocationLabel, ratio } from '../utils/shots';
 import { PhotoGallery } from './PhotoGallery';
 import { StarRating } from './StarRating';
 
@@ -40,10 +40,16 @@ export function ShotCard({ shot, beans, photoItems }: ShotCardProps) {
             {shot.extractionTime}s
           </dd>
         </div>
-        {shot.brewedLocation && (
+        {getShotLocationLabel(shot) && (
           <div>
-            <dt>Location</dt>
-            <dd>{shot.brewedLocation}</dd>
+            <dt>Suburb</dt>
+            <dd>{getShotLocationLabel(shot)}</dd>
+          </div>
+        )}
+        {shot.weather && (
+          <div>
+            <dt>Weather</dt>
+            <dd>{formatShotWeather(shot.weather)}</dd>
           </div>
         )}
         {shot.tastingNotes && (
