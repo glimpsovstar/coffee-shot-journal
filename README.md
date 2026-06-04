@@ -8,11 +8,12 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 
 ## What the app does today
 
-- **Bean catalogue** — read-only reference list from seed data
-- **Shot history** — espresso pulls sorted newest first
-- **Add-shot form** — log a new pull; it appears at the top of the list
+- **Bean catalogue** — seed beans with attachable bag/label photos (up to 5 per bean)
+- **Shot history** — espresso pulls sorted newest first, with optional puck/cup photos
+- **Add-shot form** — log a new pull with photos; it appears at the top of the list
+- **IndexedDB persistence** — beans, shots, and image blobs survive refresh (on-device only)
 
-All data lives in the browser (seed data + React state). There is no backend, auth, or persistence yet.
+There is no backend or cloud upload. Clearing browser site data removes your journal.
 
 ### Bean fields
 
@@ -23,6 +24,7 @@ All data lives in the browser (seed data + React state). There is no backend, au
 | Origin / blend | Single origin or blend description |
 | Roast date | When the beans were roasted |
 | Tasting notes | Reference flavour notes |
+| Photos | Up to 5 images (JPEG, PNG, WebP, HEIC; 2 MB each) |
 
 ### Shot fields
 
@@ -35,17 +37,17 @@ All data lives in the browser (seed data + React state). There is no backend, au
 | Extraction time | Pull time in seconds |
 | Tasting notes | What you tasted (optional) |
 | Rating | 1–5 stars |
+| Photos | Up to 5 images attached when logging (read-only after save) |
 
 ## What I want to add later
 
-- **Persistence** — `localStorage` or a simple database so data survives refresh
-- **Bean CRUD** — add, edit, and retire beans in the UI
+- **Bean CRUD** — add, edit, and retire beans in the UI (not just photos)
 - **Filters & search** — by bean, rating, or date range
 - **Charts** — dose/yield/time trends over time
-- **Photos** — puck and cup shots for visual reference
 - **Export** — CSV or JSON for backup and analysis
+- **Image compression** — smaller IndexedDB footprint for large photo libraries
 
-Explicitly **not** planned for v1: authentication, image upload pipelines, weather APIs, or AI recommendations.
+Explicitly **not** planned: authentication, cloud image hosting, weather APIs, or AI recommendations.
 
 ## AI-assisted development workflow
 
@@ -57,6 +59,7 @@ This repo is meant to double as a **demo of building software with an AI coding 
 4. **Seed realistic data** — makes the UI reviewable without manual entry.
 5. **Build UI in slices** — catalogue, list, form; wire state in `App.tsx` last.
 6. **Document intent** — README sections like this one capture *why*, not only *how*.
+7. **Keep a prompt log** — see [`.prompts-history.md`](.prompts-history.md) for the exact prompts and timing used in this repo (hidden filename, committed for replay).
 
 ### Example prompts you can try
 
@@ -95,14 +98,17 @@ npm run test:coverage
 
 | Layer | What is covered |
 |-------|-----------------|
-| Unit | `src/utils/shots.ts` — ratio, sorting, bean lookup, date helpers |
-| Data | `src/data/seed.ts` — referential integrity and valid shot fields |
-| Component | Form validation, shot list order, cards, bean catalogue |
-| Integration | `App.tsx` — seed UI and adding a shot end-to-end |
+| Unit | `src/utils/shots.ts`, `src/utils/photos.ts` |
+| Storage | `src/storage/journalRepository.ts` (IndexedDB via `fake-indexeddb` in tests) |
+| Data | `src/data/seed.ts` — referential integrity and valid fields |
+| Component | Forms, photo upload/gallery, cards, catalogue |
+| Integration | `App.tsx` — load journal, add shots, IndexedDB round-trip |
+
+New behavior changes should include tests (see `.cursor/rules/require-tests.mdc`). When scope is unclear, ask before implementing (see `.cursor/rules/ask-when-unclear.mdc`). Commit in small, reviewable slices (see `.cursor/rules/commit-often.mdc`).
 
 ## Tech stack
 
 - [Vite](https://vite.dev/) + [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
 - [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) for tests
 - Plain CSS (no component library)
-- Local React state only
+- [idb](https://github.com/jakearchibald/idb) + IndexedDB for on-device persistence
