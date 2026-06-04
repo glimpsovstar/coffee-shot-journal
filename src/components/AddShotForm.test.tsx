@@ -5,6 +5,14 @@ import { mockBeans } from '../test/fixtures';
 import { AddShotForm } from './AddShotForm';
 
 describe('AddShotForm', () => {
+  it('lists beans as roaster and name in the selector', () => {
+    render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
+    const select = screen.getByLabelText('Bean');
+
+    expect(select).toHaveTextContent('Test Roasters — Test Ethiopia');
+    expect(select).toHaveTextContent('Test Roasters — Test House');
+  });
+
   it('shows message when bean catalogue is empty', () => {
     render(<AddShotForm beans={[]} onAddShot={vi.fn()} />);
 

@@ -70,7 +70,9 @@ describe('App', () => {
     const shotSection = screen.getByRole('heading', { name: 'Espresso shots' }).closest('section')!;
     const items = within(shotSection).getAllByRole('listitem');
 
-    expect(within(items[0]).getByRole('heading', { level: 3 })).toHaveTextContent('House Espresso');
+    expect(within(items[0]).getByRole('heading', { level: 3 })).toHaveTextContent(
+      'Northside Roasters — House Espresso',
+    );
     expect(within(items[0]).getByText('Great pull.')).toBeInTheDocument();
   });
 

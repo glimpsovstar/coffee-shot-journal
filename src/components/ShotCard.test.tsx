@@ -7,7 +7,9 @@ describe('ShotCard', () => {
   it('renders bean name, recipe, and tasting notes', () => {
     render(<ShotCard shot={mockShot} beans={mockBeans} photoItems={[]} />);
 
-    expect(screen.getByRole('heading', { name: 'Test Ethiopia' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Test Roasters — Test Ethiopia' }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/18g in → 36g out \(1:2\.0\)/)).toBeInTheDocument();
     expect(screen.getByText(/28s/)).toBeInTheDocument();
     expect(screen.getByText('Balanced and sweet.')).toBeInTheDocument();

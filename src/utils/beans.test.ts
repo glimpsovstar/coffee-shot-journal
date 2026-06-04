@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createBlendComponent,
+  formatBeanChoiceLabel,
   formatRoastStyle,
   normalizeBean,
   originFieldLabel,
@@ -58,6 +59,12 @@ describe('validateNewBean', () => {
 });
 
 describe('bean field helpers', () => {
+  it('formats roaster and name for selectors', () => {
+    expect(
+      formatBeanChoiceLabel({ roaster: 'Northside', name: 'House Espresso' }),
+    ).toBe('Northside — House Espresso');
+  });
+
   it('labels and placeholders depend on kind', () => {
     expect(originFieldLabel('single_origin')).toBe('Origin');
     expect(originFieldPlaceholder('single_origin')).toMatch(/Ethiopia/);
