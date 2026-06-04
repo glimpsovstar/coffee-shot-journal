@@ -31,7 +31,7 @@ There is no backend or cloud upload. Clearing browser site data removes your jou
 | Purchase date | When you bought the bag |
 | Bag size | `200g`, `250g`, `500g`, or `1kg` |
 | Tasting notes | Reference flavour notes |
-| Photos | Up to 5 images (JPEG, PNG, WebP, HEIC; 2 MB each) |
+| Photos | Up to 5 images (JPEG, PNG, WebP, HEIC; 5 MB each) |
 
 ### Shot fields
 
