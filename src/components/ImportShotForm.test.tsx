@@ -1,8 +1,18 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { mockBeans } from '../test/fixtures';
 import { ImportShotForm } from './ImportShotForm';
+
+function deferred<T = void>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return { promise, resolve, reject };
+}
 
 describe('ImportShotForm', () => {
   it('imports a shot with only bean and date', async () => {
@@ -39,5 +49,28 @@ describe('ImportShotForm', () => {
       expect(onImportShot).toHaveBeenCalled();
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('waits for the import to persist before showing success', async () => {
+    const save = deferred();
+    const onImportShot = vi.fn(() => save.promise);
+    const user = userEvent.setup();
+
+    render(<ImportShotForm beans={mockBeans} onImportShot={onImportShot} />);
+
+    await user.click(screen.getByRole('button', { name: 'Import shot' }));
+
+    await waitFor(() => {
+      expect(onImportShot).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.getByRole('button', { name: 'Importing…' })).toBeDisabled();
+    expect(screen.queryByText('Shot imported.')).not.toBeInTheDocument();
+
+    await act(async () => {
+      save.resolve();
+      await save.promise;
+    });
+
+    expect(await screen.findByText('Shot imported.')).toBeInTheDocument();
   });
 });

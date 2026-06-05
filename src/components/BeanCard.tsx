@@ -7,8 +7,8 @@ import { PhotoUpload } from './PhotoUpload';
 interface BeanCardProps {
   bean: Bean;
   photoItems: PhotoDisplay[];
-  onAddPhotos: (beanId: string, inputs: PhotoBlobInput[]) => void;
-  onRemovePhoto: (beanId: string, photoId: string) => void;
+  onAddPhotos: (beanId: string, inputs: PhotoBlobInput[]) => Promise<void> | void;
+  onRemovePhoto: (beanId: string, photoId: string) => Promise<void> | void;
 }
 
 export function BeanCard({

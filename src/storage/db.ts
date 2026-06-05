@@ -21,6 +21,7 @@ export interface JournalDB extends DBSchema {
 }
 
 let dbPromise: Promise<IDBPDatabase<JournalDB>> | null = null;
+let dbInstance: IDBPDatabase<JournalDB> | null = null;
 
 export function getDb(): Promise<IDBPDatabase<JournalDB>> {
   if (!dbPromise) {
@@ -36,15 +37,22 @@ export function getDb(): Promise<IDBPDatabase<JournalDB>> {
           db.createObjectStore('photoBlobs');
         }
       },
-    }).catch((err) => {
-      dbPromise = null;
-      throw err;
-    });
+    })
+      .then((db) => {
+        dbInstance = db;
+        return db;
+      })
+      .catch((err) => {
+        dbPromise = null;
+        throw err;
+      });
   }
   return dbPromise;
 }
 
 /** Reset cached connection (for tests). */
 export function resetDbForTests(): void {
+  dbInstance?.close();
+  dbInstance = null;
   dbPromise = null;
 }

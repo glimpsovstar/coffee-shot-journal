@@ -24,7 +24,7 @@ import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
 
 interface AddBeanFormProps {
-  onAddBean: (payload: AddBeanPayload) => void;
+  onAddBean: (payload: AddBeanPayload) => Promise<void> | void;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -68,8 +68,12 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [scanWarnings, setScanWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const pendingPhotosRef = useRef(pendingPhotos);
-  pendingPhotosRef.current = pendingPhotos;
+
+  useEffect(() => {
+    pendingPhotosRef.current = pendingPhotos;
+  }, [pendingPhotos]);
 
   useEffect(() => {
     return () => {
@@ -130,7 +134,7 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
     }));
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
 
@@ -144,15 +148,22 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
       return;
     }
 
-    onAddBean({
-      bean: validation.bean,
-      photoBlobs: pendingPhotos.map(({ photo, blob }) => ({ photo, blob })),
-    });
+    setSubmitting(true);
+    try {
+      await onAddBean({
+        bean: validation.bean,
+        photoBlobs: pendingPhotos.map(({ photo, blob }) => ({ photo, blob })),
+      });
 
-    clearPendingPhotos(pendingPhotos);
-    setPendingPhotos([]);
-    setScanWarnings([]);
-    setForm(defaultFormState());
+      clearPendingPhotos(pendingPhotos);
+      setPendingPhotos([]);
+      setScanWarnings([]);
+      setForm(defaultFormState());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save bean.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const pendingDisplay = pendingPhotos.map(({ photo, previewUrl }) => ({
@@ -322,8 +333,8 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
           </p>
         )}
 
-        <button type="submit" className="btn-primary">
-          Add bean
+        <button type="submit" className="btn-primary" disabled={submitting}>
+          {submitting ? 'Saving…' : 'Add bean'}
         </button>
       </form>
       <p className="security-footnote">

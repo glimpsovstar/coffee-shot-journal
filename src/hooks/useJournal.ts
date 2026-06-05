@@ -31,6 +31,28 @@ export function useJournal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const photoUrlsRef = useRef<Map<string, string>>(new Map());
+  const beansRef = useRef<Bean[]>([]);
+  const shotsRef = useRef<Shot[]>([]);
+  const writeQueueRef = useRef(Promise.resolve());
+
+  const enqueueWrite = useCallback(<T,>(write: () => Promise<T>): Promise<T> => {
+    const run = writeQueueRef.current.then(write, write);
+    writeQueueRef.current = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }, []);
+
+  const syncBeans = useCallback((nextBeans: Bean[]) => {
+    beansRef.current = nextBeans;
+    setBeans(nextBeans);
+  }, []);
+
+  const syncShots = useCallback((nextShots: Shot[]) => {
+    shotsRef.current = nextShots;
+    setShots(nextShots);
+  }, []);
 
   const syncPhotoUrlsRef = useCallback((urls: Map<string, string>) => {
     photoUrlsRef.current = urls;
@@ -85,8 +107,8 @@ export function useJournal() {
       try {
         const data = await loadJournal();
         if (cancelled) return;
-        setBeans(data.beans);
-        setShots(data.shots);
+        syncBeans(data.beans);
+        syncShots(data.shots);
         await hydratePhotoUrls(data.beans, data.shots);
       } catch (err) {
         if (!cancelled) {
@@ -101,7 +123,7 @@ export function useJournal() {
       cancelled = true;
       photoUrlsRef.current.forEach((url) => revokePhotoObjectUrl(url));
     };
-  }, [hydratePhotoUrls]);
+  }, [hydratePhotoUrls, syncBeans, syncShots]);
 
   const resolvePhotos = useCallback(
     (photos: Photo[]): PhotoDisplay[] =>
@@ -115,73 +137,76 @@ export function useJournal() {
   );
 
   const addBean = useCallback(
-    async (payload: AddBeanPayload) => {
-      for (const { photo, blob } of payload.photoBlobs) {
-        await putPhotoBlob(photo.id, blob);
-      }
+    (payload: AddBeanPayload) =>
+      enqueueWrite(async () => {
+        for (const { photo, blob } of payload.photoBlobs) {
+          await putPhotoBlob(photo.id, blob);
+        }
 
-      const bean: Bean = {
-        ...payload.bean,
-        id: crypto.randomUUID(),
-      };
-      const nextBeans = [bean, ...beans];
-      await saveBeans(nextBeans);
-      registerPhotoUrls(payload.photoBlobs);
-      setBeans(nextBeans);
-    },
-    [beans, registerPhotoUrls],
+        const bean: Bean = {
+          ...payload.bean,
+          id: crypto.randomUUID(),
+        };
+        const nextBeans = [bean, ...beansRef.current];
+        await saveBeans(nextBeans);
+        registerPhotoUrls(payload.photoBlobs);
+        syncBeans(nextBeans);
+      }),
+    [enqueueWrite, registerPhotoUrls, syncBeans],
   );
 
   const addShot = useCallback(
-    async (payload: AddShotPayload) => {
-      for (const { photo, blob } of payload.photoBlobs) {
-        await putPhotoBlob(photo.id, blob);
-      }
+    (payload: AddShotPayload) =>
+      enqueueWrite(async () => {
+        for (const { photo, blob } of payload.photoBlobs) {
+          await putPhotoBlob(photo.id, blob);
+        }
 
-      const shot: Shot = {
-        ...payload.shot,
-        id: crypto.randomUUID(),
-      };
-      const nextShots = [shot, ...shots];
-      await saveShots(nextShots);
-      registerPhotoUrls(payload.photoBlobs);
-      setShots(nextShots);
-    },
-    [shots, registerPhotoUrls],
+        const shot: Shot = {
+          ...payload.shot,
+          id: crypto.randomUUID(),
+        };
+        const nextShots = [shot, ...shotsRef.current];
+        await saveShots(nextShots);
+        registerPhotoUrls(payload.photoBlobs);
+        syncShots(nextShots);
+      }),
+    [enqueueWrite, registerPhotoUrls, syncShots],
   );
 
   const addBeanPhotos = useCallback(
-    async (beanId: string, inputs: PhotoBlobInput[]) => {
-      for (const { photo, blob } of inputs) {
-        await putPhotoBlob(photo.id, blob);
-      }
+    (beanId: string, inputs: PhotoBlobInput[]) =>
+      enqueueWrite(async () => {
+        for (const { photo, blob } of inputs) {
+          await putPhotoBlob(photo.id, blob);
+        }
 
-      const nextBeans = beans.map((bean) =>
-        bean.id === beanId
-          ? { ...bean, photos: [...bean.photos, ...inputs.map((i) => i.photo)] }
-          : bean,
-      );
-      await saveBeans(nextBeans);
-      registerPhotoUrls(inputs);
-      setBeans(nextBeans);
-    },
-    [beans, registerPhotoUrls],
+        const nextBeans = beansRef.current.map((bean) =>
+          bean.id === beanId
+            ? { ...bean, photos: [...bean.photos, ...inputs.map((i) => i.photo)] }
+            : bean,
+        );
+        await saveBeans(nextBeans);
+        registerPhotoUrls(inputs);
+        syncBeans(nextBeans);
+      }),
+    [enqueueWrite, registerPhotoUrls, syncBeans],
   );
 
   const removeBeanPhoto = useCallback(
-    async (beanId: string, photoId: string) => {
-      await deletePhotoBlob(photoId);
-      unregisterPhotoUrl(photoId);
-
-      const nextBeans = beans.map((bean) =>
-        bean.id === beanId
-          ? { ...bean, photos: bean.photos.filter((p) => p.id !== photoId) }
-          : bean,
-      );
-      await saveBeans(nextBeans);
-      setBeans(nextBeans);
-    },
-    [beans, unregisterPhotoUrl],
+    (beanId: string, photoId: string) =>
+      enqueueWrite(async () => {
+        const nextBeans = beansRef.current.map((bean) =>
+          bean.id === beanId
+            ? { ...bean, photos: bean.photos.filter((p) => p.id !== photoId) }
+            : bean,
+        );
+        await saveBeans(nextBeans);
+        syncBeans(nextBeans);
+        await deletePhotoBlob(photoId);
+        unregisterPhotoUrl(photoId);
+      }),
+    [enqueueWrite, syncBeans, unregisterPhotoUrl],
   );
 
   return {

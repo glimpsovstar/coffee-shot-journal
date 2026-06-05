@@ -37,8 +37,8 @@ function normalizeShots(shots: Shot[]): Shot[] {
   });
 }
 
-/** Copy beans/shots from pre-v2 `meta` store (opened at DB version 1). */
-async function migrateLegacyMetaIfPresent(
+/** Read beans/shots from pre-v2 `meta` store when the upgraded DB still has one. */
+async function readLegacyMetaIfPresent(
   db: Awaited<ReturnType<typeof getDb>>,
 ): Promise<JournalData | null> {
   if (!([...db.objectStoreNames] as string[]).includes('meta')) {
@@ -56,46 +56,59 @@ async function migrateLegacyMetaIfPresent(
     return null;
   }
 
-  const data = {
+  return {
     beans: normalizeBeans(legacyBeans ?? seedBeans),
     shots: normalizeShots(legacyShots ?? seedShots),
   };
+}
 
-  await saveBeans(data.beans);
-  await saveShots(data.shots);
-  return data;
+function hasChanges<T>(current: T, normalized: T): boolean {
+  return JSON.stringify(current) !== JSON.stringify(normalized);
+}
+
+async function clearLegacyMetaIfPresent(db: Awaited<ReturnType<typeof getDb>>): Promise<void> {
+  if (!([...db.objectStoreNames] as string[]).includes('meta')) {
+    return;
+  }
+
+  const legacyDb = db as unknown as IDBPDatabase<LegacyJournalDB>;
+  const tx = legacyDb.transaction('meta', 'readwrite');
+  const meta = tx.objectStore('meta');
+  await meta.delete('beans');
+  await meta.delete('shots');
+  await tx.done;
 }
 
 export async function loadJournal(): Promise<JournalData> {
   const db = await getDb();
 
-  const legacy = await migrateLegacyMetaIfPresent(db);
-  if (legacy) {
-    return legacy;
-  }
-
   const beans = await db.get('beans', JOURNAL_KEY);
   const shots = await db.get('shots', JOURNAL_KEY);
+  const legacy = await readLegacyMetaIfPresent(db);
 
-  if (beans !== undefined && shots !== undefined) {
-    const normalized = {
-      beans: normalizeBeans(beans),
-      shots: normalizeShots(shots),
-    };
-    const needsMigration = beans.some(
-      (b, i) => JSON.stringify(b) !== JSON.stringify(normalized.beans[i]),
-    );
-    if (needsMigration) {
-      await saveBeans(normalized.beans);
-      await saveShots(normalized.shots);
-    }
-    return normalized;
+  const source = {
+    beans: beans ?? legacy?.beans ?? seedBeans,
+    shots: shots ?? legacy?.shots ?? seedShots,
+  };
+  const normalized = {
+    beans: normalizeBeans(source.beans),
+    shots: normalizeShots(source.shots),
+  };
+
+  const shouldSaveBeans = beans === undefined || hasChanges(beans, normalized.beans);
+  const shouldSaveShots = shots === undefined || hasChanges(shots, normalized.shots);
+
+  if (shouldSaveBeans) {
+    await saveBeans(normalized.beans);
+  }
+  if (shouldSaveShots) {
+    await saveShots(normalized.shots);
+  }
+  if (legacy) {
+    await clearLegacyMetaIfPresent(db);
   }
 
-  const initial = { beans: seedBeans, shots: seedShots };
-  await saveBeans(initial.beans);
-  await saveShots(initial.shots);
-  return initial;
+  return normalized;
 }
 
 export async function saveBeans(beans: Bean[]): Promise<void> {

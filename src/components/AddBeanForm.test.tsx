@@ -67,4 +67,22 @@ describe('AddBeanForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/total 100%/i);
     expect(onAddBean).not.toHaveBeenCalled();
   });
+
+  it('keeps form data visible when saving fails', async () => {
+    const user = userEvent.setup();
+    const onAddBean = vi.fn().mockRejectedValue(new Error('IndexedDB quota exceeded'));
+
+    render(<AddBeanForm onAddBean={onAddBean} />);
+
+    await user.type(screen.getByLabelText('Name'), 'Unsaved Bean');
+    await user.type(screen.getByLabelText('Roaster'), 'Test Roasters');
+    await user.type(screen.getByLabelText('Origin'), 'Yirgacheffe, Ethiopia');
+    await user.type(screen.getByLabelText('Roast date'), '2026-05-01');
+    await user.clear(screen.getByLabelText('Purchased'));
+    await user.type(screen.getByLabelText('Purchased'), '2026-05-02');
+    await user.click(screen.getByRole('button', { name: 'Add bean' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('IndexedDB quota exceeded');
+    expect(screen.getByLabelText('Name')).toHaveValue('Unsaved Bean');
+  });
 });

@@ -1,4 +1,4 @@
-import { render, screen, within, waitFor } from '@testing-library/react';
+import { act, render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mockBeans } from '../test/fixtures';
@@ -14,6 +14,16 @@ vi.mock('../utils/photoExif', async (importOriginal) => {
 vi.mock('../services/weather', () => ({
   fetchWeatherAt: vi.fn(),
 }));
+
+function deferred<T = void>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return { promise, resolve, reject };
+}
 
 describe('AddShotForm', () => {
   afterEach(() => {
@@ -79,6 +89,32 @@ describe('AddShotForm', () => {
         photos: [],
       },
       photoBlobs: [],
+    });
+  });
+
+  it('keeps the submit button disabled until the shot save finishes', async () => {
+    const user = userEvent.setup();
+    const save = deferred();
+    const onAddShot = vi.fn(() => save.promise);
+
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+
+    await user.type(within(form).getByLabelText('Grind setting'), '14.5');
+    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
+
+    await waitFor(() => {
+      expect(onAddShot).toHaveBeenCalledTimes(1);
+    });
+    expect(within(form).getByRole('button', { name: 'Saving…' })).toBeDisabled();
+
+    await act(async () => {
+      save.resolve();
+      await save.promise;
+    });
+
+    await waitFor(() => {
+      expect(within(form).getByRole('button', { name: 'Add shot' })).not.toBeDisabled();
     });
   });
 
