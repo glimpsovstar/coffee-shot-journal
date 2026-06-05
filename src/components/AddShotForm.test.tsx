@@ -107,6 +107,28 @@ describe('AddShotForm', () => {
     });
   });
 
+  it('accepts typed suburb name without clicking the dropdown', async () => {
+    const user = userEvent.setup();
+    const onAddShot = vi.fn();
+    vi.mocked(weather.fetchWeatherAt).mockResolvedValue({
+      temperatureC: 20,
+      humidityPercent: 55,
+      description: 'Clear',
+      source: 'open-meteo',
+      observedAt: '2026-06-04T09:00',
+    });
+
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+
+    await user.type(within(form).getByLabelText('Suburb'), 'Melbourne');
+    await user.type(within(form).getByLabelText('Grind setting'), '14');
+    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
+
+    await waitFor(() => expect(onAddShot).toHaveBeenCalled());
+    expect(onAddShot.mock.calls[0]![0].shot.brewSuburb?.label).toMatch(/Melbourne/);
+  });
+
   it('fetches weather when suburb is selected on submit', async () => {
     const user = userEvent.setup();
     const onAddShot = vi.fn();

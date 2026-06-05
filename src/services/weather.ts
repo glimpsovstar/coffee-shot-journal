@@ -48,6 +48,7 @@ function parseHourlyWeather(data: HourlyWeatherResponse, at: Date): ShotWeather 
     temperatureC: Math.round(temperatureC * 10) / 10,
     humidityPercent: Math.round(humidityPercent),
     description: describeWeatherCode(code),
+    weatherCode: code,
     source: 'open-meteo',
     observedAt: hourly.time[index]!,
   };

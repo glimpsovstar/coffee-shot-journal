@@ -26,6 +26,39 @@ export function getSuburbById(id: string): SuburbEntry | undefined {
   return AU_NZ_SUBURBS.find((s) => s.id === id);
 }
 
+/**
+ * Resolve typed text to a curated suburb when it clearly matches (no dropdown click).
+ */
+export function resolveSuburbFromQuery(query: string): SuburbEntry | null {
+  const trimmed = query.trim();
+  if (!trimmed) return null;
+
+  const lower = trimmed.toLowerCase();
+
+  const byLabel = AU_NZ_SUBURBS.find(
+    (s) => formatSuburbLabel(s).toLowerCase() === lower,
+  );
+  if (byLabel) return byLabel;
+
+  const byName = AU_NZ_SUBURBS.filter((s) => s.name.toLowerCase() === lower);
+  if (byName.length === 1) return byName[0]!;
+
+  const matches = searchSuburbs(trimmed, 20);
+  if (matches.length === 1) {
+    const only = matches[0]!;
+    if (only.name.toLowerCase() === lower) return only;
+  }
+
+  // "Wantirna, VIC" — match name segment before comma
+  const namePart = trimmed.split(',')[0]?.trim().toLowerCase();
+  if (namePart) {
+    const byNamePart = AU_NZ_SUBURBS.filter((s) => s.name.toLowerCase() === namePart);
+    if (byNamePart.length === 1) return byNamePart[0]!;
+  }
+
+  return null;
+}
+
 function toRad(deg: number): number {
   return (deg * Math.PI) / 180;
 }

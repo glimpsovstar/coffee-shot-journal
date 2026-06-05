@@ -49,6 +49,8 @@ export interface ShotWeather {
   temperatureC: number;
   humidityPercent: number;
   description: string;
+  /** WMO code from Open-Meteo; optional for shots saved before this field existed. */
+  weatherCode?: number;
   source: 'open-meteo';
   observedAt: string;
 }

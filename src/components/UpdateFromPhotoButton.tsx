@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { SuburbEntry } from '../data/auNzSuburbs';
 import { toDatetimeLocalValue } from '../utils/datetime';
-import { extractShotMetadataFromBlob } from '../utils/photoExif';
+import { reverseGeocodeSuburb } from '../services/geocoding';
+import { extractShotMetadataFromBlob, formatGpsLocation } from '../utils/photoExif';
 import { findNearestSuburb, formatSuburbLabel } from '../utils/suburbs';
 
 export interface ShotFormMetadataUpdate {
@@ -42,7 +43,16 @@ export function UpdateFromPhotoButton({ imageBlob, onUpdate }: UpdateFromPhotoBu
           patch.suburb = nearest;
           patch.suburbQuery = formatSuburbLabel(nearest);
         } else {
-          messages.push('GPS is outside the AU/NZ suburb list — search manually.');
+          const geocoded = await reverseGeocodeSuburb(gps.latitude, gps.longitude);
+          if (geocoded) {
+            patch.suburb = geocoded;
+            patch.suburbQuery = formatSuburbLabel(geocoded);
+            messages.push('Set suburb from photo GPS.');
+          } else {
+            messages.push(
+              `GPS ${formatGpsLocation(gps.latitude, gps.longitude)} — pick suburb manually.`,
+            );
+          }
         }
       }
 

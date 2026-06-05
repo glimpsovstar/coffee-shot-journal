@@ -13,9 +13,9 @@ import { StarRating } from './StarRating';
 import { SuburbAutocomplete } from './SuburbAutocomplete';
 import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFromPhotoButton';
 
-interface AddShotFormProps {
+interface ImportShotFormProps {
   beans: Bean[];
-  onAddShot: (payload: AddShotPayload) => void;
+  onImportShot: (payload: AddShotPayload) => void;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -25,13 +25,14 @@ interface PendingPhoto extends PhotoBlobInput {
 const defaultFormState = (beans: Bean[]) => ({
   beanId: beans[0]?.id ?? '',
   brewedAt: toDatetimeLocalValue(new Date()),
-  grinder: 'Niche Zero',
+  grinder: '',
   grindSetting: '',
-  doseIn: '18',
-  yieldOut: '36',
-  extractionTime: '28',
+  doseIn: '',
+  yieldOut: '',
+  extractionTime: '',
   tastingNotes: '',
-  rating: 4 as 1 | 2 | 3 | 4 | 5,
+  rating: 3 as 1 | 2 | 3 | 4 | 5,
+  fetchWeather: true,
 });
 
 function clearPendingPhotos(pending: PendingPhoto[]) {
@@ -40,7 +41,15 @@ function clearPendingPhotos(pending: PendingPhoto[]) {
   }
 }
 
-export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
+function parseOptionalPositive(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const n = parseFloat(trimmed);
+  if (Number.isNaN(n) || n <= 0) return undefined;
+  return n;
+}
+
+export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
   const [form, setForm] = useState(() => defaultFormState(beans));
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const pendingPhotosRef = useRef(pendingPhotos);
@@ -85,33 +94,26 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       return;
     }
 
-    const doseIn = parseFloat(form.doseIn);
-    const yieldOut = parseFloat(form.yieldOut);
-    const extractionTime = parseFloat(form.extractionTime);
-
-    if (!form.grindSetting.trim()) {
-      setError('Grind setting is required.');
-      return;
-    }
-
-    if (Number.isNaN(doseIn) || doseIn <= 0) {
-      setError('Dose must be a positive number.');
-      return;
-    }
-
-    if (Number.isNaN(yieldOut) || yieldOut <= 0) {
-      setError('Yield must be a positive number.');
-      return;
-    }
-
-    if (Number.isNaN(extractionTime) || extractionTime <= 0) {
-      setError('Extraction time must be a positive number.');
-      return;
-    }
-
     const brewedAt = new Date(form.brewedAt);
     if (Number.isNaN(brewedAt.getTime())) {
       setError('Please enter a valid date and time.');
+      return;
+    }
+
+    const doseIn = parseOptionalPositive(form.doseIn);
+    const yieldOut = parseOptionalPositive(form.yieldOut);
+    const extractionTime = parseOptionalPositive(form.extractionTime);
+
+    if (form.doseIn.trim() && doseIn === undefined) {
+      setError('Dose must be a positive number if provided.');
+      return;
+    }
+    if (form.yieldOut.trim() && yieldOut === undefined) {
+      setError('Yield must be a positive number if provided.');
+      return;
+    }
+    if (form.extractionTime.trim() && extractionTime === undefined) {
+      setError('Extraction time must be a positive number if provided.');
       return;
     }
 
@@ -137,7 +139,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       }
 
       let weather;
-      if (resolvedSuburb) {
+      if (form.fetchWeather && resolvedSuburb) {
         setStatusMessage('Fetching weather for this brew…');
         try {
           weather = await fetchWeatherAt({
@@ -154,7 +156,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
         }
       }
 
-      onAddShot({
+      onImportShot({
         shot: {
           beanId: form.beanId,
           brewedAt: brewedAt.toISOString(),
@@ -162,9 +164,9 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
           ...(weather ? { weather } : {}),
           grinder: form.grinder.trim(),
           grindSetting: form.grindSetting.trim(),
-          doseIn,
-          yieldOut,
-          extractionTime,
+          doseIn: doseIn ?? 0,
+          yieldOut: yieldOut ?? 0,
+          extractionTime: extractionTime ?? 0,
           tastingNotes: form.tastingNotes.trim(),
           rating: form.rating,
           photos: pendingPhotos.map((p) => p.photo),
@@ -177,7 +179,8 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       setSelectedSuburb(null);
       setSuburbQuery('');
       setForm(defaultFormState(beans));
-      setStatusMessage(null);
+      setStatusMessage('Shot imported.');
+      setTimeout(() => setStatusMessage(null), 3000);
     } finally {
       setSubmitting(false);
     }
@@ -186,7 +189,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
   if (beans.length === 0) {
     return (
       <section className="panel">
-        <p className="empty-state">Add beans to the catalogue before logging shots.</p>
+        <p className="empty-state">Add beans to the catalogue before importing shots.</p>
       </section>
     );
   }
@@ -212,13 +215,17 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
   };
 
   return (
-    <section className="panel" aria-labelledby="add-shot-heading">
-      <h2 id="add-shot-heading">Log a shot</h2>
+    <section className="panel" aria-labelledby="import-shot-heading">
+      <h2 id="import-shot-heading">Import past shot</h2>
+      <p className="panel__intro">
+        Backfill shots from memory or old photos. Only bean and date are required — leave recipe
+        fields blank if you do not remember them.
+      </p>
       <form className="shot-form" onSubmit={handleSubmit} noValidate>
         <div className="form-row">
-          <label htmlFor="beanId">Bean</label>
+          <label htmlFor="import-beanId">Bean</label>
           <select
-            id="beanId"
+            id="import-beanId"
             value={form.beanId}
             onChange={(e) => setForm((f) => ({ ...f, beanId: e.target.value }))}
             required
@@ -233,9 +240,9 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
 
         <div className="form-row form-row--pair">
           <div>
-            <label htmlFor="brewedAt">Brewed</label>
+            <label htmlFor="import-brewedAt">Brewed</label>
             <input
-              id="brewedAt"
+              id="import-brewedAt"
               type="datetime-local"
               value={form.brewedAt}
               onChange={(e) => setForm((f) => ({ ...f, brewedAt: e.target.value }))}
@@ -244,8 +251,8 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
           </div>
           <div>
             <SuburbAutocomplete
-              id="brewSuburb"
-              label="Suburb"
+              id="import-brewSuburb"
+              label="Suburb (optional)"
               value={selectedSuburb}
               inputValue={suburbQuery}
               onInputChange={setSuburbQuery}
@@ -256,82 +263,77 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
 
         <div className="form-row form-row--pair">
           <div>
-            <label htmlFor="grinder">Grinder</label>
+            <label htmlFor="import-grinder">Grinder (optional)</label>
             <input
-              id="grinder"
+              id="import-grinder"
               type="text"
               value={form.grinder}
               onChange={(e) => setForm((f) => ({ ...f, grinder: e.target.value }))}
-              required
+              placeholder="e.g. Niche Zero"
             />
           </div>
           <div>
-            <label htmlFor="grindSetting">Grind setting</label>
+            <label htmlFor="import-grindSetting">Grind setting (optional)</label>
             <input
-              id="grindSetting"
+              id="import-grindSetting"
               type="text"
               value={form.grindSetting}
               onChange={(e) => setForm((f) => ({ ...f, grindSetting: e.target.value }))}
               placeholder="e.g. 14.5"
-              required
             />
           </div>
         </div>
 
         <div className="form-row form-row--triple">
           <div>
-            <label htmlFor="doseIn">Dose in (g)</label>
+            <label htmlFor="import-doseIn">Dose in (g, optional)</label>
             <input
-              id="doseIn"
+              id="import-doseIn"
               type="number"
               min="0.1"
               step="0.1"
               value={form.doseIn}
               onChange={(e) => setForm((f) => ({ ...f, doseIn: e.target.value }))}
-              required
             />
           </div>
           <div>
-            <label htmlFor="yieldOut">Yield out (g)</label>
+            <label htmlFor="import-yieldOut">Yield out (g, optional)</label>
             <input
-              id="yieldOut"
+              id="import-yieldOut"
               type="number"
               min="0.1"
               step="0.1"
               value={form.yieldOut}
               onChange={(e) => setForm((f) => ({ ...f, yieldOut: e.target.value }))}
-              required
             />
           </div>
           <div>
-            <label htmlFor="extractionTime">Time (s)</label>
+            <label htmlFor="import-extractionTime">Time (s, optional)</label>
             <input
-              id="extractionTime"
+              id="import-extractionTime"
               type="number"
               min="1"
               step="1"
               value={form.extractionTime}
               onChange={(e) => setForm((f) => ({ ...f, extractionTime: e.target.value }))}
-              required
             />
           </div>
         </div>
 
         <div className="form-row">
-          <label htmlFor="tastingNotes">Tasting notes</label>
+          <label htmlFor="import-tastingNotes">Tasting notes (optional)</label>
           <textarea
-            id="tastingNotes"
+            id="import-tastingNotes"
             rows={3}
             value={form.tastingNotes}
             onChange={(e) => setForm((f) => ({ ...f, tastingNotes: e.target.value }))}
-            placeholder="Optional — acidity, body, what to try next…"
           />
         </div>
 
         <PhotoUpload
           existingCount={pendingPhotos.length}
           onPhotosAdded={handlePhotosAdded}
-          label="Shot photos"
+          label="Shot photos (optional)"
         />
         <PhotoGalleryEditable
           items={pendingDisplay}
@@ -343,9 +345,20 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
         <StarRating
           value={form.rating}
           onChange={(rating) => setForm((f) => ({ ...f, rating }))}
-          name="shot-rating"
+          name="import-shot-rating"
           label="Rating"
         />
+
+        <div className="form-row form-row--checkbox">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={form.fetchWeather}
+              onChange={(e) => setForm((f) => ({ ...f, fetchWeather: e.target.checked }))}
+            />
+            Look up weather when suburb is set
+          </label>
+        </div>
 
         {statusMessage && (
           <p className="photo-upload__hint" aria-live="polite">
@@ -360,7 +373,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
         )}
 
         <button type="submit" className="btn-primary" disabled={submitting}>
-          {submitting ? 'Saving…' : 'Add shot'}
+          {submitting ? 'Importing…' : 'Import shot'}
         </button>
       </form>
     </section>

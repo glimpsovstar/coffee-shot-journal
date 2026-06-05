@@ -1,8 +1,16 @@
 import type { Bean, PhotoDisplay, Shot } from '../types';
 import { formatBeanChoiceLabel } from '../utils/beans';
-import { formatBrewedAt, formatShotWeather, getBeanById, getShotLocationLabel, ratio } from '../utils/shots';
+import {
+  formatBrewedAt,
+  getBeanById,
+  getShotLocationLabel,
+  hasShotGrinder,
+  hasShotRecipe,
+  ratio,
+} from '../utils/shots';
 import { PhotoGallery } from './PhotoGallery';
 import { StarRating } from './StarRating';
+import { WeatherDisplay } from './WeatherDisplay';
 
 interface ShotCardProps {
   shot: Shot;
@@ -27,19 +35,23 @@ export function ShotCard({ shot, beans, photoItems }: ShotCardProps) {
       </header>
       <PhotoGallery items={photoItems} label="Shot photos" />
       <dl className="detail-list detail-list--inline">
-        <div>
-          <dt>Grinder</dt>
-          <dd>
-            {shot.grinder} · setting {shot.grindSetting}
-          </dd>
-        </div>
-        <div>
-          <dt>Recipe</dt>
-          <dd>
-            {shot.doseIn}g in → {shot.yieldOut}g out ({ratio(shot.doseIn, shot.yieldOut)}) ·{' '}
-            {shot.extractionTime}s
-          </dd>
-        </div>
+        {hasShotGrinder(shot) && (
+          <div>
+            <dt>Grinder</dt>
+            <dd>
+              {shot.grinder} · setting {shot.grindSetting}
+            </dd>
+          </div>
+        )}
+        {hasShotRecipe(shot) && (
+          <div>
+            <dt>Recipe</dt>
+            <dd>
+              {shot.doseIn}g in → {shot.yieldOut}g out ({ratio(shot.doseIn, shot.yieldOut)}) ·{' '}
+              {shot.extractionTime}s
+            </dd>
+          </div>
+        )}
         {getShotLocationLabel(shot) && (
           <div>
             <dt>Suburb</dt>
@@ -49,7 +61,9 @@ export function ShotCard({ shot, beans, photoItems }: ShotCardProps) {
         {shot.weather && (
           <div>
             <dt>Weather</dt>
-            <dd>{formatShotWeather(shot.weather)}</dd>
+            <dd>
+              <WeatherDisplay weather={shot.weather} />
+            </dd>
           </div>
         )}
         {shot.tastingNotes && (

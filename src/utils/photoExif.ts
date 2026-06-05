@@ -14,6 +14,8 @@ type ExifPick = {
   longitude?: number;
 };
 
+const EXIF_READ_OPTIONS = { reviveValues: true };
+
 function parseExifDate(value: Date | string | undefined): Date | undefined {
   if (!value) return undefined;
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
@@ -35,49 +37,99 @@ export function formatGpsLocation(latitude: number, longitude: number): string {
   return `${Math.abs(latitude).toFixed(5)}° ${latHem}, ${Math.abs(longitude).toFixed(5)}° ${lonHem}`;
 }
 
-export async function extractShotMetadataFromBlob(blob: Blob): Promise<ShotPhotoMetadata> {
-  const messages: string[] = [];
+/** exifr reads ArrayBuffer reliably; Blob can fail outside the browser. */
+async function toExifInput(blob: Blob): Promise<ArrayBuffer> {
+  return blob.arrayBuffer();
+}
 
-  let exif: ExifPick | null = null;
+async function extractGpsFromBuffer(
+  buffer: ArrayBuffer,
+): Promise<{ latitude: number; longitude: number } | undefined> {
   try {
-    exif = (await exifr.parse(blob, {
+    const gps = await exifr.gps(buffer);
+    if (
+      gps &&
+      typeof gps.latitude === 'number' &&
+      typeof gps.longitude === 'number' &&
+      !Number.isNaN(gps.latitude) &&
+      !Number.isNaN(gps.longitude)
+    ) {
+      return { latitude: gps.latitude, longitude: gps.longitude };
+    }
+  } catch {
+    // fall through to parse()
+  }
+
+  try {
+    const parsed = (await exifr.parse(buffer, {
+      ...EXIF_READ_OPTIONS,
       gps: true,
-      pick: ['DateTimeOriginal', 'CreateDate', 'ModifyDate', 'latitude', 'longitude'],
+      pick: ['latitude', 'longitude'],
+    })) as ExifPick | null;
+
+    const lat = parsed?.latitude;
+    const lon = parsed?.longitude;
+    if (
+      typeof lat === 'number' &&
+      typeof lon === 'number' &&
+      !Number.isNaN(lat) &&
+      !Number.isNaN(lon)
+    ) {
+      return { latitude: lat, longitude: lon };
+    }
+  } catch {
+    // no GPS
+  }
+
+  return undefined;
+}
+
+async function extractDatesFromBuffer(buffer: ArrayBuffer): Promise<ExifPick | null> {
+  try {
+    return (await exifr.parse(buffer, {
+      ...EXIF_READ_OPTIONS,
+      pick: ['DateTimeOriginal', 'CreateDate', 'ModifyDate'],
     })) as ExifPick | null;
   } catch {
-    messages.push('Could not read metadata from this image.');
+    return null;
+  }
+}
+
+export async function extractShotMetadataFromBlob(blob: Blob): Promise<ShotPhotoMetadata> {
+  const messages: string[] = [];
+  const buffer = await toExifInput(blob);
+
+  const exif = await extractDatesFromBuffer(buffer);
+  const brewedAt = exif ? pickBrewedDate(exif) : undefined;
+  const gps = await extractGpsFromBuffer(buffer);
+  const hasGps = gps !== undefined;
+
+  if (!exif && !hasGps) {
+    messages.push(
+      'No metadata in this photo. WhatsApp, Messages, and many editors strip location — use the original from your Photos app.',
+    );
     return { messages };
   }
-
-  if (!exif) {
-    messages.push('No metadata found in this photo (common after messaging apps or edits).');
-    return { messages };
-  }
-
-  const brewedAt = pickBrewedDate(exif);
-  const lat = exif.latitude;
-  const lon = exif.longitude;
-  const hasGps =
-    typeof lat === 'number' &&
-    typeof lon === 'number' &&
-    !Number.isNaN(lat) &&
-    !Number.isNaN(lon);
 
   if (brewedAt) {
     messages.push('Set brewed date and time from photo.');
-  } else {
+  } else if (exif) {
     messages.push('No date/time found in photo metadata.');
   }
 
   if (hasGps) {
-    messages.push('GPS found — pick the nearest suburb from suggestions.');
+    messages.push(
+      `GPS found (${formatGpsLocation(gps!.latitude, gps!.longitude)}) — suburb filled when possible.`,
+    );
   } else {
-    messages.push('No GPS in photo (enable Location when taking iPhone photos).');
+    messages.push(
+      'No GPS in this file. Use an unedited original (Camera roll / Files), with Location enabled when shooting.',
+    );
   }
 
   return {
     brewedAt,
-    gps: hasGps ? { latitude: lat!, longitude: lon! } : undefined,
+    gps,
     messages,
   };
 }

@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from 'react';
 import type { SuburbEntry } from '../data/auNzSuburbs';
-import { formatSuburbLabel, searchSuburbs } from '../utils/suburbs';
+import { formatSuburbLabel, resolveSuburbFromQuery, searchSuburbs } from '../utils/suburbs';
 
 interface SuburbAutocompleteProps {
   id?: string;
@@ -35,6 +35,10 @@ export function SuburbAutocomplete({
   };
 
   const handleBlur = () => {
+    const resolved = resolveSuburbFromQuery(inputValue);
+    if (resolved) {
+      selectSuburb(resolved);
+    }
     blurTimeout.current = setTimeout(() => setOpen(false), 150);
   };
 
@@ -111,7 +115,9 @@ export function SuburbAutocomplete({
           ))}
         </ul>
       )}
-      <p className="photo-upload__hint">Australia and New Zealand suburbs only.</p>
+      <p className="photo-upload__hint">
+        Australia and New Zealand only. Type &quot;Suburb, VIC&quot; if yours is not listed.
+      </p>
     </div>
   );
 }

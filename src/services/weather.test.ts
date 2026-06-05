@@ -30,6 +30,7 @@ describe('fetchWeatherAt', () => {
 
     expect(weather.temperatureC).toBe(16);
     expect(weather.humidityPercent).toBe(65);
+    expect(weather.weatherCode).toBe(2);
     expect(weather.description).toMatch(/cloud/i);
     expect(weather.source).toBe('open-meteo');
   });
