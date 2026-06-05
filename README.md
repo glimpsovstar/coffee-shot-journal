@@ -39,6 +39,8 @@ There is no backend or cloud upload. Clearing browser site data removes your jou
 |-------|-------------|
 | Bean | Which bean was used |
 | Brewed | Date and time of the pull |
+| Suburb | Optional AU/NZ suburb typeahead; **Update from photo** can suggest nearest suburb from GPS |
+| Weather | Fetched on save when suburb is set (Open-Meteo, temperature, humidity, conditions) |
 | Grinder & grind setting | Equipment and setting |
 | Dose in / yield out | Input and output in grams |
 | Extraction time | Pull time in seconds |

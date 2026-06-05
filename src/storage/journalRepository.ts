@@ -22,7 +22,19 @@ function normalizeBeans(beans: Bean[]): Bean[] {
 }
 
 function normalizeShots(shots: Shot[]): Shot[] {
-  return shots.map((shot) => ({ ...shot, photos: shot.photos ?? [] }));
+  return shots.map((shot) => {
+    const normalized: Shot = { ...shot, photos: shot.photos ?? [] };
+    if (!normalized.brewedLocation?.trim()) {
+      delete normalized.brewedLocation;
+    }
+    if (!normalized.brewSuburb?.id) {
+      delete normalized.brewSuburb;
+    }
+    if (!normalized.weather?.description) {
+      delete normalized.weather;
+    }
+    return normalized;
+  });
 }
 
 /** Copy beans/shots from pre-v2 `meta` store (opened at DB version 1). */

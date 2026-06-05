@@ -4,9 +4,12 @@ import {
   formatBrewedAt,
   formatRoastDate,
   getBeanById,
+  hasShotGrinder,
+  hasShotRecipe,
   ratio,
   sortShotsNewestFirst,
 } from './shots';
+import type { Shot } from '../types';
 
 describe('getBeanById', () => {
   it('returns the bean when id matches', () => {
@@ -57,6 +60,29 @@ describe('formatBrewedAt', () => {
       dateStyle: 'medium',
       timeStyle: 'short',
     });
+  });
+});
+
+describe('partial shot display helpers', () => {
+  const fullShot: Shot = {
+    id: 's1',
+    beanId: 'b1',
+    brewedAt: '2026-06-01T08:00:00',
+    grinder: 'Niche',
+    grindSetting: '14',
+    doseIn: 18,
+    yieldOut: 36,
+    extractionTime: 28,
+    tastingNotes: '',
+    rating: 4,
+    photos: [],
+  };
+
+  it('detects missing recipe and grinder on imported shots', () => {
+    const imported = { ...fullShot, doseIn: 0, yieldOut: 0, extractionTime: 0, grinder: '', grindSetting: '' };
+    expect(hasShotRecipe(imported)).toBe(false);
+    expect(hasShotGrinder(imported)).toBe(false);
+    expect(hasShotRecipe(fullShot)).toBe(true);
   });
 });
 

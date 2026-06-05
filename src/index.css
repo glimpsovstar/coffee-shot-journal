@@ -75,6 +75,48 @@ dl {
   max-width: 36rem;
 }
 
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.app-nav__link {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.app-nav__link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.app-nav__link--active {
+  color: var(--surface);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.form-row--checkbox {
+  margin-top: 0.25rem;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
 .app-layout {
   display: grid;
   gap: 1.5rem;
@@ -148,6 +190,29 @@ dl {
 
 .detail-list dd {
   margin: 0.15rem 0 0;
+}
+
+.weather-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.weather-display__primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text);
+}
+
+.weather-display__temp {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.weather-display__details {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .shot-card__header {
@@ -451,7 +516,8 @@ dl {
   color: var(--text-muted);
 }
 
-.label-scan {
+.label-scan,
+.photo-metadata-update {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -469,4 +535,50 @@ dl {
   margin-top: 0.75rem;
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+.suburb-autocomplete {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.suburb-autocomplete__list {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 0.15rem 0 0;
+  padding: 0.25rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.suburb-autocomplete__list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.45rem 0.65rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.suburb-autocomplete__option--active,
+.suburb-autocomplete__list button:hover {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }

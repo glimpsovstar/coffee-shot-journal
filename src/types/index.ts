@@ -38,10 +38,33 @@ export interface Bean {
   photos: Photo[];
 }
 
+export interface StoredBrewSuburb {
+  id: string;
+  label: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface ShotWeather {
+  temperatureC: number;
+  humidityPercent: number;
+  description: string;
+  /** WMO code from Open-Meteo; optional for shots saved before this field existed. */
+  weatherCode?: number;
+  source: 'open-meteo';
+  observedAt: string;
+}
+
 export interface Shot {
   id: string;
   beanId: string;
   brewedAt: string;
+  /** AU/NZ suburb selected from catalogue. */
+  brewSuburb?: StoredBrewSuburb;
+  /** Weather at brew time (Open-Meteo). */
+  weather?: ShotWeather;
+  /** @deprecated Legacy free-text or GPS string. */
+  brewedLocation?: string;
   grinder: string;
   grindSetting: string;
   doseIn: number;
