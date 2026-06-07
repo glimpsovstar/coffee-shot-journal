@@ -30,7 +30,11 @@ export function useJournal() {
   const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const beansRef = useRef<Bean[]>([]);
+  const shotsRef = useRef<Shot[]>([]);
   const photoUrlsRef = useRef<Map<string, string>>(new Map());
+  const beanMutationQueueRef = useRef(Promise.resolve());
+  const shotMutationQueueRef = useRef(Promise.resolve());
 
   const syncPhotoUrlsRef = useCallback((urls: Map<string, string>) => {
     photoUrlsRef.current = urls;
@@ -51,6 +55,18 @@ export function useJournal() {
     photoUrlsRef.current.forEach((url) => revokePhotoObjectUrl(url));
     syncPhotoUrlsRef(next);
   }, [syncPhotoUrlsRef]);
+
+  const enqueueBeanMutation = useCallback((mutation: () => Promise<void>) => {
+    const run = beanMutationQueueRef.current.then(mutation, mutation);
+    beanMutationQueueRef.current = run.catch(() => undefined);
+    return run;
+  }, []);
+
+  const enqueueShotMutation = useCallback((mutation: () => Promise<void>) => {
+    const run = shotMutationQueueRef.current.then(mutation, mutation);
+    shotMutationQueueRef.current = run.catch(() => undefined);
+    return run;
+  }, []);
 
   const registerPhotoUrls = useCallback(
     (inputs: PhotoBlobInput[]) => {
@@ -85,6 +101,8 @@ export function useJournal() {
       try {
         const data = await loadJournal();
         if (cancelled) return;
+        beansRef.current = data.beans;
+        shotsRef.current = data.shots;
         setBeans(data.beans);
         setShots(data.shots);
         await hydratePhotoUrls(data.beans, data.shots);
@@ -124,12 +142,16 @@ export function useJournal() {
         ...payload.bean,
         id: crypto.randomUUID(),
       };
-      const nextBeans = [bean, ...beans];
-      await saveBeans(nextBeans);
-      registerPhotoUrls(payload.photoBlobs);
-      setBeans(nextBeans);
+
+      await enqueueBeanMutation(async () => {
+        const nextBeans = [bean, ...beansRef.current];
+        await saveBeans(nextBeans);
+        beansRef.current = nextBeans;
+        registerPhotoUrls(payload.photoBlobs);
+        setBeans(nextBeans);
+      });
     },
-    [beans, registerPhotoUrls],
+    [enqueueBeanMutation, registerPhotoUrls],
   );
 
   const addShot = useCallback(
@@ -142,12 +164,16 @@ export function useJournal() {
         ...payload.shot,
         id: crypto.randomUUID(),
       };
-      const nextShots = [shot, ...shots];
-      await saveShots(nextShots);
-      registerPhotoUrls(payload.photoBlobs);
-      setShots(nextShots);
+
+      await enqueueShotMutation(async () => {
+        const nextShots = [shot, ...shotsRef.current];
+        await saveShots(nextShots);
+        shotsRef.current = nextShots;
+        registerPhotoUrls(payload.photoBlobs);
+        setShots(nextShots);
+      });
     },
-    [shots, registerPhotoUrls],
+    [enqueueShotMutation, registerPhotoUrls],
   );
 
   const addBeanPhotos = useCallback(
@@ -156,32 +182,38 @@ export function useJournal() {
         await putPhotoBlob(photo.id, blob);
       }
 
-      const nextBeans = beans.map((bean) =>
-        bean.id === beanId
-          ? { ...bean, photos: [...bean.photos, ...inputs.map((i) => i.photo)] }
-          : bean,
-      );
-      await saveBeans(nextBeans);
-      registerPhotoUrls(inputs);
-      setBeans(nextBeans);
+      await enqueueBeanMutation(async () => {
+        const nextBeans = beansRef.current.map((bean) =>
+          bean.id === beanId
+            ? { ...bean, photos: [...bean.photos, ...inputs.map((i) => i.photo)] }
+            : bean,
+        );
+        await saveBeans(nextBeans);
+        beansRef.current = nextBeans;
+        registerPhotoUrls(inputs);
+        setBeans(nextBeans);
+      });
     },
-    [beans, registerPhotoUrls],
+    [enqueueBeanMutation, registerPhotoUrls],
   );
 
   const removeBeanPhoto = useCallback(
     async (beanId: string, photoId: string) => {
+      await enqueueBeanMutation(async () => {
+        const nextBeans = beansRef.current.map((bean) =>
+          bean.id === beanId
+            ? { ...bean, photos: bean.photos.filter((p) => p.id !== photoId) }
+            : bean,
+        );
+        await saveBeans(nextBeans);
+        beansRef.current = nextBeans;
+        setBeans(nextBeans);
+      });
+
       await deletePhotoBlob(photoId);
       unregisterPhotoUrl(photoId);
-
-      const nextBeans = beans.map((bean) =>
-        bean.id === beanId
-          ? { ...bean, photos: bean.photos.filter((p) => p.id !== photoId) }
-          : bean,
-      );
-      await saveBeans(nextBeans);
-      setBeans(nextBeans);
     },
-    [beans, unregisterPhotoUrl],
+    [enqueueBeanMutation, unregisterPhotoUrl],
   );
 
   return {

@@ -175,4 +175,20 @@ describe('AddShotForm', () => {
     expect(within(form).getByRole('alert')).toHaveTextContent('Dose must be a positive number.');
     expect(onAddShot).not.toHaveBeenCalled();
   });
+
+  it('keeps the filled form when saving the shot fails', async () => {
+    const user = userEvent.setup();
+    const onAddShot = vi.fn().mockRejectedValue(new Error('IndexedDB quota exceeded'));
+
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+
+    await user.type(within(form).getByLabelText('Grind setting'), '14');
+    await user.type(within(form).getByLabelText('Tasting notes'), 'Do not lose this draft.');
+    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
+
+    expect(await within(form).findByRole('alert')).toHaveTextContent('IndexedDB quota exceeded');
+    expect(within(form).getByLabelText('Grind setting')).toHaveValue('14');
+    expect(within(form).getByLabelText('Tasting notes')).toHaveValue('Do not lose this draft.');
+  });
 });

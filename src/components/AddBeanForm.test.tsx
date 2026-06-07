@@ -67,4 +67,22 @@ describe('AddBeanForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/total 100%/i);
     expect(onAddBean).not.toHaveBeenCalled();
   });
+
+  it('keeps the bean draft when saving fails', async () => {
+    const user = userEvent.setup();
+    const onAddBean = vi.fn().mockRejectedValue(new Error('Unable to save bean'));
+
+    render(<AddBeanForm onAddBean={onAddBean} />);
+
+    await user.type(screen.getByLabelText('Name'), 'Draft Bean');
+    await user.type(screen.getByLabelText('Roaster'), 'Draft Roasters');
+    await user.type(screen.getByLabelText('Origin'), 'Draft Origin');
+    await user.type(screen.getByLabelText('Roast date'), '2026-05-01');
+    await user.click(screen.getByRole('button', { name: 'Add bean' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to save bean');
+    expect(screen.getByLabelText('Name')).toHaveValue('Draft Bean');
+    expect(screen.getByLabelText('Roaster')).toHaveValue('Draft Roasters');
+    expect(screen.getByLabelText('Origin')).toHaveValue('Draft Origin');
+  });
 });

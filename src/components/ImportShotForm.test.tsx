@@ -40,4 +40,17 @@ describe('ImportShotForm', () => {
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
+
+  it('keeps the import draft when saving fails', async () => {
+    const onImportShot = vi.fn().mockRejectedValue(new Error('Failed to write journal'));
+    const user = userEvent.setup();
+
+    render(<ImportShotForm beans={mockBeans} onImportShot={onImportShot} />);
+
+    await user.type(screen.getByLabelText(/Tasting notes/), 'Imported shot draft');
+    await user.click(screen.getByRole('button', { name: 'Import shot' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Failed to write journal');
+    expect(screen.getByLabelText(/Tasting notes/)).toHaveValue('Imported shot draft');
+  });
 });

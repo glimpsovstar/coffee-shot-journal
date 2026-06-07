@@ -24,7 +24,7 @@ import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
 
 interface AddBeanFormProps {
-  onAddBean: (payload: AddBeanPayload) => void;
+  onAddBean: (payload: AddBeanPayload) => void | Promise<void>;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -69,7 +69,10 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
   const [scanWarnings, setScanWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const pendingPhotosRef = useRef(pendingPhotos);
-  pendingPhotosRef.current = pendingPhotos;
+
+  useEffect(() => {
+    pendingPhotosRef.current = pendingPhotos;
+  }, [pendingPhotos]);
 
   useEffect(() => {
     return () => {
@@ -130,7 +133,7 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
     }));
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
 
@@ -144,10 +147,15 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
       return;
     }
 
-    onAddBean({
-      bean: validation.bean,
-      photoBlobs: pendingPhotos.map(({ photo, blob }) => ({ photo, blob })),
-    });
+    try {
+      await onAddBean({
+        bean: validation.bean,
+        photoBlobs: pendingPhotos.map(({ photo, blob }) => ({ photo, blob })),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save bean.');
+      return;
+    }
 
     clearPendingPhotos(pendingPhotos);
     setPendingPhotos([]);

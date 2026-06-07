@@ -15,7 +15,7 @@ import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFrom
 
 interface AddShotFormProps {
   beans: Bean[];
-  onAddShot: (payload: AddShotPayload) => void;
+  onAddShot: (payload: AddShotPayload) => void | Promise<void>;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -44,12 +44,15 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
   const [form, setForm] = useState(() => defaultFormState(beans));
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const pendingPhotosRef = useRef(pendingPhotos);
-  pendingPhotosRef.current = pendingPhotos;
   const [selectedSuburb, setSelectedSuburb] = useState<SuburbEntry | null>(null);
   const [suburbQuery, setSuburbQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    pendingPhotosRef.current = pendingPhotos;
+  }, [pendingPhotos]);
 
   useEffect(() => {
     return () => {
@@ -154,7 +157,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
         }
       }
 
-      onAddShot({
+      await onAddShot({
         shot: {
           beanId: form.beanId,
           brewedAt: brewedAt.toISOString(),
@@ -178,6 +181,9 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       setSuburbQuery('');
       setForm(defaultFormState(beans));
       setStatusMessage(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save shot.');
+      setStatusMessage(null);
     } finally {
       setSubmitting(false);
     }
@@ -198,7 +204,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
 
   const firstPhotoBlob = pendingPhotos[0]?.blob ?? null;
 
-  const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate, _messages: string[]) => {
+  const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate) => {
     setForm((f) => ({
       ...f,
       brewedAt: patch.brewedAt ?? f.brewedAt,

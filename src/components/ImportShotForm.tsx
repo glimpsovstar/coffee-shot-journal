@@ -15,7 +15,7 @@ import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFrom
 
 interface ImportShotFormProps {
   beans: Bean[];
-  onImportShot: (payload: AddShotPayload) => void;
+  onImportShot: (payload: AddShotPayload) => void | Promise<void>;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -53,12 +53,15 @@ export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
   const [form, setForm] = useState(() => defaultFormState(beans));
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const pendingPhotosRef = useRef(pendingPhotos);
-  pendingPhotosRef.current = pendingPhotos;
   const [selectedSuburb, setSelectedSuburb] = useState<SuburbEntry | null>(null);
   const [suburbQuery, setSuburbQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    pendingPhotosRef.current = pendingPhotos;
+  }, [pendingPhotos]);
 
   useEffect(() => {
     return () => {
@@ -156,7 +159,7 @@ export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
         }
       }
 
-      onImportShot({
+      await onImportShot({
         shot: {
           beanId: form.beanId,
           brewedAt: brewedAt.toISOString(),
@@ -181,6 +184,9 @@ export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
       setForm(defaultFormState(beans));
       setStatusMessage('Shot imported.');
       setTimeout(() => setStatusMessage(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to import shot.');
+      setStatusMessage(null);
     } finally {
       setSubmitting(false);
     }
@@ -201,7 +207,7 @@ export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
 
   const firstPhotoBlob = pendingPhotos[0]?.blob ?? null;
 
-  const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate, _messages: string[]) => {
+  const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate) => {
     setForm((f) => ({
       ...f,
       brewedAt: patch.brewedAt ?? f.brewedAt,

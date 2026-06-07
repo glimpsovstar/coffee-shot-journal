@@ -5,9 +5,9 @@ import { BeanCard } from './BeanCard';
 interface BeanCatalogueProps {
   beans: Bean[];
   resolvePhotos: (photos: Bean['photos']) => PhotoDisplay[];
-  onAddBean: (payload: AddBeanPayload) => void;
-  onAddBeanPhotos: (beanId: string, inputs: PhotoBlobInput[]) => void;
-  onRemoveBeanPhoto: (beanId: string, photoId: string) => void;
+  onAddBean: (payload: AddBeanPayload) => void | Promise<void>;
+  onAddBeanPhotos: (beanId: string, inputs: PhotoBlobInput[]) => void | Promise<void>;
+  onRemoveBeanPhoto: (beanId: string, photoId: string) => void | Promise<void>;
 }
 
 export function BeanCatalogue({
