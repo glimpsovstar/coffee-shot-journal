@@ -99,8 +99,8 @@ export function AuthScreen({
           </div>
 
           <p className="auth-panel__hint auth-panel__hint--compact">
-            After your first sign-in, tap <strong>Add passkey to this device</strong> in the journal
-            header for Face ID, Touch ID, or a security key on this device.
+            After your first sign-in, open <strong>Backup &amp; restore</strong> to optionally add a
+            passkey for Face ID, Touch ID, or a security key on this device.
           </p>
 
           {message ? (

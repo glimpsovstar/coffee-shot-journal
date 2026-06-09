@@ -26,7 +26,7 @@ export function PasskeySetupButton({ onRegisterPasskey }: PasskeySetupButtonProp
   return (
     <div className="passkey-setup">
       <button type="button" className="btn-secondary" disabled={loading} onClick={handleRegister}>
-        {loading ? 'Registering…' : 'Add passkey to this device'}
+        {loading ? 'Registering…' : 'Add passkey'}
       </button>
       {message ? <p className="passkey-setup__message">{message}</p> : null}
       {error ? (

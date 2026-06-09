@@ -75,7 +75,7 @@ P5:         Product backlog (#13–#16, export, charts, filters)
 2. **Enable sign-ups** if you want “Create account” via Google/Apple/GitHub on the landing page (or keep invite-only and create users in the dashboard).
 3. Enable **Passkeys** in Supabase Auth settings.
 4. **First visit:** landing page → **Continue with Google** (or Apple/GitHub) → journal opens.
-5. **Add passkey:** while signed in, tap **Add passkey to this device** in the header → Face ID / Touch ID.
+5. **Add passkey (optional):** while signed in, open **Backup & restore** → **Sign-in options** → **Add passkey**.
 6. **Return visits:** **Sign in with passkey** or the same social button.
 
 **Break-glass:** magic link from Authentication → Users still works if OAuth or passkeys fail.

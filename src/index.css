@@ -592,25 +592,58 @@ dl {
 }
 
 .app-header__account {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.5rem;
   flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.btn-ghost {
+  padding: 0.4rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  color: var(--accent);
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.passkey-setup {
+  margin-top: 0.75rem;
 }
 
 .passkey-setup__message {
   font-size: 0.875rem;
   color: var(--text-muted);
-  margin: 0.25rem 0 0;
-  text-align: right;
+  margin: 0.5rem 0 0;
 }
 
 .passkey-setup__error {
   font-size: 0.875rem;
   color: var(--error);
-  margin: 0.25rem 0 0;
-  text-align: right;
+  margin: 0.5rem 0 0;
+}
+
+.account-panel {
+  max-width: 40rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.account-panel p {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
 .auth-panel__hint ol {

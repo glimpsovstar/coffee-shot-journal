@@ -5,7 +5,7 @@ import { BeanCatalogue } from './components/BeanCatalogue';
 import { CloudImportPrompt } from './components/CloudImportPrompt';
 import { JournalBackupPanel } from './components/JournalBackupPanel';
 import { BrandedLogo } from './components/BrandedLogo';
-import { PasskeySetupButton } from './components/PasskeySetupButton';
+import { AccountSignInPanel } from './components/AccountSignInPanel';
 import { ImportShotForm } from './components/ImportShotForm';
 import { ShotList } from './components/ShotList';
 import { useAuth } from './hooks/useAuth';
@@ -62,16 +62,11 @@ function JournalApp({
               Track beans and espresso shots to learn what affects consistency and taste.
             </p>
           </div>
-          {onSignOut || onRegisterPasskey ? (
+          {onSignOut ? (
             <div className="app-header__account">
-              {onRegisterPasskey ? (
-                <PasskeySetupButton onRegisterPasskey={onRegisterPasskey} />
-              ) : null}
-              {onSignOut ? (
-                <button type="button" className="btn-secondary" onClick={onSignOut}>
-                  Sign out
-                </button>
-              ) : null}
+              <button type="button" className="btn-ghost" onClick={onSignOut}>
+                Sign out
+              </button>
             </div>
           ) : null}
         </div>
@@ -120,7 +115,12 @@ function JournalApp({
               <ShotList shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
             </>
           ) : (
-            <JournalBackupPanel cloudUserId={cloudUserId} onRestored={() => reloadJournal()} />
+            <>
+              {onRegisterPasskey ? (
+                <AccountSignInPanel onRegisterPasskey={onRegisterPasskey} />
+              ) : null}
+              <JournalBackupPanel cloudUserId={cloudUserId} onRestored={() => reloadJournal()} />
+            </>
           )}
         </main>
         <aside className="app-sidebar">
