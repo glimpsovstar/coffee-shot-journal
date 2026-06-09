@@ -70,9 +70,14 @@ P5:         Product backlog (#13–#16, export, charts, filters)
 | **Allowed origins** | `https://coffeesnob.withdevo.net` only (localhost is incompatible with RP ID `withdevo.net`) |
 
 1. Enable Passkeys in Supabase Auth settings.
-2. **Disable public sign-up** — single operator account only.
-3. On **phone**: open the app → register passkey (Face ID / Touch ID).
-4. Optionally register a **second passkey on your laptop** for daily use without QR.
+2. Set **Site URL** to `https://coffeesnob.withdevo.net` (Authentication → URL Configuration).
+3. **Disable public sign-up** — single operator account only.
+4. **First passkey (one-time):** `registerPasskey()` requires a session — you cannot register from the login screen.
+   - Create your user in Authentication → Users (confirm email).
+   - Send a **magic link** to your email from the user row (or set a temporary password).
+   - Open the link on your **phone** → you land in the journal signed in.
+   - Tap **Add passkey to this device** in the app header → Face ID / Touch ID.
+5. Later visits: **Sign in with passkey**. Optionally add a laptop passkey the same way while signed in.
 
 ### 3c — Laptop / borrowed PC sign-in
 

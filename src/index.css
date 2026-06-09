@@ -590,8 +590,31 @@ dl {
   gap: 1rem;
 }
 
-.app-header__sign-out {
+.app-header__account {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
   flex-shrink: 0;
+}
+
+.passkey-setup__message {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0 0;
+  text-align: right;
+}
+
+.passkey-setup__error {
+  font-size: 0.875rem;
+  color: var(--error);
+  margin: 0.25rem 0 0;
+  text-align: right;
+}
+
+.auth-panel__hint ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
 }
 
 .auth-panel,

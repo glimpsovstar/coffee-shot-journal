@@ -4,6 +4,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { BeanCatalogue } from './components/BeanCatalogue';
 import { CloudImportPrompt } from './components/CloudImportPrompt';
 import { JournalBackupPanel } from './components/JournalBackupPanel';
+import { PasskeySetupButton } from './components/PasskeySetupButton';
 import { ImportShotForm } from './components/ImportShotForm';
 import { ShotList } from './components/ShotList';
 import { useAuth } from './hooks/useAuth';
@@ -14,9 +15,11 @@ type AppPage = 'journal' | 'import' | 'backup';
 function JournalApp({
   cloudUserId,
   onSignOut,
+  onRegisterPasskey,
 }: {
   cloudUserId: string | null;
   onSignOut?: () => Promise<void>;
+  onRegisterPasskey?: () => Promise<void>;
 }) {
   const [page, setPage] = useState<AppPage>('journal');
   const {
@@ -56,10 +59,17 @@ function JournalApp({
             <h1>Coffee Shot Journal</h1>
             <p>Track beans and espresso shots to learn what affects consistency and taste.</p>
           </div>
-          {onSignOut ? (
-            <button type="button" className="btn-secondary app-header__sign-out" onClick={onSignOut}>
-              Sign out
-            </button>
+          {onSignOut || onRegisterPasskey ? (
+            <div className="app-header__account">
+              {onRegisterPasskey ? (
+                <PasskeySetupButton onRegisterPasskey={onRegisterPasskey} />
+              ) : null}
+              {onSignOut ? (
+                <button type="button" className="btn-secondary" onClick={onSignOut}>
+                  Sign out
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </div>
         <nav className="app-nav" aria-label="Main">
@@ -137,11 +147,7 @@ function App() {
 
   if (auth.cloudEnabled && !auth.session) {
     return (
-      <AuthScreen
-        error={auth.error}
-        onSignInWithPasskey={auth.signInWithPasskey}
-        onRegisterPasskey={auth.registerPasskey}
-      />
+      <AuthScreen error={auth.error} onSignInWithPasskey={auth.signInWithPasskey} />
     );
   }
 
@@ -151,6 +157,7 @@ function App() {
     <JournalApp
       cloudUserId={cloudUserId}
       onSignOut={auth.cloudEnabled ? auth.signOut : undefined}
+      onRegisterPasskey={auth.cloudEnabled ? auth.registerPasskey : undefined}
     />
   );
 }
