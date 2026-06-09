@@ -31,10 +31,21 @@ export function getCloudImportDoneKey(userId: string): string {
   return `journal-cloud-import-done:${userId}`;
 }
 
-export function isCloudImportMarkedDone(userId: string): boolean {
+/** User imported local data, skipped the prompt, or imported via backup — do not show banner again. */
+export function isCloudImportPromptHandled(userId: string): boolean {
   return localStorage.getItem(getCloudImportDoneKey(userId)) === '1';
 }
 
-export function markCloudImportDone(userId: string): void {
+export function markCloudImportPromptHandled(userId: string): void {
   localStorage.setItem(getCloudImportDoneKey(userId), '1');
+}
+
+/** @deprecated Use isCloudImportPromptHandled */
+export function isCloudImportMarkedDone(userId: string): boolean {
+  return isCloudImportPromptHandled(userId);
+}
+
+/** @deprecated Use markCloudImportPromptHandled */
+export function markCloudImportDone(userId: string): void {
+  markCloudImportPromptHandled(userId);
 }

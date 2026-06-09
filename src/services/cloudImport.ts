@@ -1,4 +1,4 @@
-import { markCloudImportDone } from '../lib/cloudConfig';
+import { markCloudImportPromptHandled } from '../lib/cloudConfig';
 import { collectPhotoIds, journalDiffersFromSeed, type JournalData } from '../utils/journalSeed';
 import {
   getPhotoBlob,
@@ -17,16 +17,12 @@ export interface CloudImportResult {
   photos: number;
 }
 
-async function loadLocalJournalForImport(): Promise<LocalJournalData> {
-  const raw = await readJournalFromIndexedDb();
-  if (!raw) {
-    return { beans: [], shots: [] };
-  }
-  return raw;
-}
-
 export async function importLocalJournalToCloud(userId: string): Promise<CloudImportResult> {
-  const local = await loadLocalJournalForImport();
+  const local = await readLocalJournalForImport();
+  if (!local) {
+    throw new Error('No local journal on this device to import.');
+  }
+
   const photoIds = collectPhotoIds(local.beans, local.shots);
 
   let photosUploaded = 0;
@@ -39,7 +35,7 @@ export async function importLocalJournalToCloud(userId: string): Promise<CloudIm
 
   await saveBeansToCloud(userId, local.beans);
   await saveShotsToCloud(userId, local.shots);
-  markCloudImportDone(userId);
+  markCloudImportPromptHandled(userId);
 
   return {
     beans: local.beans.length,
@@ -48,8 +44,15 @@ export async function importLocalJournalToCloud(userId: string): Promise<CloudIm
   };
 }
 
+async function readLocalJournalForImport(): Promise<LocalJournalData | null> {
+  const raw = await readJournalFromIndexedDb();
+  if (!raw) return null;
+  return raw;
+}
+
 export async function hasCustomLocalJournal(): Promise<boolean> {
-  const local = await loadLocalJournalForImport();
+  const local = await readLocalJournalForImport();
+  if (!local) return false;
   return journalDiffersFromSeed(local);
 }
 
@@ -71,7 +74,7 @@ export async function importJournalDataToCloud(
 
   await saveBeansToCloud(userId, data.beans);
   await saveShotsToCloud(userId, data.shots);
-  markCloudImportDone(userId);
+  markCloudImportPromptHandled(userId);
 
   return {
     beans: data.beans.length,
