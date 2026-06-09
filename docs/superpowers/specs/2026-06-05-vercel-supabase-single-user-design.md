@@ -1,8 +1,17 @@
 # Coffee Shot Journal — Vercel + Supabase (single-user) design spec
 
-**Status:** Approved direction from brainstorming (AWS/Vault path **parked**).  
+**Status:** Approved direction (AWS/Vault path **parked**). **Implementation:** P1–P3 shipped on `main` (Vercel + Supabase + `/api/label-scan` + OAuth landing).  
 **Supersedes for implementation:** `2026-06-05-p1-platform-foundation-design.md` (AWS/ECS).  
 **Program context:** [Program design](2026-06-05-coffee-shot-journal-program-design.md) — phases redefined below.
+
+### Implementation notes (2026-06)
+
+| Area | Shipped behavior |
+|------|------------------|
+| Auth | Google/Apple/GitHub OAuth on landing; optional passkey in **Backup & restore → Sign-in options** |
+| Cloud import | Banner only when cloud empty + local has custom IndexedDB data; skip persisted per user |
+| Label scan | `api/label-scan.ts` + `OPENAI_API_KEY` on Vercel |
+| Branding | `public/branding/`, `public/favicon.svg`, coffee snob. landing page |
 
 ---
 

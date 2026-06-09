@@ -3,7 +3,7 @@
 ## Active direction (2026)
 
 **Implementation path:** **Vercel** (hosting + serverless API) + **Supabase** (Postgres, Storage, Passkey auth).  
-**Public URL:** **`https://coffeesnob.withdevo.net`** — P1 deployed (SPA on Vercel; IndexedDB until P3 cloud migration).  
+**Public URL:** **`https://coffeesnob.withdevo.net`** — live on Vercel with cloud journal (Supabase).  
 **Approved spec:** [`docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md`](docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md).
 
 **Parked:** AWS/ECS/Vault/TFC path (`coffee.dev.withdevo.net`, `tf-coffee-journal-*`, HCP Vault namespace `coffee-shot-journal`). Historical detail remains below and in [`docs/public-hosting-plan.md`](docs/public-hosting-plan.md) and [`docs/superpowers/specs/2026-06-05-p1-platform-foundation-design.md`](docs/superpowers/specs/2026-06-05-p1-platform-foundation-design.md).
@@ -14,7 +14,7 @@
 
 Single source of truth for the **Coffee Shot Journal** as a **long-lived platform**: public web app now, **shared cloud data** for phone and laptop, and a future **Apple (iOS) app** on the same backend.
 
-**Active stack:** Vercel + Supabase — personal, low-cost, single-user (passkey-only; no public sign-up).
+**Active stack:** Vercel + Supabase — personal, low-cost; Google/OAuth sign-in + optional passkey.
 
 **Parked stack:** AWS + HCP Terraform + HCP Vault + ECS — preserved for reference; not pursued for this app.
 
@@ -22,9 +22,9 @@ Read this before platform work, Supabase schema/auth, or mobile clients.
 
 ## Core intent
 
-- **API-first (Vercel path):** web and iOS are clients; **Supabase** becomes the system of record (P3+).
-- **Secure label scan:** `/api/label-scan` on Vercel; **no OpenAI keys** in browser bundles or git (closes **#1**).
-- **Passkey auth:** Supabase Auth WebAuthn — phone primary; laptop via cross-device QR; sign-up disabled (operator account only).
+- **API-first (Vercel path):** web and iOS are clients; **Supabase** is the system of record when signed in.
+- **Secure label scan:** `/api/label-scan` on Vercel; **no OpenAI keys** in production browser bundles.
+- **Auth:** Supabase — **Google/OAuth** on landing page; optional **passkey** (Backup & restore → Sign-in options); laptop QR hybrid when using passkey without a local credential.
 - **Single-user RLS:** `auth.uid() = user_id` on Postgres and Storage; unauthenticated visitors see login only.
 - **Never** commit secrets, tokens, or credential material.
 
@@ -34,13 +34,15 @@ Read this before platform work, Supabase schema/auth, or mobile clients.
 |-------|------------|
 | **Hosting** | Vercel Hobby — React SPA + Serverless Functions |
 | **Domain** | `coffeesnob.withdevo.net` |
-| **Auth** | Supabase Auth — Passkey (WebAuthn) |
+| **Auth** | Supabase Auth — OAuth (Google, etc.) + optional Passkey (WebAuthn) |
 | **Data** | Supabase Postgres — beans, shots |
 | **Photos** | Supabase Storage — RLS per owner |
 | **Label scan** | Vercel Function — `OPENAI_API_KEY` server-only |
-| **Client** | This repo — migrate from IndexedDB to Supabase (P3) |
+| **Client** | This repo — cloud CRUD when signed in; IndexedDB for local-only dev and backup export |
 
-**Phases:** P1 Vercel deploy ✓ · P2 `/api/label-scan` · P3 Supabase + passkey + cloud CRUD · P4 iOS · P5 product backlog.
+**Phases:** P1 Vercel deploy ✓ · P2 `/api/label-scan` ✓ · P3 Supabase + cloud CRUD + auth ✓ · P4 iOS · P5 product backlog.
+
+**Branding:** `public/branding/` — coffee snob. logo assets; favicon at `public/favicon.svg`.
 
 **Operator runbook:** [`docs/demo-flow.md`](docs/demo-flow.md).
 
@@ -130,5 +132,5 @@ See [`docs/public-hosting-plan.md`](docs/public-hosting-plan.md) — **supersede
 
 ## AI / SDLC
 
-- App features: [`.cursor/rules/sdlc-for-features.mdc`](.cursor/rules/sdlc-for-features.mdc)
-- Platform: GitHub issue → spec in `docs/superpowers/specs/` → plan → implement → deploy on Vercel
+- Workflow: [`.cursor/rules/sdlc-for-features.mdc`](.cursor/rules/sdlc-for-features.mdc) — **tests + docs required**; GitHub issues and feature branches **optional**
+- Platform specs: `docs/superpowers/specs/` → implement → push `main` → Vercel deploy

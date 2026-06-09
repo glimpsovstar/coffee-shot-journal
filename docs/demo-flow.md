@@ -16,11 +16,11 @@ Operator runbook for the **active** Vercel + Supabase platform. See [`constituti
 ## High-level flow
 
 ```
-P1 (done):  Vercel project → custom domain → deploy SPA (IndexedDB OK)
-P2:         /api/label-scan → prod build without VITE_OPENAI_API_KEY
-P3:         Supabase schema + Storage + Passkey → migrate web to cloud CRUD
+P1 (done):  Vercel project → custom domain → deploy SPA
+P2 (done):  /api/label-scan → prod build without VITE_OPENAI_API_KEY
+P3 (done):  Supabase schema + Storage + OAuth + cloud CRUD + optional passkey
 P4:         iOS (SwiftUI + Supabase)
-P5:         Product backlog (#13–#16, export, charts, filters)
+P5:         Product backlog (filters, charts, export enhancements)
 ```
 
 ---
@@ -38,9 +38,9 @@ P5:         Product backlog (#13–#16, export, charts, filters)
 
 ---
 
-## P2 — Secure label scan
+## P2 — Secure label scan (done)
 
-**Goal:** Close GitHub **#1** — no OpenAI key in the browser bundle in production.
+**Goal:** No OpenAI key in the browser bundle in production.
 
 1. `api/label-scan.ts` — Vercel serverless proxy to OpenAI (shipped).
 2. Set **`OPENAI_API_KEY`** in Vercel **Production** (and Preview if desired). **Do not** set `VITE_OPENAI_API_KEY` on Vercel.
@@ -50,9 +50,9 @@ P5:         Product backlog (#13–#16, export, charts, filters)
 
 ---
 
-## P3 — Supabase + Passkey (one-time operator setup)
+## P3 — Supabase + auth + cloud journal (done)
 
-**Goal:** Cloud journal — same beans/shots/photos on phone, laptop, and any browser after passkey sign-in.
+**Goal:** Cloud journal — same beans/shots/photos on phone, laptop, and any browser after sign-in.
 
 ### 3a — Create Supabase project
 
@@ -98,11 +98,15 @@ No magic link, password, or recovery codes in the app.
 | Lost phone passkey | Supabase Dashboard → **Authentication → Users** → manage passkeys for your user |
 | Re-register | Delete old passkey in dashboard; register new passkey on replacement device |
 
-### 3e — Migrate web app
+### 3e — Local → cloud data
 
-1. Ship client changes: Supabase SDK, passkey sign-in UI, CRUD against Postgres + Storage.
-2. Optional one-time **IndexedDB → cloud** import for existing local data.
-3. Validate **V-1** through **V-4** in the design spec (phone add → laptop sees data; RLS; label scan).
+| Path | When |
+|------|------|
+| **Auto prompt** | Only if cloud is **empty** and this browser has **non-seed** IndexedDB data. Skip is remembered per user. |
+| **Backup & restore** | Export JSON on one machine → **Import backup to cloud** while signed in on production. |
+| **Not shown** | Cloud already has beans/shots (stale local IndexedDB is ignored). |
+
+Validate **V-1** through **V-4** in the design spec (phone add → laptop sees data; RLS; label scan).
 
 ---
 
@@ -122,7 +126,8 @@ No magic link, password, or recovery codes in the app.
 | Passkey / QR fails | Relying Party ID = `withdevo.net`; origins include prod URL; hybrid transport not stripped |
 | Label scan 401/500 | Vercel function logs; `OPENAI_API_KEY` set in Production |
 | Data not syncing | Supabase RLS policies; signed-in `auth.uid()` matches row `user_id` |
-| Stranger sees journal | Should not — unauthenticated users see login only |
+| Import banner keeps appearing | Cloud already has data → should not show; hard refresh after deploy; use Skip once (stored per user in local/session storage) |
+| Stranger sees journal | Should not — unauthenticated users see landing / sign-in only |
 
 ## Five-minute demo script (Vercel + Supabase audience)
 

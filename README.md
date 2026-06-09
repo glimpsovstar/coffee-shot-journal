@@ -13,7 +13,8 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 - **Label scan** — OpenAI vision prefill from a bag photo via `/api/label-scan` on Vercel (`OPENAI_API_KEY` server-only); local dev can use `VITE_OPENAI_API_KEY` in `.env.local` for demo
 - **Shot history** — espresso pulls sorted newest first, with optional puck/cup photos
 - **Add-shot form** — log a new pull with photos; it appears at the top of the list
-- **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (Google/Apple/GitHub sign-in, then optional passkey). Local-only mode remains when Supabase env is unset.
+- **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (Google/Apple/GitHub on the landing page; optional passkey under **Backup & restore**). Local-only mode remains when Supabase env is unset.
+- **Branded landing** — coffee snob. sign-in page with logo assets in `public/branding/`
 
 ### Bean fields
 
@@ -89,7 +90,7 @@ Open the URL shown in the terminal (usually `http://localhost:5173`).
 
 Optional local label scan demo: copy [`.env.example`](.env.example) to `.env.local`, set `VITE_OPENAI_API_KEY`, restart the dev server. Production uses `OPENAI_API_KEY` on Vercel only — never commit `.env.local`.
 
-Contributing and SDLC (issues → branch → PR): see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributing (tests + docs required; ship to `main`): see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Production build:
 
@@ -110,13 +111,13 @@ npm run test:coverage
 
 | Layer | What is covered |
 |-------|-----------------|
-| Unit | `src/utils/shots.ts`, `src/utils/photos.ts`, `src/utils/beans.ts`, `src/services/labelVision.ts` |
+| Unit | `src/utils/**`, `src/services/**` (label scan, cloud import) |
 | Storage | `src/storage/journalRepository.ts` (IndexedDB via `fake-indexeddb` in tests) |
 | Data | `src/data/seed.ts` — referential integrity and valid fields |
-| Component | Forms, photo upload/gallery, cards, catalogue |
+| Component | Forms, photo upload/gallery, cards, catalogue, auth landing |
 | Integration | `App.tsx` — load journal, add shots, IndexedDB round-trip |
 
-New behavior changes should include tests (see `.cursor/rules/require-tests.mdc`). When scope is unclear, ask before implementing (see `.cursor/rules/ask-when-unclear.mdc`). Commit in small, reviewable slices (see `.cursor/rules/commit-often.mdc`).
+Behavior changes need **tests** (`.cursor/rules/require-tests.mdc`) and **docs** when user- or operator-visible (`.cursor/rules/require-docs.mdc`). Ask when scope is unclear (`.cursor/rules/ask-when-unclear.mdc`).
 
 ## Tech stack
 

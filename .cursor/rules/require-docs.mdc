@@ -1,0 +1,17 @@
+---
+description: Update docs when user-visible behavior or operator setup changes
+alwaysApply: true
+---
+
+# Docs required for behavior changes
+
+When you add or change **user-visible** behavior, auth, deployment, or operator setup:
+
+1. Update **README.md** if end users would notice (features, sign-in, URLs, env vars).
+2. Update **docs/demo-flow.md** for production operator steps (Vercel, Supabase, OAuth, passkeys).
+3. Update **constitution.md** or a **docs/superpowers/specs/** file when platform architecture or phase status changes.
+4. Update **.env.example** when new env vars are introduced.
+
+Docs-only changes do not require new tests. App behavior changes still require tests per `require-tests.mdc`.
+
+If the change is internal refactor with no user/operator impact, docs are optional.

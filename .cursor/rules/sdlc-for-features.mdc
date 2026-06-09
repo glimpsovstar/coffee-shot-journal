@@ -1,19 +1,19 @@
 ---
-description: Use GitHub SDLC for every new feature
+description: Workflow for new features — docs + tests; skip GitHub issues and feature branches
 alwaysApply: true
 ---
 
-# SDLC for new features
+# Workflow for new features
 
-When the user asks for a **new feature** (not bugfixes, docs-only, or tiny copy tweaks):
+When the user asks for a **new feature** (not obvious bugfixes, docs-only, or tiny copy tweaks):
 
-1. **Open a GitHub issue** — problem, acceptance criteria, test plan (use the feature request template when present).
-2. **Branch** — `feature/<issue#>-short-description` from `main`.
-3. **Implement** — small commits; include tests per `require-tests.mdc`.
-4. **Verify** — `npm run test:run` and `npm run build`.
-5. **Pull request** — link the issue (`Fixes #N`); fill the PR template.
-6. **Close the issue** when the PR is merged (or when the user confirms merge).
+1. **Design** — align with [`docs/superpowers/specs/`](../../docs/superpowers/specs/) when platform-related; update or add a spec when behavior meaningfully changes.
+2. **Implement** on `main` (or the branch the user specifies) — **no GitHub issue or `feature/*` branch required** unless the user asks.
+3. **Tests** — add or update automated tests per `require-tests.mdc`; run `npm run test:run`.
+4. **Docs** — update user-visible docs in the same change per `require-docs.mdc`.
+5. **Verify** — `npm run test:run` and `npm run build` for substantial app changes.
+6. **Commit** — when the user asks (see user commit rules and `commit-often.mdc`).
 
-Do not skip the issue for "small" features unless the user explicitly says to skip SDLC for that task.
+Skip the issue/branch/PR ceremony by default. Still keep commits small and messages clear.
 
 Reference: [CONTRIBUTING.md](../../CONTRIBUTING.md).
