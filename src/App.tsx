@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { AddShotForm } from './components/AddShotForm';
+import { AnalyticsPage } from './components/AnalyticsPage';
 import { AuthScreen } from './components/AuthScreen';
 import { BeanCatalogue } from './components/BeanCatalogue';
 import { CloudImportPrompt } from './components/CloudImportPrompt';
+import { EditorialHeader } from './components/EditorialHeader';
+import { FloatingShotHero } from './components/FloatingShotHero';
 import { JournalBackupPanel } from './components/JournalBackupPanel';
-import { BrandedLogo } from './components/BrandedLogo';
 import { AccountSignInPanel } from './components/AccountSignInPanel';
 import { ImportShotForm } from './components/ImportShotForm';
 import { ShotList } from './components/ShotList';
 import { useAuth } from './hooks/useAuth';
 import { useJournal } from './hooks/useJournal';
+import { getFeaturedShotWithPhoto } from './utils/analytics';
 
-type AppPage = 'journal' | 'import' | 'backup';
+type AppPage = 'journal' | 'analytics' | 'import' | 'backup';
 
 function JournalApp({
   cloudUserId,
@@ -36,6 +39,8 @@ function JournalApp({
     reloadJournal,
   } = useJournal(cloudUserId);
 
+  const featuredShotId = getFeaturedShotWithPhoto(shots)?.id;
+
   if (loading) {
     return (
       <div className="app app--loading">
@@ -54,49 +59,42 @@ function JournalApp({
 
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="app-header__row">
-          <div className="app-brand">
-            <BrandedLogo variant="horizontal" className="app-brand__logo" />
-            <p className="app-brand__subtitle">
-              Track beans and espresso shots to learn what affects consistency and taste.
-            </p>
-          </div>
-          {onSignOut ? (
-            <div className="app-header__account">
-              <button type="button" className="btn-ghost" onClick={onSignOut}>
-                Sign out
-              </button>
-            </div>
-          ) : null}
-        </div>
-        <nav className="app-nav" aria-label="Main">
-          <button
-            type="button"
-            className={page === 'journal' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
-            aria-current={page === 'journal' ? 'page' : undefined}
-            onClick={() => setPage('journal')}
-          >
-            Journal
-          </button>
-          <button
-            type="button"
-            className={page === 'import' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
-            aria-current={page === 'import' ? 'page' : undefined}
-            onClick={() => setPage('import')}
-          >
-            Import past shot
-          </button>
-          <button
-            type="button"
-            className={page === 'backup' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
-            aria-current={page === 'backup' ? 'page' : undefined}
-            onClick={() => setPage('backup')}
-          >
-            Backup &amp; restore
-          </button>
-        </nav>
-      </header>
+      <EditorialHeader onSignOut={onSignOut} />
+
+      <nav className="app-nav app-nav--primary" aria-label="Main">
+        <button
+          type="button"
+          className={page === 'journal' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
+          aria-current={page === 'journal' ? 'page' : undefined}
+          onClick={() => setPage('journal')}
+        >
+          Journal
+        </button>
+        <button
+          type="button"
+          className={page === 'analytics' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
+          aria-current={page === 'analytics' ? 'page' : undefined}
+          onClick={() => setPage('analytics')}
+        >
+          Analytics
+        </button>
+        <button
+          type="button"
+          className={page === 'import' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
+          aria-current={page === 'import' ? 'page' : undefined}
+          onClick={() => setPage('import')}
+        >
+          Import past shot
+        </button>
+        <button
+          type="button"
+          className={page === 'backup' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
+          aria-current={page === 'backup' ? 'page' : undefined}
+          onClick={() => setPage('backup')}
+        >
+          Backup &amp; restore
+        </button>
+      </nav>
 
       {cloudUserId ? (
         <CloudImportPrompt userId={cloudUserId} onImported={() => reloadJournal()} />
@@ -106,9 +104,17 @@ function JournalApp({
         <main className="app-main">
           {page === 'journal' ? (
             <>
-              <ShotList shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
+              <FloatingShotHero shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
+              <ShotList
+                shots={shots}
+                beans={beans}
+                resolvePhotos={resolvePhotos}
+                excludeShotId={featuredShotId}
+              />
               <AddShotForm beans={beans} onAddShot={addShot} />
             </>
+          ) : page === 'analytics' ? (
+            <AnalyticsPage shots={shots} />
           ) : page === 'import' ? (
             <>
               <ImportShotForm beans={beans} onImportShot={addShot} />
@@ -123,15 +129,17 @@ function JournalApp({
             </>
           )}
         </main>
-        <aside className="app-sidebar">
-          <BeanCatalogue
-            beans={beans}
-            resolvePhotos={resolvePhotos}
-            onAddBean={addBean}
-            onAddBeanPhotos={addBeanPhotos}
-            onRemoveBeanPhoto={removeBeanPhoto}
-          />
-        </aside>
+        {page === 'journal' || page === 'import' ? (
+          <aside className="app-sidebar">
+            <BeanCatalogue
+              beans={beans}
+              resolvePhotos={resolvePhotos}
+              onAddBean={addBean}
+              onAddBeanPhotos={addBeanPhotos}
+              onRemoveBeanPhoto={removeBeanPhoto}
+            />
+          </aside>
+        ) : null}
       </div>
     </div>
   );
