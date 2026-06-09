@@ -90,7 +90,7 @@ Open the URL shown in the terminal (usually `http://localhost:5173`).
 
 Optional local label scan demo: copy [`.env.example`](.env.example) to `.env.local`, set `VITE_OPENAI_API_KEY`, restart the dev server. Production uses `OPENAI_API_KEY` on Vercel only — never commit `.env.local`.
 
-Contributing (tests + docs required; ship to `main`): see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributing (issue → branch → PR; tests + docs required): see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Production build:
 
@@ -117,7 +117,7 @@ npm run test:coverage
 | Component | Forms, photo upload/gallery, cards, catalogue, auth landing |
 | Integration | `App.tsx` — load journal, add shots, IndexedDB round-trip |
 
-Behavior changes need **tests** (`.cursor/rules/require-tests.mdc`) and **docs** when user- or operator-visible (`.cursor/rules/require-docs.mdc`). Ask when scope is unclear (`.cursor/rules/ask-when-unclear.mdc`).
+New features: **issue → feature branch → PR** (`.cursor/rules/sdlc-for-features.mdc`). Behavior changes need **tests** (`.cursor/rules/require-tests.mdc`) and **docs** when user- or operator-visible (`.cursor/rules/require-docs.mdc`).
 
 ## Tech stack
 

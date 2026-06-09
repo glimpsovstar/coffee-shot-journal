@@ -13,9 +13,9 @@ alwaysApply: true
 4. Only commit when the user asks, unless they have explicitly asked you to commit often as part of the task.
 5. Run `npm run test:run` (and `npm run build` for substantial changes) before committing app code.
 
-## Pull requests (optional)
+## Pull requests
 
-This repo often ships directly to `main`. When creating or updating PRs:
+When creating or updating PRs (required for new features per `sdlc-for-features.mdc`):
 
 1. Keep PRs **focused** — one feature or theme per PR when possible.
 2. Use a **Summary** (2–4 bullets: what changed and why) and a **Test plan** checklist.

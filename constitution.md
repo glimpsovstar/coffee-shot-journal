@@ -132,5 +132,6 @@ See [`docs/public-hosting-plan.md`](docs/public-hosting-plan.md) — **supersede
 
 ## AI / SDLC
 
-- Workflow: [`.cursor/rules/sdlc-for-features.mdc`](.cursor/rules/sdlc-for-features.mdc) — **tests + docs required**; GitHub issues and feature branches **optional**
-- Platform specs: `docs/superpowers/specs/` → implement → push `main` → Vercel deploy
+- App features: [`.cursor/rules/sdlc-for-features.mdc`](.cursor/rules/sdlc-for-features.mdc) — issue → `feature/*` branch → PR → `main`; **tests + docs required**
+- Platform: spec in `docs/superpowers/specs/` → plan (optional) → implement on feature branch → merge → Vercel deploy
+- P1–P3 shipped on `main` before full SDLC; no retroactive issues for that work

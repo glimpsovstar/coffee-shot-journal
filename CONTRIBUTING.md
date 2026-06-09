@@ -1,18 +1,21 @@
 # Contributing
 
-## Workflow (this repo)
+## SDLC workflow (this repo)
 
-We ship directly to `main` on Vercel. **GitHub issues and feature branches are optional** — not required for every change.
+For **new features** and **non-trivial fixes** going forward:
 
-For **new features** and **non-trivial fixes**:
+1. **Open an issue** — use the Feature request template; list acceptance criteria and test plan.
+2. **Branch** — `git checkout -b feature/<issue#>-short-description` from `main`.
+3. **Implement** — small commits on the feature branch.
+4. **Tests** — add or update tests for behavior under `src/` (see `.cursor/rules/require-tests.mdc`).
+5. **Docs** — update README, `docs/demo-flow.md`, or specs when users or operators would notice (see `.cursor/rules/require-docs.mdc`).
+6. **Verify** — `npm run test:run` and `npm run build`.
+7. **Pull request** — link the issue (`Fixes #N`); fill in the PR template.
+8. **Merge** — squash merge to `main`; Vercel deploys `https://coffeesnob.withdevo.net`; close the issue.
 
-1. **Implement** — small commits on `main` (or a branch if you prefer).
-2. **Tests** — add or update tests for behavior under `src/` (see `.cursor/rules/require-tests.mdc`).
-3. **Docs** — update README, `docs/demo-flow.md`, or specs when users or operators would notice (see `.cursor/rules/require-docs.mdc`).
-4. **Verify** — `npm run test:run` and `npm run build` before you consider the work done.
-5. **Deploy** — push to `main`; Vercel deploys `https://coffeesnob.withdevo.net`.
+**Historical note:** P1–P3 platform work (Vercel deploy, label scan proxy, Supabase cloud journal, OAuth landing, import-prompt fixes) landed on `main` without this ceremony. That is accepted; use the issue → branch → PR path for **future** work.
 
-Optional: open a GitHub issue or PR for tracking or review — use when you want discussion, not as a gate.
+Obvious typos, clear one-line bugs, or explicit "just fix it" requests may skip the issue when the user says so.
 
 ## Label scan
 
@@ -36,4 +39,4 @@ npm run dev
 
 ## Cursor rules
 
-Project rules live in `.cursor/rules/` (tests, docs, ask when unclear, commit policy).
+Project rules live in `.cursor/rules/` (SDLC, tests, docs, ask when unclear, commit policy).
