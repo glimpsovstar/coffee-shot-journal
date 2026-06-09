@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // VITE_* for manual setup; NEXT_PUBLIC_* when linked via Vercel Supabase integration.
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   plugins: [react()],
   test: {
     environment: 'jsdom',

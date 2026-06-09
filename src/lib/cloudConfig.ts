@@ -1,13 +1,30 @@
-/** Supabase cloud journal is enabled when Vite env vars are set (P3). */
-export function isCloudEnabled(): boolean {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  return (
-    typeof url === 'string' &&
-    url.trim().length > 0 &&
-    typeof key === 'string' &&
-    key.trim().length > 0
+function readClientEnv(...keys: string[]): string | undefined {
+  const env = import.meta.env as Record<string, string | undefined>;
+  for (const key of keys) {
+    const value = env[key];
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+  return undefined;
+}
+
+/** Supabase project URL from Vite or Vercel Supabase integration env names. */
+export function getSupabaseUrl(): string | undefined {
+  return readClientEnv('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL');
+}
+
+/** Publishable key for browser client (never the secret key). */
+export function getSupabasePublishableKey(): string | undefined {
+  return readClientEnv(
+    'VITE_SUPABASE_PUBLISHABLE_KEY',
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
   );
+}
+
+/** Supabase cloud journal is enabled when URL + publishable key are in the build env. */
+export function isCloudEnabled(): boolean {
+  return Boolean(getSupabaseUrl() && getSupabasePublishableKey());
 }
 
 export function getCloudImportDoneKey(userId: string): string {

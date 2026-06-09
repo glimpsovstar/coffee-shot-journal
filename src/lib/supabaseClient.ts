@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { isCloudEnabled } from './cloudConfig';
+import { getSupabasePublishableKey, getSupabaseUrl, isCloudEnabled } from './cloudConfig';
 
 let client: SupabaseClient | null = null;
 
@@ -9,8 +9,8 @@ export function getSupabaseClient(): SupabaseClient {
   }
 
   if (!client) {
-    const url = import.meta.env.VITE_SUPABASE_URL as string;
-    const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+    const url = getSupabaseUrl()!;
+    const key = getSupabasePublishableKey()!;
     client = createClient(url, key, {
       auth: {
         experimental: { passkey: true },
