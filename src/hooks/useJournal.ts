@@ -30,6 +30,8 @@ export function useJournal() {
   const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const shotsRef = useRef<Shot[]>([]);
+  const shotSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const photoUrlsRef = useRef<Map<string, string>>(new Map());
 
   const syncPhotoUrlsRef = useCallback((urls: Map<string, string>) => {
@@ -86,6 +88,7 @@ export function useJournal() {
         const data = await loadJournal();
         if (cancelled) return;
         setBeans(data.beans);
+        shotsRef.current = data.shots;
         setShots(data.shots);
         await hydratePhotoUrls(data.beans, data.shots);
       } catch (err) {
@@ -142,12 +145,19 @@ export function useJournal() {
         ...payload.shot,
         id: crypto.randomUUID(),
       };
-      const nextShots = [shot, ...shots];
-      await saveShots(nextShots);
-      registerPhotoUrls(payload.photoBlobs);
-      setShots(nextShots);
+
+      const saveOperation = shotSaveQueueRef.current.then(async () => {
+        const nextShots = [shot, ...shotsRef.current];
+        await saveShots(nextShots);
+        shotsRef.current = nextShots;
+        registerPhotoUrls(payload.photoBlobs);
+        setShots(nextShots);
+      });
+
+      shotSaveQueueRef.current = saveOperation.catch(() => undefined);
+      await saveOperation;
     },
-    [shots, registerPhotoUrls],
+    [registerPhotoUrls],
   );
 
   const addBeanPhotos = useCallback(
