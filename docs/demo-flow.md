@@ -61,23 +61,24 @@ P5:         Product backlog (#13–#16, export, charts, filters)
 3. Add to Vercel env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (or equivalent); secret key server-side only if needed.
 4. Define schema (beans, shots), Storage bucket for photos, **RLS** policies: `auth.uid() = user_id`.
 
-### 3b — Enable Passkeys (Authentication)
+### 3b — Auth: social login + passkeys
 
 | Setting | Value |
 |---------|--------|
+| **Site URL** | `https://coffeesnob.withdevo.net` |
+| **Redirect URLs** | `https://coffeesnob.withdevo.net` (add preview URLs if needed) |
 | **Relying Party ID** | `withdevo.net` (bare domain — do not change after enrollment) |
-| **Relying Party name** | e.g. `Coffee Snob Journal` |
+| **Relying Party name** | e.g. `coffee snob.` |
 | **Allowed origins** | `https://coffeesnob.withdevo.net` only (localhost is incompatible with RP ID `withdevo.net`) |
 
-1. Enable Passkeys in Supabase Auth settings.
-2. Set **Site URL** to `https://coffeesnob.withdevo.net` (Authentication → URL Configuration).
-3. **Disable public sign-up** — single operator account only.
-4. **First passkey (one-time):** `registerPasskey()` requires a session — you cannot register from the login screen.
-   - Create your user in Authentication → Users (confirm email).
-   - Send a **magic link** to your email from the user row (or set a temporary password).
-   - Open the link on your **phone** → you land in the journal signed in.
-   - Tap **Add passkey to this device** in the app header → Face ID / Touch ID.
-5. Later visits: **Sign in with passkey**. Optionally add a laptop passkey the same way while signed in.
+1. **Social providers** (Authentication → Providers): enable **Google**, **Apple**, and/or **GitHub**; paste OAuth client IDs/secrets from each provider console. Redirect URI is your Supabase callback URL (`https://<project-ref>.supabase.co/auth/v1/callback`).
+2. **Enable sign-ups** if you want “Create account” via Google/Apple/GitHub on the landing page (or keep invite-only and create users in the dashboard).
+3. Enable **Passkeys** in Supabase Auth settings.
+4. **First visit:** landing page → **Continue with Google** (or Apple/GitHub) → journal opens.
+5. **Add passkey:** while signed in, tap **Add passkey to this device** in the header → Face ID / Touch ID.
+6. **Return visits:** **Sign in with passkey** or the same social button.
+
+**Break-glass:** magic link from Authentication → Users still works if OAuth or passkeys fail.
 
 ### 3c — Laptop / borrowed PC sign-in
 

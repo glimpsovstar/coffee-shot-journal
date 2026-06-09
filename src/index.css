@@ -1,16 +1,17 @@
 :root {
-  --bg: #f6f3ef;
+  --bg: #faf6f0;
   --surface: #ffffff;
-  --text: #2c2419;
+  --text: #2e1f16;
   --text-muted: #6b5f52;
-  --border: #e4ddd4;
-  --accent: #6b4423;
-  --accent-hover: #523419;
+  --border: #e8e0d6;
+  --accent: #e05a47;
+  --accent-hover: #c94d3d;
+  --accent-dark: #2e1f16;
   --star: #c9a227;
   --error: #9b2c2c;
   --radius: 10px;
-  --shadow: 0 1px 3px rgba(44, 36, 25, 0.08);
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --shadow: 0 1px 3px rgba(46, 31, 22, 0.08);
+  font-family: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color: var(--text);
@@ -62,17 +63,17 @@ dl {
   margin-bottom: 2rem;
 }
 
-.app-header h1 {
-  font-size: 1.75rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--accent);
+.app-brand__logo {
+  display: block;
+  width: min(100%, 320px);
+  height: auto;
 }
 
-.app-header p {
-  margin-top: 0.35rem;
+.app-brand__subtitle {
+  margin-top: 0.5rem;
   color: var(--text-muted);
   max-width: 36rem;
+  font-size: 0.95rem;
 }
 
 .app-nav {
@@ -647,8 +648,159 @@ dl {
   color: var(--text-muted);
 }
 
-.app--auth {
-  padding: 2rem 1rem;
+.landing {
+  min-height: 100vh;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.landing__layout {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 840px) {
+  .landing__layout {
+    grid-template-columns: 1fr minmax(300px, 380px);
+    gap: 3rem;
+    padding-top: 1rem;
+  }
+}
+
+.landing__hero {
+  padding-top: 0.5rem;
+}
+
+.landing__logo {
+  display: block;
+  width: min(100%, 360px);
+  height: auto;
+  margin-bottom: 1.25rem;
+}
+
+.landing__tagline {
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  max-width: 32rem;
+}
+
+.landing__features {
+  margin-top: 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.landing__features li {
+  position: relative;
+  padding-left: 1.35rem;
+  margin-bottom: 0.65rem;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.landing__features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.landing__auth {
+  margin: 0;
+}
+
+.auth-panel__intro {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.auth-panel__divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.auth-panel__divider::before,
+.auth-panel__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.auth-panel__hint--compact {
+  margin-top: 0.75rem;
+}
+
+.oauth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.oauth-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.oauth-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.oauth-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.oauth-button__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.oauth-button--apple {
+  color: var(--accent-dark);
+}
+
+.oauth-button--github {
+  color: var(--accent-dark);
+}
+
+.btn-primary--wide {
+  width: 100%;
+}
+
+.branded-logo--horizontal {
+  max-width: 320px;
+}
+
+.branded-logo--stacked {
+  max-width: 360px;
 }
 
 .journal-backup {

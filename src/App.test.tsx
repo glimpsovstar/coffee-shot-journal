@@ -22,7 +22,7 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Coffee Shot Journal' })).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'coffee snob.' })).toBeInTheDocument();
     });
 
     const catalogue = screen

@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState } from 'react';
 import { isCloudEnabled } from '../lib/cloudConfig';
+import { type OAuthProviderId, toSupabaseProvider } from '../lib/oauthProviders';
 import { getSupabaseClient } from '../lib/supabaseClient';
 
 export function useAuth() {
@@ -39,6 +40,20 @@ export function useAuth() {
     }
   }, []);
 
+  const signInWithOAuth = useCallback(async (provider: OAuthProviderId) => {
+    setError(null);
+    const { error: oauthError } = await getSupabaseClient().auth.signInWithOAuth({
+      provider: toSupabaseProvider(provider),
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (oauthError) {
+      setError(oauthError.message);
+      throw oauthError;
+    }
+  }, []);
+
   const registerPasskey = useCallback(async () => {
     setError(null);
     const { error: registerError } = await getSupabaseClient().auth.registerPasskey();
@@ -62,6 +77,7 @@ export function useAuth() {
     loading,
     error,
     signInWithPasskey,
+    signInWithOAuth,
     registerPasskey,
     signOut,
     cloudEnabled: isCloudEnabled(),

@@ -1,4 +1,4 @@
-# Coffee Shot Journal
+# coffee snob. — daily beans & brews journal
 
 A small React + TypeScript app for logging espresso beans and shots—built to practice dialing in consistency and taste over time.
 
@@ -13,7 +13,7 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 - **Label scan** — OpenAI vision prefill from a bag photo via `/api/label-scan` on Vercel (`OPENAI_API_KEY` server-only); local dev can use `VITE_OPENAI_API_KEY` in `.env.local` for demo
 - **Shot history** — espresso pulls sorted newest first, with optional puck/cup photos
 - **Add-shot form** — log a new pull with photos; it appears at the top of the list
-- **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (passkey auth). Local-only mode remains when Supabase env is unset.
+- **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (Google/Apple/GitHub sign-in, then optional passkey). Local-only mode remains when Supabase env is unset.
 
 ### Bean fields
 

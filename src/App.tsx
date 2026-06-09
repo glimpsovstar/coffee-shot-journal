@@ -4,6 +4,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { BeanCatalogue } from './components/BeanCatalogue';
 import { CloudImportPrompt } from './components/CloudImportPrompt';
 import { JournalBackupPanel } from './components/JournalBackupPanel';
+import { BrandedLogo } from './components/BrandedLogo';
 import { PasskeySetupButton } from './components/PasskeySetupButton';
 import { ImportShotForm } from './components/ImportShotForm';
 import { ShotList } from './components/ShotList';
@@ -55,9 +56,11 @@ function JournalApp({
     <div className="app">
       <header className="app-header">
         <div className="app-header__row">
-          <div>
-            <h1>Coffee Shot Journal</h1>
-            <p>Track beans and espresso shots to learn what affects consistency and taste.</p>
+          <div className="app-brand">
+            <BrandedLogo variant="horizontal" className="app-brand__logo" />
+            <p className="app-brand__subtitle">
+              Track beans and espresso shots to learn what affects consistency and taste.
+            </p>
           </div>
           {onSignOut || onRegisterPasskey ? (
             <div className="app-header__account">
@@ -147,7 +150,11 @@ function App() {
 
   if (auth.cloudEnabled && !auth.session) {
     return (
-      <AuthScreen error={auth.error} onSignInWithPasskey={auth.signInWithPasskey} />
+      <AuthScreen
+        error={auth.error}
+        onSignInWithPasskey={auth.signInWithPasskey}
+        onSignInWithOAuth={auth.signInWithOAuth}
+      />
     );
   }
 
