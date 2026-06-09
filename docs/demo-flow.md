@@ -42,11 +42,11 @@ P5:         Product backlog (#13–#16, export, charts, filters)
 
 **Goal:** Close GitHub **#1** — no OpenAI key in the browser bundle in production.
 
-1. Add Vercel Serverless Function at `/api/label-scan` (proxy to OpenAI).
-2. Set `OPENAI_API_KEY` in Vercel **Production** environment variables.
-3. Point the web app at `/api/label-scan` in production; keep optional `.env.local` for local dev only.
-4. Redeploy; verify network tab shows same-origin API call, not `api.openai.com` from the client.
-5. Confirm no `VITE_OPENAI_API_KEY` in production build env.
+1. `api/label-scan.ts` — Vercel serverless proxy to OpenAI (shipped).
+2. Set **`OPENAI_API_KEY`** in Vercel **Production** (and Preview if desired). **Do not** set `VITE_OPENAI_API_KEY` on Vercel.
+3. Redeploy; add a bean with label photo → **Scan label**.
+4. Verify network tab: `POST /api/label-scan` only — no `api.openai.com` from the browser.
+5. Optional local demo: `VITE_OPENAI_API_KEY` in `.env.local` only.
 
 ---
 

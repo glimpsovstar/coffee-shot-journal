@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { isLabelScanAvailable, scanLabelFromBlob } from '../services/labelVision';
+import {
+  isLabelScanAvailable,
+  isLocalLabelScanDemo,
+  scanLabelFromBlob,
+} from '../services/labelVision';
 import type { BeanDraft } from '../types';
 
 interface LabelScanButtonProps {
@@ -41,8 +45,13 @@ export function LabelScanButton({ imageBlob, onDraft }: LabelScanButtonProps) {
       </button>
       {!available && (
         <p className="photo-upload__hint">
-          Label scan needs <code>VITE_OPENAI_API_KEY</code> in <code>.env.local</code> (demo
-          only — see CONTRIBUTING.md). Enter details manually otherwise.
+          Label scan is not configured on this deployment. Enter bean details manually.
+        </p>
+      )}
+      {available && isLocalLabelScanDemo() && (
+        <p className="photo-upload__hint">
+          Local demo mode: using <code>VITE_OPENAI_API_KEY</code> from <code>.env.local</code>.
+          Production uses the server proxy — no browser key.
         </p>
       )}
       {available && !imageBlob && (

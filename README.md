@@ -10,12 +10,10 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 
 - **Bean catalogue** — seed beans plus **add bean** (manual entry, bag/label photos)
 - **Bean metadata** — purchase date, bag size, single origin vs blend with composition %
-- **Label scan (demo)** — optional OpenAI vision prefill from a bag photo when `VITE_OPENAI_API_KEY` is set in `.env.local` (see [CONTRIBUTING.md](CONTRIBUTING.md); production should use a backend proxy — tracked as a high-priority security issue)
+- **Label scan** — OpenAI vision prefill from a bag photo via `/api/label-scan` on Vercel (`OPENAI_API_KEY` server-only); local dev can use `VITE_OPENAI_API_KEY` in `.env.local` for demo
 - **Shot history** — espresso pulls sorted newest first, with optional puck/cup photos
 - **Add-shot form** — log a new pull with photos; it appears at the top of the list
-- **IndexedDB persistence** — beans, shots, and image blobs survive refresh (on-device only)
-
-There is no cloud backend yet—data is on-device only. Clearing browser site data removes your journal. The app is deployed at **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel); cloud sync via **Supabase** (passkey auth) is the active roadmap. See platform docs below.
+- **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (passkey auth). Local-only mode remains when Supabase env is unset.
 
 ### Bean fields
 
@@ -51,7 +49,7 @@ There is no cloud backend yet—data is on-device only. Clearing browser site da
 ## What I want to add later
 
 - **Edit / retire beans** — update or archive catalogue entries (add is done)
-- **Secure label scanning** — backend proxy so API keys are not in the browser (see GitHub issues labeled `security`)
+- **Label scan hardening** — optional auth on `/api/label-scan`, rate limits (see design spec)
 - **Filters & search** — by bean, rating, or date range
 - **Charts** — dose/yield/time trends over time
 - **Export** — CSV or JSON for backup and analysis
@@ -89,7 +87,7 @@ npm run dev
 
 Open the URL shown in the terminal (usually `http://localhost:5173`).
 
-Optional label scan (demo only): copy [`.env.example`](.env.example) to `.env.local`, set `VITE_OPENAI_API_KEY`, restart the dev server. Never commit `.env.local`.
+Optional local label scan demo: copy [`.env.example`](.env.example) to `.env.local`, set `VITE_OPENAI_API_KEY`, restart the dev server. Production uses `OPENAI_API_KEY` on Vercel only — never commit `.env.local`.
 
 Contributing and SDLC (issues → branch → PR): see [CONTRIBUTING.md](CONTRIBUTING.md).
 

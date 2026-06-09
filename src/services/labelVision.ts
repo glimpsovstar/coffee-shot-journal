@@ -1,14 +1,22 @@
-import type { BagSize, BeanDraft, BeanKind, RoastStyle } from '../types';
-import { BAG_SIZES, ROAST_STYLES } from '../utils/beans';
+import type { LabelScanResult } from './labelScanParse';
+import { callOpenAiLabelScan } from './labelScanOpenai';
 
-export interface LabelScanResult {
-  draft: BeanDraft;
-  warnings: string[];
+function hasLocalOpenAiKey(): boolean {
+  const key = import.meta.env.VITE_OPENAI_API_KEY;
+  return typeof key === 'string' && key.trim().length > 0;
+}
+
+/** Production builds use the Vercel `/api/label-scan` proxy unless a local demo key is set. */
+function usesServerLabelScan(): boolean {
+  return !hasLocalOpenAiKey() && import.meta.env.MODE === 'production';
 }
 
 export function isLabelScanAvailable(): boolean {
-  const key = import.meta.env.VITE_OPENAI_API_KEY;
-  return typeof key === 'string' && key.trim().length > 0;
+  return hasLocalOpenAiKey() || usesServerLabelScan();
+}
+
+export function isLocalLabelScanDemo(): boolean {
+  return hasLocalOpenAiKey();
 }
 
 async function blobToBase64(blob: Blob): Promise<string> {
@@ -21,135 +29,49 @@ async function blobToBase64(blob: Blob): Promise<string> {
   return btoa(binary);
 }
 
-function parseBagSize(value: unknown): BagSize | undefined {
-  if (typeof value !== 'string') return undefined;
-  const normalized = value.replace(/\s/g, '').toLowerCase();
-  const match = BAG_SIZES.find((s) => s.toLowerCase() === normalized);
-  return match;
-}
+async function scanViaServerProxy(blob: Blob): Promise<LabelScanResult> {
+  const imageBase64 = await blobToBase64(blob);
+  const mimeType = blob.type || 'image/jpeg';
 
-function parseRoastStyle(value: unknown): RoastStyle | undefined {
-  if (typeof value !== 'string') return undefined;
-  const normalized = value.trim().toLowerCase();
-  const match = ROAST_STYLES.find((s) => s === normalized);
-  if (match) return match;
-  if (normalized.includes('light')) return 'light';
-  if (normalized.includes('dark')) return 'dark';
-  if (normalized.includes('medium')) return 'medium';
-  return undefined;
-}
+  const response = await fetch('/api/label-scan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mimeType, imageBase64 }),
+  });
 
-function parseKind(value: unknown, originText: string): BeanKind | undefined {
-  if (value === 'single_origin' || value === 'blend') return value;
-  const lower = originText.toLowerCase();
-  if (lower.includes('blend')) return 'blend';
-  if (lower.includes('single origin') || lower.includes('single-origin')) {
-    return 'single_origin';
-  }
-  return undefined;
-}
+  const payload = (await response.json().catch(() => null)) as
+    | LabelScanResult
+    | { error?: string }
+    | null;
 
-function parseDraftFromJson(raw: unknown): LabelScanResult {
-  const warnings: string[] = [];
-  const obj = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-
-  const originOrBlend =
-    typeof obj.originOrBlend === 'string' ? obj.originOrBlend : '';
-  const kind = parseKind(obj.kind, originOrBlend);
-
-  const draft: BeanDraft = {
-    name: typeof obj.name === 'string' ? obj.name : undefined,
-    roaster: typeof obj.roaster === 'string' ? obj.roaster : undefined,
-    kind,
-    originOrBlend: originOrBlend || undefined,
-    roastStyle: parseRoastStyle(obj.roastStyle),
-    roastDate: typeof obj.roastDate === 'string' ? obj.roastDate : undefined,
-    purchaseDate: typeof obj.purchaseDate === 'string' ? obj.purchaseDate : undefined,
-    bagSize: parseBagSize(obj.bagSize),
-    tastingNotes: typeof obj.tastingNotes === 'string' ? obj.tastingNotes : undefined,
-  };
-
-  if (Array.isArray(obj.blendComponents)) {
-    draft.blendComponents = obj.blendComponents
-      .filter((c) => c && typeof c === 'object')
-      .map((c) => {
-        const row = c as Record<string, unknown>;
-        return {
-          name: typeof row.name === 'string' ? row.name : '',
-          percent: typeof row.percent === 'number' ? row.percent : Number(row.percent) || 0,
-        };
-      });
+  if (!response.ok) {
+    const message =
+      payload && typeof payload === 'object' && 'error' in payload && payload.error
+        ? payload.error
+        : `Label scan failed (${response.status}).`;
+    throw new Error(message);
   }
 
-  if (!draft.name) warnings.push('Name was not detected — please enter manually.');
-  if (!draft.roaster) warnings.push('Roaster was not detected — please enter manually.');
+  if (!payload || !('draft' in payload) || !('warnings' in payload)) {
+    throw new Error('Label scan returned an invalid response.');
+  }
 
-  return { draft, warnings };
+  return payload;
 }
 
 export async function scanLabelFromBlob(blob: Blob): Promise<LabelScanResult> {
   if (!isLabelScanAvailable()) {
     throw new Error(
-      'Label scan is not configured. Add VITE_OPENAI_API_KEY to .env.local or enter details manually.',
+      'Label scan is not configured. Add VITE_OPENAI_API_KEY to .env.local for local demo, or configure OPENAI_API_KEY on Vercel.',
     );
+  }
+
+  if (usesServerLabelScan()) {
+    return scanViaServerProxy(blob);
   }
 
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY as string;
   const base64 = await blobToBase64(blob);
   const mimeType = blob.type || 'image/jpeg';
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You extract coffee bag label fields for an espresso journal. Return JSON only with keys: name, roaster, kind ("single_origin"|"blend"), originOrBlend (region/country for single origin OR blend marketing name — not roast level), roastStyle ("light"|"medium"|"dark"), blendComponents (array of {name, percent} when blend), roastDate (YYYY-MM-DD), purchaseDate (YYYY-MM-DD if unknown use roastDate), bagSize ("200g"|"250g"|"500g"|"1kg"), tastingNotes. Use null for unknown fields.',
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: 'Extract bean information from this coffee bag label image.',
-            },
-            {
-              type: 'image_url',
-              image_url: { url: `data:${mimeType};base64,${base64}` },
-            },
-          ],
-        },
-      ],
-      max_tokens: 800,
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Label scan failed (${response.status}): ${text.slice(0, 200)}`);
-  }
-
-  const data = (await response.json()) as {
-    choices?: { message?: { content?: string } }[];
-  };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new Error('Label scan returned an empty response.');
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(content);
-  } catch {
-    throw new Error('Label scan returned invalid JSON.');
-  }
-
-  return parseDraftFromJson(parsed);
+  return callOpenAiLabelScan(apiKey, mimeType, base64);
 }
