@@ -31,13 +31,32 @@ export function getCloudImportDoneKey(userId: string): string {
   return `journal-cloud-import-done:${userId}`;
 }
 
+function readHandledFlag(storage: Storage, userId: string): boolean {
+  try {
+    return storage.getItem(getCloudImportDoneKey(userId)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeHandledFlag(storage: Storage, userId: string): void {
+  try {
+    storage.setItem(getCloudImportDoneKey(userId), '1');
+  } catch {
+    // Storage may be blocked; other stores are tried in markCloudImportPromptHandled.
+  }
+}
+
 /** User imported local data, skipped the prompt, or imported via backup — do not show banner again. */
 export function isCloudImportPromptHandled(userId: string): boolean {
-  return localStorage.getItem(getCloudImportDoneKey(userId)) === '1';
+  return (
+    readHandledFlag(localStorage, userId) || readHandledFlag(sessionStorage, userId)
+  );
 }
 
 export function markCloudImportPromptHandled(userId: string): void {
-  localStorage.setItem(getCloudImportDoneKey(userId), '1');
+  writeHandledFlag(localStorage, userId);
+  writeHandledFlag(sessionStorage, userId);
 }
 
 /** @deprecated Use isCloudImportPromptHandled */

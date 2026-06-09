@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
-import {
-  isCloudImportPromptHandled,
-  markCloudImportPromptHandled,
-} from '../lib/cloudConfig';
-import { hasCustomLocalJournal, importLocalJournalToCloud } from '../services/cloudImport';
+import { markCloudImportPromptHandled } from '../lib/cloudConfig';
+import { importLocalJournalToCloud, shouldOfferCloudImportPrompt } from '../services/cloudImport';
 
 interface CloudImportPromptProps {
   userId: string;
@@ -20,9 +17,8 @@ export function CloudImportPrompt({ userId, onImported }: CloudImportPromptProps
     let cancelled = false;
 
     (async () => {
-      if (isCloudImportPromptHandled(userId)) return;
-      const custom = await hasCustomLocalJournal();
-      if (!cancelled && custom) setVisible(true);
+      const offer = await shouldOfferCloudImportPrompt(userId);
+      if (!cancelled && offer) setVisible(true);
     })();
 
     return () => {

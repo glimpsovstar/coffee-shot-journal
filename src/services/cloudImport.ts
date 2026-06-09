@@ -1,4 +1,7 @@
-import { markCloudImportPromptHandled } from '../lib/cloudConfig';
+import {
+  isCloudImportPromptHandled,
+  markCloudImportPromptHandled,
+} from '../lib/cloudConfig';
 import { collectPhotoIds, journalDiffersFromSeed, type JournalData } from '../utils/journalSeed';
 import {
   getPhotoBlob,
@@ -6,6 +9,7 @@ import {
   type JournalData as LocalJournalData,
 } from '../storage/journalRepository';
 import {
+  loadJournalFromCloud,
   putPhotoBlobToCloud,
   saveBeansToCloud,
   saveShotsToCloud,
@@ -53,7 +57,25 @@ async function readLocalJournalForImport(): Promise<LocalJournalData | null> {
 export async function hasCustomLocalJournal(): Promise<boolean> {
   const local = await readLocalJournalForImport();
   if (!local) return false;
+  if (local.beans.length === 0 && local.shots.length === 0) return false;
   return journalDiffersFromSeed(local);
+}
+
+/**
+ * Offer import only when cloud is still empty but this browser has real local entries.
+ * If cloud already has data, mark handled so stale local IndexedDB does not nag.
+ */
+export async function shouldOfferCloudImportPrompt(userId: string): Promise<boolean> {
+  if (isCloudImportPromptHandled(userId)) return false;
+  if (!(await hasCustomLocalJournal())) return false;
+
+  const cloud = await loadJournalFromCloud(userId);
+  if (cloud.beans.length > 0 || cloud.shots.length > 0) {
+    markCloudImportPromptHandled(userId);
+    return false;
+  }
+
+  return true;
 }
 
 /** Test helper: import explicit journal payload to cloud. */

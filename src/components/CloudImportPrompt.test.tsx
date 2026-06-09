@@ -2,6 +2,15 @@ import 'fake-indexeddb/auto';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadJournalFromCloud } from '../storage/supabaseJournalRepository';
+
+vi.mock('../storage/supabaseJournalRepository', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../storage/supabaseJournalRepository')>();
+  return {
+    ...actual,
+    loadJournalFromCloud: vi.fn().mockResolvedValue({ beans: [], shots: [] }),
+  };
+});
 import { seedBeans, seedShots } from '../data/seed';
 import { getCloudImportDoneKey } from '../lib/cloudConfig';
 import { resetDbForTests } from '../storage/db';
@@ -32,6 +41,7 @@ describe('CloudImportPrompt', () => {
 
   beforeEach(async () => {
     stubLocalStorage();
+    vi.mocked(loadJournalFromCloud).mockResolvedValue({ beans: [], shots: [] });
     resetDbForTests();
     await clearJournalForTests();
     resetDbForTests();
