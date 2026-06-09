@@ -15,7 +15,7 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 - **Add-shot form** — log a new pull with photos; it appears at the top of the list
 - **IndexedDB persistence** — beans, shots, and image blobs survive refresh (on-device only)
 
-There is no backend or cloud upload. Clearing browser site data removes your journal.
+There is no cloud backend yet—data is on-device only. Clearing browser site data removes your journal. The app is deployed at **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel); cloud sync via **Supabase** (passkey auth) is the active roadmap. See platform docs below.
 
 ### Bean fields
 
@@ -57,7 +57,7 @@ There is no backend or cloud upload. Clearing browser site data removes your jou
 - **Export** — CSV or JSON for backup and analysis
 - **Image compression** — smaller IndexedDB footprint for large photo libraries
 
-Explicitly **not** planned: authentication, cloud image hosting, weather APIs, or AI recommendations.
+**Platform roadmap** (Vercel + Supabase + future iOS): **`https://coffeesnob.withdevo.net`**, Supabase Postgres + Storage, passkey auth, `/api/label-scan` on Vercel. See [`constitution.md`](constitution.md) and [`docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md`](docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md). The earlier AWS/ECS/Vault plan is **parked** — [`docs/public-hosting-plan.md`](docs/public-hosting-plan.md).
 
 ## AI-assisted development workflow
 

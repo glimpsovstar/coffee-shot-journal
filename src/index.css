@@ -582,3 +582,78 @@ dl {
   opacity: 0.65;
   cursor: not-allowed;
 }
+
+.app-header__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.app-header__sign-out {
+  flex-shrink: 0;
+}
+
+.auth-panel,
+.cloud-import {
+  max-width: 40rem;
+  margin: 0 auto 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.auth-panel__actions,
+.cloud-import__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.auth-panel__error {
+  color: var(--error);
+  margin-top: 0.75rem;
+}
+
+.auth-panel__hint {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.app--auth {
+  padding: 2rem 1rem;
+}
+
+.journal-backup {
+  max-width: 40rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.journal-backup__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.journal-backup__file-input {
+  display: none;
+}
+
+.journal-backup__message {
+  margin-top: 0.75rem;
+  color: var(--text-muted);
+}
+
+.journal-backup__error {
+  margin-top: 0.75rem;
+  color: var(--error);
+}

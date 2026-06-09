@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isCloudEnabled } from '../lib/cloudConfig';
 import {
   deletePhotoBlob,
   getPhotoBlob,
@@ -7,6 +8,14 @@ import {
   saveBeans,
   saveShots,
 } from '../storage/journalRepository';
+import {
+  deletePhotoBlobFromCloud,
+  getPhotoBlobFromCloud,
+  loadJournalFromCloud,
+  putPhotoBlobToCloud,
+  saveBeansToCloud,
+  saveShotsToCloud,
+} from '../storage/supabaseJournalRepository';
 import type {
   AddBeanPayload,
   AddShotPayload,
@@ -24,7 +33,10 @@ function collectPhotos(beans: Bean[], shots: Shot[]): Photo[] {
   return [...beans.flatMap((b) => b.photos), ...shots.flatMap((s) => s.photos)];
 }
 
-export function useJournal() {
+export function useJournal(cloudUserId: string | null) {
+  const useCloud = isCloudEnabled() && cloudUserId !== null;
+  const userId = cloudUserId ?? '';
+
   const [beans, setBeans] = useState<Bean[]>([]);
   const [shots, setShots] = useState<Shot[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map());
@@ -37,20 +49,51 @@ export function useJournal() {
     setPhotoUrls(urls);
   }, []);
 
-  const hydratePhotoUrls = useCallback(async (beansData: Bean[], shotsData: Shot[]) => {
-    const photos = collectPhotos(beansData, shotsData);
-    const next = new Map<string, string>();
+  const getBlob = useCallback(
+    async (photoId: string): Promise<Blob | undefined> => {
+      if (useCloud) return getPhotoBlobFromCloud(userId, photoId);
+      return getPhotoBlob(photoId);
+    },
+    [useCloud, userId],
+  );
 
-    for (const photo of photos) {
-      const blob = await getPhotoBlob(photo.id);
-      if (blob) {
-        next.set(photo.id, createPhotoObjectUrl(blob));
+  const hydratePhotoUrls = useCallback(
+    async (beansData: Bean[], shotsData: Shot[]) => {
+      const photos = collectPhotos(beansData, shotsData);
+      const next = new Map<string, string>();
+
+      for (const photo of photos) {
+        const blob = await getBlob(photo.id);
+        if (blob) {
+          next.set(photo.id, createPhotoObjectUrl(blob));
+        }
       }
-    }
 
-    photoUrlsRef.current.forEach((url) => revokePhotoObjectUrl(url));
-    syncPhotoUrlsRef(next);
-  }, [syncPhotoUrlsRef]);
+      photoUrlsRef.current.forEach((url) => revokePhotoObjectUrl(url));
+      syncPhotoUrlsRef(next);
+    },
+    [getBlob, syncPhotoUrlsRef],
+  );
+
+  const loadJournalData = useCallback(async () => {
+    if (useCloud) return loadJournalFromCloud(userId);
+    return loadJournal();
+  }, [useCloud, userId]);
+
+  const reloadJournal = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await loadJournalData();
+      setBeans(data.beans);
+      setShots(data.shots);
+      await hydratePhotoUrls(data.beans, data.shots);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load journal');
+    } finally {
+      setLoading(false);
+    }
+  }, [hydratePhotoUrls, loadJournalData]);
 
   const registerPhotoUrls = useCallback(
     (inputs: PhotoBlobInput[]) => {
@@ -83,7 +126,7 @@ export function useJournal() {
 
     (async () => {
       try {
-        const data = await loadJournal();
+        const data = await loadJournalData();
         if (cancelled) return;
         setBeans(data.beans);
         setShots(data.shots);
@@ -101,7 +144,7 @@ export function useJournal() {
       cancelled = true;
       photoUrlsRef.current.forEach((url) => revokePhotoObjectUrl(url));
     };
-  }, [hydratePhotoUrls]);
+  }, [hydratePhotoUrls, loadJournalData]);
 
   const resolvePhotos = useCallback(
     (photos: Photo[]): PhotoDisplay[] =>
@@ -114,10 +157,42 @@ export function useJournal() {
     [photoUrls],
   );
 
+  const storePhotoBlob = useCallback(
+    async (photoId: string, blob: Blob) => {
+      if (useCloud) await putPhotoBlobToCloud(userId, photoId, blob);
+      else await putPhotoBlob(photoId, blob);
+    },
+    [useCloud, userId],
+  );
+
+  const removePhotoBlob = useCallback(
+    async (photoId: string) => {
+      if (useCloud) await deletePhotoBlobFromCloud(userId, photoId);
+      else await deletePhotoBlob(photoId);
+    },
+    [useCloud, userId],
+  );
+
+  const persistBeans = useCallback(
+    async (nextBeans: Bean[]) => {
+      if (useCloud) await saveBeansToCloud(userId, nextBeans);
+      else await saveBeans(nextBeans);
+    },
+    [useCloud, userId],
+  );
+
+  const persistShots = useCallback(
+    async (nextShots: Shot[]) => {
+      if (useCloud) await saveShotsToCloud(userId, nextShots);
+      else await saveShots(nextShots);
+    },
+    [useCloud, userId],
+  );
+
   const addBean = useCallback(
     async (payload: AddBeanPayload) => {
       for (const { photo, blob } of payload.photoBlobs) {
-        await putPhotoBlob(photo.id, blob);
+        await storePhotoBlob(photo.id, blob);
       }
 
       const bean: Bean = {
@@ -125,17 +200,17 @@ export function useJournal() {
         id: crypto.randomUUID(),
       };
       const nextBeans = [bean, ...beans];
-      await saveBeans(nextBeans);
+      await persistBeans(nextBeans);
       registerPhotoUrls(payload.photoBlobs);
       setBeans(nextBeans);
     },
-    [beans, registerPhotoUrls],
+    [beans, persistBeans, registerPhotoUrls, storePhotoBlob],
   );
 
   const addShot = useCallback(
     async (payload: AddShotPayload) => {
       for (const { photo, blob } of payload.photoBlobs) {
-        await putPhotoBlob(photo.id, blob);
+        await storePhotoBlob(photo.id, blob);
       }
 
       const shot: Shot = {
@@ -143,17 +218,17 @@ export function useJournal() {
         id: crypto.randomUUID(),
       };
       const nextShots = [shot, ...shots];
-      await saveShots(nextShots);
+      await persistShots(nextShots);
       registerPhotoUrls(payload.photoBlobs);
       setShots(nextShots);
     },
-    [shots, registerPhotoUrls],
+    [shots, persistShots, registerPhotoUrls, storePhotoBlob],
   );
 
   const addBeanPhotos = useCallback(
     async (beanId: string, inputs: PhotoBlobInput[]) => {
       for (const { photo, blob } of inputs) {
-        await putPhotoBlob(photo.id, blob);
+        await storePhotoBlob(photo.id, blob);
       }
 
       const nextBeans = beans.map((bean) =>
@@ -161,16 +236,16 @@ export function useJournal() {
           ? { ...bean, photos: [...bean.photos, ...inputs.map((i) => i.photo)] }
           : bean,
       );
-      await saveBeans(nextBeans);
+      await persistBeans(nextBeans);
       registerPhotoUrls(inputs);
       setBeans(nextBeans);
     },
-    [beans, registerPhotoUrls],
+    [beans, persistBeans, registerPhotoUrls, storePhotoBlob],
   );
 
   const removeBeanPhoto = useCallback(
     async (beanId: string, photoId: string) => {
-      await deletePhotoBlob(photoId);
+      await removePhotoBlob(photoId);
       unregisterPhotoUrl(photoId);
 
       const nextBeans = beans.map((bean) =>
@@ -178,10 +253,10 @@ export function useJournal() {
           ? { ...bean, photos: bean.photos.filter((p) => p.id !== photoId) }
           : bean,
       );
-      await saveBeans(nextBeans);
+      await persistBeans(nextBeans);
       setBeans(nextBeans);
     },
-    [beans, unregisterPhotoUrl],
+    [beans, persistBeans, removePhotoBlob, unregisterPhotoUrl],
   );
 
   return {
@@ -194,5 +269,6 @@ export function useJournal() {
     addBean,
     addBeanPhotos,
     removeBeanPhoto,
+    reloadJournal,
   };
 }

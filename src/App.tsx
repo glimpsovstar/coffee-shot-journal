@@ -1,13 +1,23 @@
 import { useState } from 'react';
 import { AddShotForm } from './components/AddShotForm';
+import { AuthScreen } from './components/AuthScreen';
 import { BeanCatalogue } from './components/BeanCatalogue';
+import { CloudImportPrompt } from './components/CloudImportPrompt';
+import { JournalBackupPanel } from './components/JournalBackupPanel';
 import { ImportShotForm } from './components/ImportShotForm';
 import { ShotList } from './components/ShotList';
+import { useAuth } from './hooks/useAuth';
 import { useJournal } from './hooks/useJournal';
 
-type AppPage = 'journal' | 'import';
+type AppPage = 'journal' | 'import' | 'backup';
 
-function App() {
+function JournalApp({
+  cloudUserId,
+  onSignOut,
+}: {
+  cloudUserId: string | null;
+  onSignOut?: () => Promise<void>;
+}) {
   const [page, setPage] = useState<AppPage>('journal');
   const {
     beans,
@@ -19,7 +29,8 @@ function App() {
     addBean,
     addBeanPhotos,
     removeBeanPhoto,
-  } = useJournal();
+    reloadJournal,
+  } = useJournal(cloudUserId);
 
   if (loading) {
     return (
@@ -40,8 +51,17 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Coffee Shot Journal</h1>
-        <p>Track beans and espresso shots to learn what affects consistency and taste.</p>
+        <div className="app-header__row">
+          <div>
+            <h1>Coffee Shot Journal</h1>
+            <p>Track beans and espresso shots to learn what affects consistency and taste.</p>
+          </div>
+          {onSignOut ? (
+            <button type="button" className="btn-secondary app-header__sign-out" onClick={onSignOut}>
+              Sign out
+            </button>
+          ) : null}
+        </div>
         <nav className="app-nav" aria-label="Main">
           <button
             type="button"
@@ -59,8 +79,20 @@ function App() {
           >
             Import past shot
           </button>
+          <button
+            type="button"
+            className={page === 'backup' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
+            aria-current={page === 'backup' ? 'page' : undefined}
+            onClick={() => setPage('backup')}
+          >
+            Backup &amp; restore
+          </button>
         </nav>
       </header>
+
+      {cloudUserId ? (
+        <CloudImportPrompt userId={cloudUserId} onImported={() => reloadJournal()} />
+      ) : null}
 
       <div className="app-layout">
         <main className="app-main">
@@ -69,11 +101,13 @@ function App() {
               <ShotList shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
               <AddShotForm beans={beans} onAddShot={addShot} />
             </>
-          ) : (
+          ) : page === 'import' ? (
             <>
               <ImportShotForm beans={beans} onImportShot={addShot} />
               <ShotList shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
             </>
+          ) : (
+            <JournalBackupPanel cloudUserId={cloudUserId} onRestored={() => reloadJournal()} />
           )}
         </main>
         <aside className="app-sidebar">
@@ -87,6 +121,37 @@ function App() {
         </aside>
       </div>
     </div>
+  );
+}
+
+function App() {
+  const auth = useAuth();
+
+  if (auth.cloudEnabled && auth.loading) {
+    return (
+      <div className="app app--loading">
+        <p>Loading…</p>
+      </div>
+    );
+  }
+
+  if (auth.cloudEnabled && !auth.session) {
+    return (
+      <AuthScreen
+        error={auth.error}
+        onSignInWithPasskey={auth.signInWithPasskey}
+        onRegisterPasskey={auth.registerPasskey}
+      />
+    );
+  }
+
+  const cloudUserId = auth.session?.user.id ?? null;
+
+  return (
+    <JournalApp
+      cloudUserId={cloudUserId}
+      onSignOut={auth.cloudEnabled ? auth.signOut : undefined}
+    />
   );
 }
 

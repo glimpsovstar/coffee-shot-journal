@@ -66,6 +66,22 @@ async function migrateLegacyMetaIfPresent(
   return data;
 }
 
+/** Read IndexedDB journal without seeding empty stores (for import/export checks). */
+export async function readJournalFromIndexedDb(): Promise<JournalData | null> {
+  const db = await getDb();
+  const beans = await db.get('beans', JOURNAL_KEY);
+  const shots = await db.get('shots', JOURNAL_KEY);
+
+  if (beans === undefined && shots === undefined) {
+    return null;
+  }
+
+  return {
+    beans: normalizeBeans(beans ?? []),
+    shots: normalizeShots(shots ?? []),
+  };
+}
+
 export async function loadJournal(): Promise<JournalData> {
   const db = await getDb();
 
