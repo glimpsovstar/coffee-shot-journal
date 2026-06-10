@@ -1,21 +1,23 @@
 ---
-description: Use GitHub SDLC for every new feature
+description: Use GitHub SDLC for features and bugs
 alwaysApply: true
 ---
 
-# SDLC for new features
+# SDLC for features and bugs
 
-When the user asks for a **new feature** (not bugfixes, docs-only, or tiny copy tweaks):
+When the user asks for a **new feature**, reports a **bug**, or you discover a **production/deploy error** (not docs-only or tiny copy tweaks):
 
-1. **Open a GitHub issue** — problem, acceptance criteria, test plan (use the feature request template when present).
-2. **Branch** — `feature/<issue#>-short-description` from `main`.
+1. **Open a GitHub issue** — problem, acceptance criteria, test plan (Feature request or **Bug report** template).
+2. **Branch** — `feature/<issue#>-short-description` or `fix/<issue#>-short-description` from `main`.
 3. **Implement** — small commits; include tests per `require-tests.mdc` and docs per `require-docs.mdc`.
 4. **Verify** — `npm run test:run` and `npm run build`.
 5. **Pull request** — link the issue (`Fixes #N`); fill the PR template.
 6. **Close the issue** when the PR is merged (or when the user confirms merge).
 
-Do not skip the issue for "small" features unless the user explicitly says to skip SDLC for that task.
+**File the issue when the problem is found** — including operator/config issues (OAuth secrets, env vars). Do not rely on PR comments alone.
 
-**Note:** Early platform work (P1–P3, branding, auth) shipped directly to `main` before this gate was enforced. Do not retroactively open issues for that history.
+Do not skip the issue for "small" features or obvious bugs unless the user explicitly says to skip SDLC for that task.
+
+Retroactive bug log for pre-issue fixes: issues **#23–#30** on GitHub.
 
 Reference: [CONTRIBUTING.md](../../CONTRIBUTING.md).
