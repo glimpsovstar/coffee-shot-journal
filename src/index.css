@@ -120,15 +120,7 @@ dl {
 }
 
 .app-layout {
-  display: grid;
-  gap: 1.5rem;
-}
-
-@media (min-width: 768px) {
-  .app-layout {
-    grid-template-columns: 1fr 320px;
-    align-items: start;
-  }
+  display: block;
 }
 
 .app-main {
@@ -994,6 +986,7 @@ dl {
 
 .floating-hero {
   margin-bottom: 0.5rem;
+  text-align: center;
 }
 
 .floating-hero__eyebrow {
@@ -1005,18 +998,24 @@ dl {
   margin-bottom: 0.75rem;
 }
 
-.floating-hero__gallery {
-  --hero-card-width: min(200px, 38vw);
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  gap: 0;
+.floating-hero__scroller {
   overflow-x: auto;
   overflow-y: hidden;
   min-height: 220px;
   padding: 1.25rem 0.75rem 1.5rem;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  justify-content: center;
+}
+
+.floating-hero__gallery {
+  --hero-card-width: min(200px, 38vw);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0;
+  flex: 0 0 auto;
 }
 
 .floating-hero__card {
@@ -1063,9 +1062,12 @@ dl {
 }
 
 @media (min-width: 768px) {
+  .floating-hero__scroller {
+    min-height: 260px;
+  }
+
   .floating-hero__gallery {
     --hero-card-width: 180px;
-    min-height: 260px;
   }
 
   .floating-hero__image {

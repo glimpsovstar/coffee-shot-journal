@@ -46,7 +46,8 @@ export function FloatingShotHero({ shots, beans, resolvePhotos }: FloatingShotHe
       <h2 id="floating-hero-heading" className="floating-hero__eyebrow">
         Recent extractions
       </h2>
-      <div className="floating-hero__gallery">
+      <div className="floating-hero__scroller">
+        <div className="floating-hero__gallery">
         {cards.map((card, index) => {
           const isRevealed = revealedId === card.id;
           const layout = getHeroCardLayout(card.id, index);
@@ -85,6 +86,7 @@ export function FloatingShotHero({ shots, beans, resolvePhotos }: FloatingShotHe
             </button>
           );
         })}
+        </div>
       </div>
       <p className="floating-hero__hint">
         Showing the last {cards.length} extraction photo{cards.length === 1 ? '' : 's'}. Hover or
