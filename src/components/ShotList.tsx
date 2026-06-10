@@ -6,10 +6,12 @@ interface ShotListProps {
   shots: Shot[];
   beans: Bean[];
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
+  /** Hide a shot already featured elsewhere (e.g. floating hero). */
+  excludeShotId?: string;
 }
 
-export function ShotList({ shots, beans, resolvePhotos }: ShotListProps) {
-  const sorted = sortShotsNewestFirst(shots);
+export function ShotList({ shots, beans, resolvePhotos, excludeShotId }: ShotListProps) {
+  const sorted = sortShotsNewestFirst(shots).filter((shot) => shot.id !== excludeShotId);
 
   return (
     <section className="panel" aria-labelledby="shot-list-heading">

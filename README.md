@@ -15,6 +15,7 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 - **Add-shot form** — log a new pull with photos; it appears at the top of the list
 - **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (Google/Apple/GitHub on the landing page; optional passkey under **Backup & restore**). Local-only mode remains when Supabase env is unset.
 - **Branded landing** — coffee snob. sign-in page with logo assets in `public/branding/`
+- **Editorial journal** — centered hero header, floating latest-shot card, **Analytics** tab with extraction ratio & duration chart (Recharts)
 
 ### Bean fields
 
