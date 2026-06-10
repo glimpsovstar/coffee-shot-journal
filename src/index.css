@@ -971,20 +971,26 @@ dl {
 }
 
 .floating-hero__gallery {
+  --hero-card-width: min(200px, 38vw);
   display: flex;
   align-items: flex-end;
+  justify-content: flex-start;
   gap: 0;
   overflow-x: auto;
-  padding: 1.25rem 0.5rem 1.5rem;
+  overflow-y: hidden;
+  min-height: 220px;
+  padding: 1.25rem 0.75rem 1.5rem;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
 }
 
 .floating-hero__card {
   display: block;
-  flex: 0 0 min(200px, 38vw);
+  flex: 0 0 var(--hero-card-width);
+  width: var(--hero-card-width);
   scroll-snap-align: center;
-  margin-left: -22%;
+  /* Overlap ~30% of card width — % margins use container width and collapse the row */
+  margin-left: calc(var(--hero-card-width) * -0.3);
   padding: 0;
   border: none;
   background: transparent;
@@ -1022,13 +1028,13 @@ dl {
 }
 
 @media (min-width: 768px) {
-  .floating-hero__image {
-    height: 240px;
+  .floating-hero__gallery {
+    --hero-card-width: 180px;
+    min-height: 260px;
   }
 
-  .floating-hero__card {
-    flex-basis: min(180px, 16%);
-    margin-left: -18%;
+  .floating-hero__image {
+    height: 240px;
   }
 }
 

@@ -21,7 +21,7 @@ function hashString(value: string): number {
 export function getHeroCardLayout(cardId: string, index: number): HeroCardLayout {
   const hash = hashString(cardId);
   const offsetXPercent = HERO_OFFSET_X_OPTIONS[hash % HERO_OFFSET_X_OPTIONS.length];
-  const offsetYPercent = ((hash % 5) - 2) * 3;
+  const offsetYPercent = ((hash % 5) - 2) * 2;
 
   return {
     offsetXPercent,
