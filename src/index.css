@@ -1357,6 +1357,17 @@ dl {
   color: var(--text-muted);
 }
 
+.log-cafe-coffee__weather {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.log-cafe-coffee__weather-btn {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+}
+
 .cafe-place-field__suggestion-name {
   display: block;
   font-weight: 600;

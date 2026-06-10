@@ -49,7 +49,6 @@ function normalizeShots(shots: Shot[]): Shot[] {
         normalized.beanId = '';
       }
       delete normalized.brewSuburb;
-      delete normalized.weather;
       delete normalized.brewedLocation;
       if (!normalized.cafeId) {
         delete normalized.cafeId;

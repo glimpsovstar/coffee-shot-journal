@@ -20,23 +20,41 @@ function parseCafe(document: unknown): Cafe {
   return document as Cafe;
 }
 
+/** Supabase project missing `public.cafes` (migration 002 not applied). */
+export function isCafesTableMissingError(error: { message?: string; code?: string }): boolean {
+  const message = error.message?.toLowerCase() ?? '';
+  return (
+    message.includes('cafes') &&
+    (message.includes('does not exist') ||
+      message.includes('could not find the table') ||
+      message.includes('schema cache') ||
+      error.code === 'PGRST205')
+  );
+}
+
 export async function loadJournalFromCloud(userId: string): Promise<JournalData> {
   const supabase = getSupabaseClient();
 
-  const [beansResult, shotsResult, cafesResult] = await Promise.all([
-    supabase.from('beans').select('document').eq('user_id', userId),
-    supabase.from('shots').select('document').eq('user_id', userId),
-    supabase.from('cafes').select('document').eq('user_id', userId),
-  ]);
-
+  const beansResult = await supabase.from('beans').select('document').eq('user_id', userId);
   if (beansResult.error) throw beansResult.error;
+
+  const shotsResult = await supabase.from('shots').select('document').eq('user_id', userId);
   if (shotsResult.error) throw shotsResult.error;
-  if (cafesResult.error) throw cafesResult.error;
+
+  const cafesResult = await supabase.from('cafes').select('document').eq('user_id', userId);
+  let cafes: Cafe[] = [];
+  if (cafesResult.error) {
+    if (!isCafesTableMissingError(cafesResult.error)) {
+      throw cafesResult.error;
+    }
+  } else {
+    cafes = (cafesResult.data ?? []).map((row) => parseCafe(row.document));
+  }
 
   return {
     beans: (beansResult.data ?? []).map((row) => parseBean(row.document)),
     shots: (shotsResult.data ?? []).map((row) => parseShot(row.document)),
-    cafes: (cafesResult.data ?? []).map((row) => parseCafe(row.document)),
+    cafes,
   };
 }
 

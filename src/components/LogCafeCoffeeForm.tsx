@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import type { AddShotPayload, Bean, BeverageType, Cafe, PhotoBlobInput } from '../types';
+import type { AddShotPayload, Bean, BeverageType, Cafe, PhotoBlobInput, ShotWeather } from '../types';
+import { fetchWeatherAt } from '../services/weather';
 import { toDatetimeLocalValue } from '../utils/datetime';
 import {
   isCafeDrinkComplete,
@@ -11,6 +12,7 @@ import { CafeDrinkPicker } from './CafeDrinkPicker';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
 import { StarRating } from './StarRating';
+import { WeatherDisplay } from './WeatherDisplay';
 
 interface LogCafeCoffeeFormProps {
   cafe: Cafe;
@@ -32,10 +34,12 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
   const [wouldOrderAgain, setWouldOrderAgain] = useState(true);
   const [tastingNotes, setTastingNotes] = useState('');
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(4);
+  const [weatherPreview, setWeatherPreview] = useState<ShotWeather | null>(null);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const pendingPhotosRef = useRef(pendingPhotos);
   pendingPhotosRef.current = pendingPhotos;
   const [error, setError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -45,6 +49,10 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
       }
     };
   }, []);
+
+  useEffect(() => {
+    setWeatherPreview(null);
+  }, [brewedAt, cafe.id]);
 
   const handlePhotosAdded = (inputs: PhotoBlobInput[]) => {
     setPendingPhotos((current) => [
@@ -74,13 +82,35 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
     setWouldOrderAgain(true);
     setTastingNotes('');
     setRating(4);
+    setWeatherPreview(null);
+    setStatusMessage(null);
     for (const item of pendingPhotos) {
       revokePhotoObjectUrl(item.previewUrl);
     }
     setPendingPhotos([]);
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const previewWeather = async (at: Date) => {
+    setStatusMessage('Fetching weather for this visit…');
+    try {
+      const weather = await fetchWeatherAt({
+        latitude: cafe.latitude,
+        longitude: cafe.longitude,
+        at,
+      });
+      setWeatherPreview(weather);
+      setStatusMessage(null);
+    } catch (err) {
+      setWeatherPreview(null);
+      setStatusMessage(
+        err instanceof Error
+          ? `${err.message} Coffee will be saved without weather.`
+          : 'Weather unavailable. Coffee will be saved without weather.',
+      );
+    }
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
 
@@ -100,6 +130,24 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
 
     setSubmitting(true);
     try {
+      let weather = weatherPreview;
+      if (!weather) {
+        setStatusMessage('Fetching weather for this visit…');
+        try {
+          weather = await fetchWeatherAt({
+            latitude: cafe.latitude,
+            longitude: cafe.longitude,
+            at: brewed,
+          });
+        } catch (err) {
+          setStatusMessage(
+            err instanceof Error
+              ? `${err.message} Coffee will be saved without weather.`
+              : 'Weather unavailable. Coffee will be saved without weather.',
+          );
+        }
+      }
+
       onAddCoffee({
         shot: {
           context: 'cafe_purchased',
@@ -111,6 +159,7 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
           shotSize: shotSizeFromExtraShot(extraShot),
           ...(extraShot ? { extraShot: true } : {}),
           ...(alternativeMilk ? { alternativeMilk: true } : {}),
+          ...(weather ? { weather } : {}),
           ...(price !== undefined && !Number.isNaN(price) ? { priceAud: price } : {}),
           wouldOrderAgain,
           grinder: '',
@@ -143,18 +192,9 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
         Log a coffee
       </h4>
       <p className="log-cafe-coffee__intro">
-        What did you order at {cafe.name}? Pick from the menu below.
+        What did you order at {cafe.name}? Set when you visited, then pick from the menu.
       </p>
       <form className="shot-form" onSubmit={handleSubmit} noValidate>
-        <CafeDrinkPicker
-          beverageType={beverageType}
-          extraShot={extraShot}
-          alternativeMilk={alternativeMilk}
-          onBeverageTypeChange={setBeverageType}
-          onExtraShotChange={setExtraShot}
-          onAlternativeMilkChange={setAlternativeMilk}
-        />
-
         <div className="form-row form-row--pair">
           <div>
             <label htmlFor={`brewedAt-${cafe.id}`}>When</label>
@@ -166,10 +206,41 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
               required
             />
           </div>
-          <div>
-            <span className="form-label">Rating</span>
-            <StarRating value={rating} onChange={setRating} />
+          <div className="log-cafe-coffee__weather">
+            <span className="form-label">Weather at café</span>
+            {weatherPreview ? (
+              <WeatherDisplay weather={weatherPreview} />
+            ) : (
+              <button
+                type="button"
+                className="btn-ghost log-cafe-coffee__weather-btn"
+                onClick={() => {
+                  const brewed = new Date(brewedAt);
+                  if (Number.isNaN(brewed.getTime())) {
+                    setError('Enter a valid date and time before checking weather.');
+                    return;
+                  }
+                  void previewWeather(brewed);
+                }}
+              >
+                Check weather for this time
+              </button>
+            )}
           </div>
+        </div>
+
+        <CafeDrinkPicker
+          beverageType={beverageType}
+          extraShot={extraShot}
+          alternativeMilk={alternativeMilk}
+          onBeverageTypeChange={setBeverageType}
+          onExtraShotChange={setExtraShot}
+          onAlternativeMilkChange={setAlternativeMilk}
+        />
+
+        <div className="form-row">
+          <span className="form-label">Rating</span>
+          <StarRating value={rating} onChange={setRating} />
         </div>
 
         {beans.length > 0 ? (
@@ -236,6 +307,10 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
           label="Photos to attach"
           onRemove={handleRemovePending}
         />
+
+        {statusMessage ? (
+          <p className="photo-upload__hint" aria-live="polite">{statusMessage}</p>
+        ) : null}
 
         {error ? (
           <p className="form-error" role="alert">{error}</p>
