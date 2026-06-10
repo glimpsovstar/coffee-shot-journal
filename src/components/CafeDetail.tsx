@@ -29,18 +29,20 @@ export function CafeDetail({ cafe, shots, beans, resolvePhotos, onAddCoffee }: C
         longitude={cafe.longitude}
       />
 
+      <LogCafeCoffeeForm cafe={cafe} beans={beans} onAddCoffee={onAddCoffee} />
+
       {cafe.notes ? <p className="cafe-detail__notes">{cafe.notes}</p> : null}
 
       <PhotoGallery items={resolvePhotos(cafe.photos)} label="Café photos" />
-
-      <LogCafeCoffeeForm cafe={cafe} beans={beans} onAddCoffee={onAddCoffee} />
 
       <section aria-labelledby={`cafe-shots-${cafe.id}`}>
         <h4 id={`cafe-shots-${cafe.id}`} className="cafe-detail__shots-heading">
           Coffees logged here ({cafeShots.length})
         </h4>
         {cafeShots.length === 0 ? (
-          <p className="empty-state">No coffees logged at this café yet.</p>
+          <p className="empty-state">
+            No coffees logged yet — pick a drink in the form above and tap Log coffee.
+          </p>
         ) : (
           <ul className="card-list">
             {cafeShots.map((shot) => (

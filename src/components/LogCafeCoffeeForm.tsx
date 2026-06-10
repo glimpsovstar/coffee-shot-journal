@@ -142,6 +142,9 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
       <h4 id={`log-coffee-${cafe.id}`} className="log-cafe-coffee__heading">
         Log a coffee
       </h4>
+      <p className="log-cafe-coffee__intro">
+        What did you order at {cafe.name}? Pick from the menu below.
+      </p>
       <form className="shot-form" onSubmit={handleSubmit} noValidate>
         <CafeDrinkPicker
           beverageType={beverageType}

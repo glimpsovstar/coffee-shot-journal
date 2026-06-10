@@ -1256,6 +1256,10 @@ dl {
   color: var(--text-muted);
 }
 
+.cafe-catalogue__detail {
+  scroll-margin-top: 1rem;
+}
+
 .cafe-detail__title {
   font-size: 1.2rem;
   font-weight: 700;
@@ -1333,15 +1337,24 @@ dl {
 }
 
 .log-cafe-coffee {
-  margin: 1.25rem 0;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
+  margin: 1rem 0 1.25rem;
+  padding: 1rem 1rem 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .log-cafe-coffee__heading {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.log-cafe-coffee__intro {
+  margin: 0 0 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .cafe-place-field__suggestion-name {

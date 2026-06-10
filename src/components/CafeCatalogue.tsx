@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type {
   AddCafePayload,
   AddShotPayload,
@@ -33,6 +33,12 @@ export function CafeCatalogue({
 }: CafeCatalogueProps) {
   const [selectedId, setSelectedId] = useState<string | null>(cafes[0]?.id ?? null);
   const selected = cafes.find((c) => c.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const detail = document.getElementById(`cafe-detail-${selectedId}`);
+    detail?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [selectedId]);
 
   return (
     <>
@@ -70,13 +76,15 @@ export function CafeCatalogue({
         )}
       </section>
       {selected ? (
-        <CafeDetail
-          cafe={selected}
-          shots={shots}
-          beans={beans}
-          resolvePhotos={resolvePhotos}
-          onAddCoffee={onAddShot}
-        />
+        <div id={`cafe-detail-${selected.id}`} className="cafe-catalogue__detail">
+          <CafeDetail
+            cafe={selected}
+            shots={shots}
+            beans={beans}
+            resolvePhotos={resolvePhotos}
+            onAddCoffee={onAddShot}
+          />
+        </div>
       ) : null}
     </>
   );
