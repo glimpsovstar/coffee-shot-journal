@@ -946,13 +946,14 @@ dl {
   margin-bottom: 1.5rem;
 }
 
-@keyframes hero-float {
+@keyframes hero-float-card {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translateX(var(--hero-offset-x, 0)) translateY(var(--hero-offset-y, 0));
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateX(var(--hero-offset-x, 0))
+      translateY(calc(var(--hero-offset-y, 0) - 10px));
   }
 }
 
@@ -971,22 +972,37 @@ dl {
 
 .floating-hero__gallery {
   display: flex;
-  gap: 1rem;
+  align-items: flex-end;
+  gap: 0;
   overflow-x: auto;
-  padding: 0.25rem 0 0.75rem;
-  scroll-snap-type: x mandatory;
+  padding: 1.25rem 0.5rem 1.5rem;
+  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
 }
 
 .floating-hero__card {
   display: block;
-  flex: 0 0 min(220px, 42vw);
-  scroll-snap-align: start;
+  flex: 0 0 min(200px, 38vw);
+  scroll-snap-align: center;
+  margin-left: -22%;
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
   text-align: left;
+  position: relative;
+  animation: hero-float-card 5.5s ease-in-out infinite;
+  animation-delay: var(--hero-delay, 0s);
+  will-change: transform;
+}
+
+.floating-hero__card:first-child {
+  margin-left: 0;
+}
+
+.floating-hero__card:hover,
+.floating-hero__card--revealed {
+  z-index: 30;
 }
 
 .floating-hero__media {
@@ -1002,8 +1018,6 @@ dl {
   width: 100%;
   height: 200px;
   object-fit: cover;
-  animation: hero-float 5s ease-in-out infinite;
-  animation-delay: var(--hero-delay, 0s);
   transition: transform 0.35s ease;
 }
 
@@ -1013,13 +1027,18 @@ dl {
   }
 
   .floating-hero__card {
-    flex-basis: min(200px, 18%);
+    flex-basis: min(180px, 16%);
+    margin-left: -18%;
   }
+}
+
+.floating-hero__card:hover,
+.floating-hero__card--revealed {
+  animation-play-state: paused;
 }
 
 .floating-hero__card:hover .floating-hero__image,
 .floating-hero__card--revealed .floating-hero__image {
-  animation: none;
   transform: scale(1.05);
 }
 

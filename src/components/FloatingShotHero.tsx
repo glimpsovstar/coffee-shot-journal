@@ -5,6 +5,7 @@ import {
   formatHeroRecipeLine,
   getRecentExtractionPhotos,
 } from '../utils/analytics';
+import { getHeroCardLayout } from '../utils/floatingHeroLayout';
 import { formatBrewedAt, getBeanById } from '../utils/shots';
 
 interface FloatingShotHeroProps {
@@ -48,12 +49,20 @@ export function FloatingShotHero({ shots, beans, resolvePhotos }: FloatingShotHe
       <div className="floating-hero__gallery">
         {cards.map((card, index) => {
           const isRevealed = revealedId === card.id;
+          const layout = getHeroCardLayout(card.id, index);
           return (
             <button
               key={card.id}
               type="button"
               className={`floating-hero__card${isRevealed ? ' floating-hero__card--revealed' : ''}`}
-              style={{ '--hero-delay': `${index * 0.35}s` } as CSSProperties}
+              style={
+                {
+                  '--hero-delay': `${index * 0.35}s`,
+                  '--hero-offset-x': `${layout.offsetXPercent}%`,
+                  '--hero-offset-y': `${layout.offsetYPercent}%`,
+                  zIndex: layout.zIndex,
+                } as CSSProperties
+              }
               aria-expanded={isRevealed}
               aria-label={`${card.beanLabel} — ${formatBrewedAt(card.shot.brewedAt)}. Tap to ${isRevealed ? 'hide' : 'show'} recipe.`}
               onClick={() => setRevealedId(isRevealed ? null : card.id)}
