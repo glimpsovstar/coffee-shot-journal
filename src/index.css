@@ -943,7 +943,43 @@ dl {
 
 .app-nav--primary {
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.app-nav--secondary {
+  margin-bottom: 1.25rem;
+}
+
+.journal-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.journal-status__item strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.log-page__header {
+  margin-bottom: 0.75rem;
+}
+
+.log-page__title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.log-page__intro {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 36rem;
 }
 
 @keyframes hero-float-card {

@@ -18,26 +18,23 @@ describe('App', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders header, catalogue, and seed shots', async () => {
+  it('renders journal home without inline create forms', async () => {
     render(<App />);
 
     await waitFor(() => {
       expect(screen.getByRole('img', { name: 'coffee snob.' })).toBeInTheDocument();
     });
 
-    const catalogue = screen
-      .getByRole('heading', { name: 'Bean catalogue' })
-      .closest('section')!;
-    expect(
-      within(catalogue).getByRole('heading', { name: 'Ethiopia Yirgacheffe' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Past history' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Log a shot' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Add a bean' })).not.toBeInTheDocument();
 
-    const shotList = screen.getByRole('heading', { name: 'Espresso shots' }).closest('section');
+    const shotList = screen.getByRole('heading', { name: 'Past history' }).closest('section');
     expect(shotList).toBeTruthy();
     expect(within(shotList!).getAllByRole('listitem')).toHaveLength(seedShots.length);
   });
 
-  it('adds a new shot to the top of the list', async () => {
+  it('adds a new shot from the Log tab', async () => {
     vi.stubGlobal('crypto', {
       randomUUID: () => 'new-shot-id',
     });
@@ -46,12 +43,14 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Log a shot' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Log' })).toBeInTheDocument();
     });
 
-    const initialCount = within(
-      screen.getByRole('heading', { name: 'Espresso shots' }).closest('section')!,
-    ).getAllByRole('listitem').length;
+    await user.click(screen.getByRole('button', { name: 'Log' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Log a shot' })).toBeInTheDocument();
+    });
 
     const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
 
@@ -62,12 +61,14 @@ describe('App', () => {
     await user.type(within(form).getByLabelText('Tasting notes'), 'Great pull.');
     await user.click(within(form).getByRole('button', { name: 'Add shot' }));
 
+    await user.click(screen.getByRole('button', { name: 'Journal' }));
+
     await waitFor(() => {
-      const shotSection = screen.getByRole('heading', { name: 'Espresso shots' }).closest('section')!;
-      expect(within(shotSection).getAllByRole('listitem')).toHaveLength(initialCount + 1);
+      const shotSection = screen.getByRole('heading', { name: 'Past history' }).closest('section')!;
+      expect(within(shotSection).getAllByRole('listitem')).toHaveLength(seedShots.length + 1);
     });
 
-    const shotSection = screen.getByRole('heading', { name: 'Espresso shots' }).closest('section')!;
+    const shotSection = screen.getByRole('heading', { name: 'Past history' }).closest('section')!;
     const items = within(shotSection).getAllByRole('listitem');
 
     expect(within(items[0]).getByRole('heading', { level: 3 })).toHaveTextContent(
@@ -76,13 +77,20 @@ describe('App', () => {
     expect(within(items[0]).getByText('Great pull.')).toBeInTheDocument();
   });
 
-  it('adds a new bean to the catalogue', async () => {
+  it('adds a new bean from the Log tab', async () => {
     vi.stubGlobal('crypto', {
       randomUUID: () => 'new-bean-id',
     });
 
     const user = userEvent.setup();
     render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Log' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Log' }));
+    await user.click(screen.getByRole('button', { name: 'Beans' }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Add a bean' })).toBeInTheDocument();

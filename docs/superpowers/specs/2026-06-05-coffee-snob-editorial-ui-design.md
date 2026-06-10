@@ -18,9 +18,10 @@ Premium editorial journal layout: centered brand hero, floating featured shot, d
 
 ## Navigation
 
-- **Journal** — hero + shot feed + add shot + bean sidebar
-- **Analytics** — chart only (no sidebar)
-- **Import past shot** / **Backup & restore** — unchanged
+- **Journal** — floating photo gallery + past history (read-first)
+- **Log** — new shot, import past shot, beans (sub-nav)
+- **Analytics** — chart only
+- **Backup & restore** — unchanged
 
 ## Chart data
 
