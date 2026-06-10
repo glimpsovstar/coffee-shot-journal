@@ -22,7 +22,7 @@ interface PendingPhoto extends PhotoBlobInput {
   previewUrl: string;
 }
 
-const defaultFormState = (beans: Bean[]) => ({
+const defaultHomeForm = (beans: Bean[]) => ({
   beanId: beans[0]?.id ?? '',
   brewedAt: toDatetimeLocalValue(new Date()),
   grinder: 'Niche Zero',
@@ -41,7 +41,7 @@ function clearPendingPhotos(pending: PendingPhoto[]) {
 }
 
 export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
-  const [form, setForm] = useState(() => defaultFormState(beans));
+  const [form, setForm] = useState(() => defaultHomeForm(beans));
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const pendingPhotosRef = useRef(pendingPhotos);
   pendingPhotosRef.current = pendingPhotos;
@@ -80,6 +80,12 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
     setError(null);
     setStatusMessage(null);
 
+    const brewedAt = new Date(form.brewedAt);
+    if (Number.isNaN(brewedAt.getTime())) {
+      setError('Please enter a valid date and time.');
+      return;
+    }
+
     if (!form.beanId) {
       setError('Please select a bean.');
       return;
@@ -106,12 +112,6 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
 
     if (Number.isNaN(extractionTime) || extractionTime <= 0) {
       setError('Extraction time must be a positive number.');
-      return;
-    }
-
-    const brewedAt = new Date(form.brewedAt);
-    if (Number.isNaN(brewedAt.getTime())) {
-      setError('Please enter a valid date and time.');
       return;
     }
 
@@ -156,6 +156,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
 
       onAddShot({
         shot: {
+          context: 'home_pulled',
           beanId: form.beanId,
           brewedAt: brewedAt.toISOString(),
           ...(resolvedSuburb ? { brewSuburb: toStoredSuburb(resolvedSuburb) } : {}),
@@ -176,7 +177,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       setPendingPhotos([]);
       setSelectedSuburb(null);
       setSuburbQuery('');
-      setForm(defaultFormState(beans));
+      setForm(defaultHomeForm(beans));
       setStatusMessage(null);
     } finally {
       setSubmitting(false);
@@ -186,7 +187,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
   if (beans.length === 0) {
     return (
       <section className="panel">
-        <p className="empty-state">Add beans to the catalogue before logging shots.</p>
+        <p className="empty-state">Add beans to the catalogue before logging home shots.</p>
       </section>
     );
   }
@@ -213,27 +214,15 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
 
   return (
     <section className="panel" aria-labelledby="add-shot-heading">
-      <h2 id="add-shot-heading">Log a shot</h2>
+      <h2 id="add-shot-heading">Log a home shot</h2>
+      <p className="panel__intro">
+        Espresso you pulled at home — grinder, dose, yield, and tasting notes. For café coffees, use
+        Log → Café.
+      </p>
       <form className="shot-form" onSubmit={handleSubmit} noValidate>
-        <div className="form-row">
-          <label htmlFor="beanId">Bean</label>
-          <select
-            id="beanId"
-            value={form.beanId}
-            onChange={(e) => setForm((f) => ({ ...f, beanId: e.target.value }))}
-            required
-          >
-            {beans.map((bean) => (
-              <option key={bean.id} value={bean.id}>
-                {formatBeanChoiceLabel(bean)}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div className="form-row form-row--pair">
           <div>
-            <label htmlFor="brewedAt">Brewed</label>
+            <label htmlFor="brewedAt">When</label>
             <input
               id="brewedAt"
               type="datetime-local"
@@ -252,6 +241,22 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
               onSelect={setSelectedSuburb}
             />
           </div>
+        </div>
+
+        <div className="form-row">
+          <label htmlFor="beanId">Bean</label>
+          <select
+            id="beanId"
+            value={form.beanId}
+            onChange={(e) => setForm((f) => ({ ...f, beanId: e.target.value }))}
+            required
+          >
+            {beans.map((bean) => (
+              <option key={bean.id} value={bean.id}>
+                {formatBeanChoiceLabel(bean)}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="form-row form-row--pair">
@@ -347,17 +352,13 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
           label="Rating"
         />
 
-        {statusMessage && (
-          <p className="photo-upload__hint" aria-live="polite">
-            {statusMessage}
-          </p>
-        )}
+        {statusMessage ? (
+          <p className="photo-upload__hint" aria-live="polite">{statusMessage}</p>
+        ) : null}
 
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
+        {error ? (
+          <p className="form-error" role="alert">{error}</p>
+        ) : null}
 
         <button type="submit" className="btn-primary" disabled={submitting}>
           {submitting ? 'Saving…' : 'Add shot'}

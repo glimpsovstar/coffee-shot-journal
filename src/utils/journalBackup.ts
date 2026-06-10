@@ -1,14 +1,15 @@
-import type { Bean, Shot } from '../types';
+import type { Bean, Cafe, Shot } from '../types';
 import {
   getPhotoBlob,
   putPhotoBlob,
   readJournalFromIndexedDb,
   saveBeans,
+  saveCafes,
   saveShots,
 } from '../storage/journalRepository';
 import { collectPhotoIds, type JournalData } from './journalSeed';
 
-export const JOURNAL_BACKUP_VERSION = 1;
+export const JOURNAL_BACKUP_VERSION = 2;
 
 export interface JournalBackupPhoto {
   id: string;
@@ -18,10 +19,11 @@ export interface JournalBackupPhoto {
 }
 
 export interface JournalBackupFile {
-  version: typeof JOURNAL_BACKUP_VERSION;
+  version: 1 | 2;
   exportedAt: string;
   beans: Bean[];
   shots: Shot[];
+  cafes?: Cafe[];
   photos: JournalBackupPhoto[];
 }
 
@@ -49,16 +51,17 @@ export async function buildJournalBackupFromIndexedDb(): Promise<JournalBackupFi
     (await readJournalFromIndexedDb()) ?? {
       beans: [],
       shots: [],
+      cafes: [],
     };
 
-  const photoIds = collectPhotoIds(data.beans, data.shots);
+  const photoIds = collectPhotoIds(data.beans, data.shots, data.cafes);
   const photos: JournalBackupPhoto[] = [];
 
   for (const photoId of photoIds) {
     const blob = await getPhotoBlob(photoId);
     if (!blob) continue;
 
-    const beanOrShotPhoto = [...data.beans, ...data.shots]
+    const beanOrShotPhoto = [...data.beans, ...data.shots, ...data.cafes]
       .flatMap((row) => row.photos)
       .find((p) => p.id === photoId);
 
@@ -75,13 +78,14 @@ export async function buildJournalBackupFromIndexedDb(): Promise<JournalBackupFi
     exportedAt: new Date().toISOString(),
     beans: data.beans,
     shots: data.shots,
+    cafes: data.cafes,
     photos,
   };
 }
 
 export function parseJournalBackupFile(raw: string): JournalBackupFile {
   const parsed = JSON.parse(raw) as JournalBackupFile;
-  if (parsed.version !== JOURNAL_BACKUP_VERSION) {
+  if (parsed.version !== 1 && parsed.version !== JOURNAL_BACKUP_VERSION) {
     throw new Error('Unsupported backup file version.');
   }
   if (!Array.isArray(parsed.beans) || !Array.isArray(parsed.shots) || !Array.isArray(parsed.photos)) {
@@ -91,7 +95,7 @@ export function parseJournalBackupFile(raw: string): JournalBackupFile {
 }
 
 export function journalDataFromBackup(backup: JournalBackupFile): JournalData {
-  return { beans: backup.beans, shots: backup.shots };
+  return { beans: backup.beans, shots: backup.shots, cafes: backup.cafes ?? [] };
 }
 
 export function photoBlobsFromBackup(backup: JournalBackupFile): Map<string, Blob> {
@@ -105,6 +109,7 @@ export function photoBlobsFromBackup(backup: JournalBackupFile): Map<string, Blo
 export async function restoreJournalBackupToIndexedDb(backup: JournalBackupFile): Promise<void> {
   await saveBeans(backup.beans);
   await saveShots(backup.shots);
+  await saveCafes(backup.cafes ?? []);
 
   for (const photo of backup.photos) {
     const blob = base64ToBlob(photo.base64, photo.mimeType);

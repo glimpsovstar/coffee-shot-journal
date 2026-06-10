@@ -417,6 +417,22 @@ dl {
   color: var(--text-muted);
 }
 
+.photo-upload__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.photo-upload__error .form-error {
+  margin: 0;
+}
+
+.photo-upload__dismiss {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+}
+
 .photo-remove {
   font: inherit;
   font-size: 0.75rem;
@@ -1149,4 +1165,213 @@ dl {
 .shot-card__time {
   font-family: var(--font-mono);
   font-size: 0.85rem;
+}
+
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+}
+
+.radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.shot-context-fieldset,
+.drink-style-fields {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: none;
+}
+
+.drink-style-fields__legend,
+.shot-context-fieldset legend {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.shot-card__badge {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(224, 90, 71, 0.12);
+  border-radius: 999px;
+}
+
+.cafe-map {
+  margin: 1rem 0;
+}
+
+.cafe-map__iframe {
+  display: block;
+  width: 100%;
+  height: 280px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.cafe-map__link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.cafe-list__item {
+  display: block;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.cafe-list__item--active {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.cafe-list__name {
+  display: block;
+  font-weight: 700;
+}
+
+.cafe-list__meta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.cafe-detail__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.cafe-detail__address {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.cafe-detail__notes {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.cafe-detail__shots-heading {
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.cafe-place-field .suburb-autocomplete {
+  margin-bottom: 0.75rem;
+}
+
+.cafe-drink-picker {
+  margin: 0 0 1rem;
+  border: none;
+  padding: 0;
+}
+
+.cafe-drink-picker__legend {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.cafe-drink-picker__menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cafe-drink-picker__menu li {
+  list-style: none;
+}
+
+.cafe-drink-picker__option {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.cafe-drink-picker__option--active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.cafe-drink-picker__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.log-cafe-coffee {
+  margin: 1.25rem 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.log-cafe-coffee__heading {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.cafe-place-field__suggestion-name {
+  display: block;
+  font-weight: 600;
+}
+
+.cafe-place-field__suggestion-address {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.cafe-place-field__photo-suggestions {
+  margin-bottom: 1rem;
+}
+
+.cafe-place-field__photo-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cafe-place-field__photo-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }

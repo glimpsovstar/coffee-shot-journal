@@ -54,6 +54,7 @@ describe('cloudImport', () => {
     vi.mocked(loadJournalFromCloud).mockResolvedValue({
       beans: [{ ...seedBeans[0] }],
       shots: [],
+      cafes: [],
     });
 
     await saveBeans([{ ...seedBeans[0], name: 'Local only' }, ...seedBeans.slice(1)]);
@@ -63,7 +64,7 @@ describe('cloudImport', () => {
   });
 
   it('offers import when cloud is empty and local has custom entries', async () => {
-    vi.mocked(loadJournalFromCloud).mockResolvedValue({ beans: [], shots: [] });
+    vi.mocked(loadJournalFromCloud).mockResolvedValue({ beans: [], shots: [], cafes: [] });
 
     await saveBeans([{ ...seedBeans[0], name: 'Local only' }, ...seedBeans.slice(1)]);
     await saveShots(seedShots);
@@ -72,7 +73,7 @@ describe('cloudImport', () => {
   });
 
   it('does not offer import after prompt was handled', async () => {
-    vi.mocked(loadJournalFromCloud).mockResolvedValue({ beans: [], shots: [] });
+    vi.mocked(loadJournalFromCloud).mockResolvedValue({ beans: [], shots: [], cafes: [] });
     markCloudImportPromptHandled('user-3');
 
     await saveBeans([{ ...seedBeans[0], name: 'Local only' }, ...seedBeans.slice(1)]);

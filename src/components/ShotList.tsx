@@ -1,10 +1,11 @@
-import type { Bean, PhotoDisplay, Shot } from '../types';
+import type { Bean, Cafe, PhotoDisplay, Shot } from '../types';
 import { sortShotsNewestFirst } from '../utils/shots';
 import { ShotCard } from './ShotCard';
 
 interface ShotListProps {
   shots: Shot[];
   beans: Bean[];
+  cafes?: Cafe[];
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
   /** Hide a shot already featured elsewhere (e.g. floating hero). */
   excludeShotId?: string;
@@ -16,6 +17,7 @@ interface ShotListProps {
 export function ShotList({
   shots,
   beans,
+  cafes = [],
   resolvePhotos,
   excludeShotId,
   heading = 'Espresso shots',
@@ -37,6 +39,7 @@ export function ShotList({
               <ShotCard
                 shot={shot}
                 beans={beans}
+                cafes={cafes}
                 photoItems={resolvePhotos(shot.photos)}
               />
             </li>

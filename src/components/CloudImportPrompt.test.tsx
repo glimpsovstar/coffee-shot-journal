@@ -8,7 +8,7 @@ vi.mock('../storage/supabaseJournalRepository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../storage/supabaseJournalRepository')>();
   return {
     ...actual,
-    loadJournalFromCloud: vi.fn().mockResolvedValue({ beans: [], shots: [] }),
+    loadJournalFromCloud: vi.fn().mockResolvedValue({ beans: [], shots: [], cafes: [] }),
   };
 });
 import { seedBeans, seedShots } from '../data/seed';
@@ -41,7 +41,7 @@ describe('CloudImportPrompt', () => {
 
   beforeEach(async () => {
     stubLocalStorage();
-    vi.mocked(loadJournalFromCloud).mockResolvedValue({ beans: [], shots: [] });
+    vi.mocked(loadJournalFromCloud).mockResolvedValue({ beans: [], shots: [], cafes: [] });
     resetDbForTests();
     await clearJournalForTests();
     resetDbForTests();

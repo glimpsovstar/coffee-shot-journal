@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../lib/supabaseClient';
-import type { Bean, Shot } from '../types';
+import type { Bean, Cafe, Shot } from '../types';
 import type { JournalData } from '../utils/journalSeed';
 
 const PHOTO_BUCKET = 'journal-photos';
@@ -16,27 +16,34 @@ function parseShot(document: unknown): Shot {
   return document as Shot;
 }
 
+function parseCafe(document: unknown): Cafe {
+  return document as Cafe;
+}
+
 export async function loadJournalFromCloud(userId: string): Promise<JournalData> {
   const supabase = getSupabaseClient();
 
-  const [beansResult, shotsResult] = await Promise.all([
+  const [beansResult, shotsResult, cafesResult] = await Promise.all([
     supabase.from('beans').select('document').eq('user_id', userId),
     supabase.from('shots').select('document').eq('user_id', userId),
+    supabase.from('cafes').select('document').eq('user_id', userId),
   ]);
 
   if (beansResult.error) throw beansResult.error;
   if (shotsResult.error) throw shotsResult.error;
+  if (cafesResult.error) throw cafesResult.error;
 
   return {
     beans: (beansResult.data ?? []).map((row) => parseBean(row.document)),
     shots: (shotsResult.data ?? []).map((row) => parseShot(row.document)),
+    cafes: (cafesResult.data ?? []).map((row) => parseCafe(row.document)),
   };
 }
 
 async function syncRows(
-  table: 'beans' | 'shots',
+  table: 'beans' | 'shots' | 'cafes',
   userId: string,
-  rows: { id: string; document: Bean | Shot }[],
+  rows: { id: string; document: Bean | Shot | Cafe }[],
 ): Promise<void> {
   const supabase = getSupabaseClient();
 
@@ -84,6 +91,14 @@ export async function saveShotsToCloud(userId: string, shots: Shot[]): Promise<v
     'shots',
     userId,
     shots.map((shot) => ({ id: shot.id, document: shot })),
+  );
+}
+
+export async function saveCafesToCloud(userId: string, cafes: Cafe[]): Promise<void> {
+  await syncRows(
+    'cafes',
+    userId,
+    cafes.map((cafe) => ({ id: cafe.id, document: cafe })),
   );
 }
 

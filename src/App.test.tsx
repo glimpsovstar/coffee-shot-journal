@@ -26,7 +26,7 @@ describe('App', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'Past history' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Log a shot' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Log a home shot' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Add a bean' })).not.toBeInTheDocument();
 
     const shotList = screen.getByRole('heading', { name: 'Past history' }).closest('section');
@@ -49,14 +49,14 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Log' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Log a shot' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Log a home shot' })).toBeInTheDocument();
     });
 
-    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Grind setting'), '15');
-    await user.clear(within(form).getByLabelText('Brewed'));
-    await user.type(within(form).getByLabelText('Brewed'), '2026-06-05T12:00');
+    await user.clear(within(form).getByLabelText('When'));
+    await user.type(within(form).getByLabelText('When'), '2026-06-05T12:00');
     await user.selectOptions(within(form).getByLabelText('Bean'), 'bean-house');
     await user.type(within(form).getByLabelText('Tasting notes'), 'Great pull.');
     await user.click(within(form).getByRole('button', { name: 'Add shot' }));

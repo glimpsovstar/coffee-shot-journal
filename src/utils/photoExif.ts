@@ -95,6 +95,13 @@ async function extractDatesFromBuffer(buffer: ArrayBuffer): Promise<ExifPick | n
   }
 }
 
+export async function extractGpsFromPhotoBlob(
+  blob: Blob,
+): Promise<{ latitude: number; longitude: number } | undefined> {
+  const buffer = await toExifInput(blob);
+  return extractGpsFromBuffer(buffer);
+}
+
 export async function extractShotMetadataFromBlob(blob: Blob): Promise<ShotPhotoMetadata> {
   const messages: string[] = [];
   const buffer = await toExifInput(blob);

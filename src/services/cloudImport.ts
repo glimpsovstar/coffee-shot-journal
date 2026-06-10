@@ -12,12 +12,14 @@ import {
   loadJournalFromCloud,
   putPhotoBlobToCloud,
   saveBeansToCloud,
+  saveCafesToCloud,
   saveShotsToCloud,
 } from '../storage/supabaseJournalRepository';
 
 export interface CloudImportResult {
   beans: number;
   shots: number;
+  cafes: number;
   photos: number;
 }
 
@@ -27,7 +29,7 @@ export async function importLocalJournalToCloud(userId: string): Promise<CloudIm
     throw new Error('No local journal on this device to import.');
   }
 
-  const photoIds = collectPhotoIds(local.beans, local.shots);
+  const photoIds = collectPhotoIds(local.beans, local.shots, local.cafes);
 
   let photosUploaded = 0;
   for (const photoId of photoIds) {
@@ -39,11 +41,13 @@ export async function importLocalJournalToCloud(userId: string): Promise<CloudIm
 
   await saveBeansToCloud(userId, local.beans);
   await saveShotsToCloud(userId, local.shots);
+  await saveCafesToCloud(userId, local.cafes);
   markCloudImportPromptHandled(userId);
 
   return {
     beans: local.beans.length,
     shots: local.shots.length,
+    cafes: local.cafes.length,
     photos: photosUploaded,
   };
 }
@@ -70,7 +74,7 @@ export async function shouldOfferCloudImportPrompt(userId: string): Promise<bool
   if (!(await hasCustomLocalJournal())) return false;
 
   const cloud = await loadJournalFromCloud(userId);
-  if (cloud.beans.length > 0 || cloud.shots.length > 0) {
+  if (cloud.beans.length > 0 || cloud.shots.length > 0 || cloud.cafes.length > 0) {
     markCloudImportPromptHandled(userId);
     return false;
   }
@@ -84,7 +88,7 @@ export async function importJournalDataToCloud(
   data: JournalData,
   photoBlobs: Map<string, Blob>,
 ): Promise<CloudImportResult> {
-  const photoIds = collectPhotoIds(data.beans, data.shots);
+  const photoIds = collectPhotoIds(data.beans, data.shots, data.cafes);
   let photosUploaded = 0;
 
   for (const photoId of photoIds) {
@@ -96,11 +100,13 @@ export async function importJournalDataToCloud(
 
   await saveBeansToCloud(userId, data.beans);
   await saveShotsToCloud(userId, data.shots);
+  await saveCafesToCloud(userId, data.cafes);
   markCloudImportPromptHandled(userId);
 
   return {
     beans: data.beans.length,
     shots: data.shots.length,
+    cafes: data.cafes.length,
     photos: photosUploaded,
   };
 }
