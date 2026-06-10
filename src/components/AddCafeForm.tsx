@@ -1,7 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import type { AddCafePayload, PhotoBlobInput } from '../types';
+import { reverseGeocodePlaceLabel } from '../services/geocoding';
+import { searchCafesNearLocation, type CafePlaceSuggestion } from '../services/googlePlaces';
+import { isGooglePlacesEnabled } from '../lib/mapsConfig';
 import { geocodePlaceQuery } from '../services/geocoding';
+import { extractGpsFromPhotoBlob } from '../utils/photoExif';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
+import { CafePlaceField } from './CafePlaceField';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
 
@@ -17,10 +22,42 @@ export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
+  const [selectedPlace, setSelectedPlace] = useState<CafePlaceSuggestion | null>(null);
+  const [photoSuggestions, setPhotoSuggestions] = useState<CafePlaceSuggestion[]>([]);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  const resolveLocationFromPhoto = async (blob: Blob) => {
+    const gps = await extractGpsFromPhotoBlob(blob);
+    if (!gps) return;
+
+    setStatusMessage('Photo GPS found — looking up nearby cafés…');
+
+    if (isGooglePlacesEnabled()) {
+      try {
+        const nearby = await searchCafesNearLocation(gps.latitude, gps.longitude);
+        setPhotoSuggestions(nearby);
+        if (nearby.length > 0) {
+          setStatusMessage(
+            `Photo GPS found — pick a nearby café below or keep typing a name.`,
+          );
+          return;
+        }
+      } catch {
+        // fall through to reverse geocode label
+      }
+    }
+
+    const label = await reverseGeocodePlaceLabel(gps.latitude, gps.longitude);
+    if (label) {
+      setAddress(label);
+      setStatusMessage('Photo GPS found — address filled. Add the café name or pick from suggestions when available.');
+    } else {
+      setStatusMessage('Photo GPS found but could not resolve an address — enter details manually.');
+    }
+  };
 
   const handlePhotosAdded = (inputs: PhotoBlobInput[]) => {
     setPendingPhotos((current) => [
@@ -30,6 +67,10 @@ export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
         previewUrl: createPhotoObjectUrl(input.blob),
       })),
     ]);
+
+    if (inputs[0]) {
+      void resolveLocationFromPhoto(inputs[0].blob);
+    }
   };
 
   const handleRemovePending = (photoId: string) => {
@@ -53,20 +94,31 @@ export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
 
     setSubmitting(true);
     try {
-      setStatusMessage('Looking up location…');
-      const query = [trimmedName, address.trim()].filter(Boolean).join(', ');
-      const place = await geocodePlaceQuery(query);
-      if (!place) {
-        setError('Could not find that location — try a fuller address (suburb, city).');
-        return;
+      let latitude = selectedPlace?.latitude;
+      let longitude = selectedPlace?.longitude;
+      let resolvedAddress = address.trim() || selectedPlace?.address;
+      let googlePlaceId = selectedPlace?.placeId;
+
+      if (latitude === undefined || longitude === undefined) {
+        setStatusMessage('Looking up location…');
+        const query = [trimmedName, address.trim()].filter(Boolean).join(', ');
+        const place = await geocodePlaceQuery(query);
+        if (!place) {
+          setError('Could not find that location — pick a Google suggestion or add a fuller address.');
+          return;
+        }
+        latitude = place.latitude;
+        longitude = place.longitude;
+        resolvedAddress = resolvedAddress || place.address;
       }
 
       await onAddCafe({
         cafe: {
           name: trimmedName,
-          address: address.trim() || place.address,
-          latitude: place.latitude,
-          longitude: place.longitude,
+          address: resolvedAddress,
+          latitude,
+          longitude,
+          googlePlaceId,
           notes: notes.trim(),
           photos: pendingPhotos.map((p) => p.photo),
         },
@@ -79,6 +131,8 @@ export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
       setName('');
       setAddress('');
       setNotes('');
+      setSelectedPlace(null);
+      setPhotoSuggestions([]);
       setPendingPhotos([]);
       setStatusMessage(null);
     } catch (err) {
@@ -97,30 +151,18 @@ export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
     <section className="panel" aria-labelledby="add-cafe-heading">
       <h2 id="add-cafe-heading">Add a café</h2>
       <p className="panel__intro">
-        Save places you visit. We look up coordinates from the name and address for the map.
+        Type a café name for Google suggestions, or upload a photo with location data to pin nearby places.
       </p>
       <form className="shot-form" onSubmit={handleSubmit} noValidate>
-        <div className="form-row">
-          <label htmlFor="cafeName">Name</label>
-          <input
-            id="cafeName"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Market Lane Coffee"
-            required
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="cafeAddress">Address or suburb</label>
-          <input
-            id="cafeAddress"
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="e.g. Collins St, Melbourne VIC"
-          />
-        </div>
+        <CafePlaceField
+          name={name}
+          address={address}
+          selectedPlace={selectedPlace}
+          photoSuggestions={photoSuggestions}
+          onNameChange={setName}
+          onAddressChange={setAddress}
+          onSelectPlace={setSelectedPlace}
+        />
         <div className="form-row">
           <label htmlFor="cafeNotes">Notes</label>
           <textarea

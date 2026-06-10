@@ -33,9 +33,9 @@ interface LogPageProps {
 
 const LOG_SECTIONS: { id: LogSection; label: string }[] = [
   { id: 'shot', label: 'New shot' },
-  { id: 'import', label: 'Import past shot' },
+  { id: 'cafes', label: 'Café' },
   { id: 'beans', label: 'Beans' },
-  { id: 'cafes', label: 'Cafés' },
+  { id: 'import', label: 'Import past shot' },
 ];
 
 export function LogPage({
@@ -80,17 +80,7 @@ export function LogPage({
 
       {section === 'shot' ? (
         <AddShotForm beans={beans} cafes={cafes} onAddShot={onAddShot} />
-      ) : section === 'import' ? (
-        <ImportShotForm beans={beans} onImportShot={onAddShot} />
-      ) : section === 'beans' ? (
-        <BeanCatalogue
-          beans={beans}
-          resolvePhotos={resolvePhotos}
-          onAddBean={onAddBean}
-          onAddBeanPhotos={onAddBeanPhotos}
-          onRemoveBeanPhoto={onRemoveBeanPhoto}
-        />
-      ) : (
+      ) : section === 'cafes' ? (
         <CafeCatalogue
           cafes={cafes}
           shots={shots}
@@ -100,6 +90,16 @@ export function LogPage({
           onAddCafePhotos={onAddCafePhotos}
           onRemoveCafePhoto={onRemoveCafePhoto}
         />
+      ) : section === 'beans' ? (
+        <BeanCatalogue
+          beans={beans}
+          resolvePhotos={resolvePhotos}
+          onAddBean={onAddBean}
+          onAddBeanPhotos={onAddBeanPhotos}
+          onRemoveBeanPhoto={onRemoveBeanPhoto}
+        />
+      ) : (
+        <ImportShotForm beans={beans} onImportShot={onAddShot} />
       )}
     </div>
   );

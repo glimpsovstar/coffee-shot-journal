@@ -152,6 +152,28 @@ export async function geocodePlaceQuery(query: string): Promise<GeocodedPlace | 
   };
 }
 
+/** Reverse geocode to a human-readable place label (any country). */
+export async function reverseGeocodePlaceLabel(
+  latitude: number,
+  longitude: number,
+): Promise<string | null> {
+  const url = new URL('https://geocoding-api.open-meteo.com/v1/reverse');
+  url.searchParams.set('latitude', String(latitude));
+  url.searchParams.set('longitude', String(longitude));
+  url.searchParams.set('count', '1');
+  url.searchParams.set('language', 'en');
+
+  const response = await fetch(url);
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as GeocodingResult;
+  const hit = data.results?.[0];
+  if (!hit?.name) return null;
+
+  const parts = [hit.name, hit.admin1, hit.country_code].filter(Boolean);
+  return parts.join(', ');
+}
+
 export async function reverseGeocodeSuburb(
   latitude: number,
   longitude: number,

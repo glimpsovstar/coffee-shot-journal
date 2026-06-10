@@ -1262,3 +1262,35 @@ dl {
   font-size: 1rem;
   font-weight: 600;
 }
+
+.cafe-place-field__suggestion-name {
+  display: block;
+  font-weight: 600;
+}
+
+.cafe-place-field__suggestion-address {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.cafe-place-field__photo-suggestions {
+  margin-bottom: 1rem;
+}
+
+.cafe-place-field__photo-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cafe-place-field__photo-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}

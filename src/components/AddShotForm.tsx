@@ -108,7 +108,7 @@ export function AddShotForm({ beans, cafes, onAddShot }: AddShotFormProps) {
 
     if (context === 'cafe_purchased') {
       if (!cafeId) {
-        setError('Select a café — add one under Log → Cafés first.');
+        setError('Select a café — add one under Log → Café first.');
         return;
       }
       if (
@@ -264,7 +264,7 @@ export function AddShotForm({ beans, cafes, onAddShot }: AddShotFormProps) {
   if (context === 'cafe_purchased' && cafes.length === 0) {
     return (
       <section className="panel">
-        <p className="empty-state">Add a café under Log → Cafés before logging a café coffee.</p>
+        <p className="empty-state">Add a café under Log → Café before logging a café coffee.</p>
       </section>
     );
   }

@@ -38,13 +38,13 @@ describe('LogPage', () => {
     expect(onSectionChange).toHaveBeenCalledWith('beans');
   });
 
-  it('switches to cafés section when requested', async () => {
+  it('switches to café section when requested', async () => {
     const user = userEvent.setup();
     const onSectionChange = vi.fn();
 
     render(<LogPage {...defaultProps} onSectionChange={onSectionChange} />);
 
-    await user.click(screen.getByRole('button', { name: 'Cafés' }));
+    await user.click(screen.getByRole('button', { name: 'Café' }));
     expect(onSectionChange).toHaveBeenCalledWith('cafes');
   });
 
