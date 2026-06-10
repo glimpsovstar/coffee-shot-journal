@@ -134,6 +134,11 @@ export interface AddCafePayload {
   photoBlobs: PhotoBlobInput[];
 }
 
+export interface AddCafeVisitPayload {
+  cafe: AddCafePayload;
+  coffee: AddShotPayload;
+}
+
 /** Partial bean from label scan — user reviews before save. */
 export type BeanDraft = Partial<
   Omit<NewBean, 'photos' | 'blendComponents'>

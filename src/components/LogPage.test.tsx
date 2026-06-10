@@ -13,7 +13,7 @@ const defaultProps = {
   resolvePhotos: () => [],
   onAddShot: vi.fn(),
   onAddBean: vi.fn(),
-  onAddCafe: vi.fn().mockResolvedValue({
+  onAddVisit: vi.fn().mockResolvedValue({
     id: 'cafe-test',
     name: 'Test Café',
     latitude: -36.85,

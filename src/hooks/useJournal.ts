@@ -21,6 +21,7 @@ import {
 import type {
   AddBeanPayload,
   AddCafePayload,
+  AddCafeVisitPayload,
   AddShotPayload,
   Bean,
   Cafe,
@@ -272,6 +273,40 @@ export function useJournal(cloudUserId: string | null) {
     [shots, persistShots, registerPhotoUrls, storePhotoBlob],
   );
 
+  const addCafeVisit = useCallback(
+    async (payload: AddCafeVisitPayload): Promise<Cafe> => {
+      for (const { photo, blob } of payload.cafe.photoBlobs) {
+        await storePhotoBlob(photo.id, blob);
+      }
+
+      const cafe: Cafe = {
+        ...payload.cafe.cafe,
+        id: crypto.randomUUID(),
+      };
+      const nextCafes = [cafe, ...cafes];
+      await persistCafes(nextCafes);
+      registerPhotoUrls(payload.cafe.photoBlobs);
+
+      for (const { photo, blob } of payload.coffee.photoBlobs) {
+        await storePhotoBlob(photo.id, blob);
+      }
+
+      const shot: Shot = {
+        ...payload.coffee.shot,
+        id: crypto.randomUUID(),
+        cafeId: cafe.id,
+      };
+      const nextShots = [shot, ...shots];
+      await persistShots(nextShots);
+      registerPhotoUrls(payload.coffee.photoBlobs);
+
+      setCafes(nextCafes);
+      setShots(nextShots);
+      return cafe;
+    },
+    [cafes, shots, persistCafes, persistShots, registerPhotoUrls, storePhotoBlob],
+  );
+
   const addBeanPhotos = useCallback(
     async (beanId: string, inputs: PhotoBlobInput[]) => {
       for (const { photo, blob } of inputs) {
@@ -350,6 +385,7 @@ export function useJournal(cloudUserId: string | null) {
     addShot,
     addBean,
     addCafe,
+    addCafeVisit,
     addBeanPhotos,
     removeBeanPhoto,
     addCafePhotos,

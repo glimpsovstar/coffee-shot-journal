@@ -1,18 +1,33 @@
 import { useState, type FormEvent } from 'react';
-import type { AddCafePayload, Cafe, PhotoBlobInput } from '../types';
+import type {
+  AddCafeVisitPayload,
+  Bean,
+  BeverageType,
+  Cafe,
+  PhotoBlobInput,
+  ShotWeather,
+} from '../types';
 import { reverseGeocodePlaceLabel } from '../services/geocoding';
 import { searchCafesNearLocation, type CafePlaceSuggestion } from '../services/googlePlaces';
+import { fetchWeatherAt } from '../services/weather';
 import { isGooglePlacesEnabled } from '../lib/mapsConfig';
 import { geocodePlaceQuery } from '../services/geocoding';
 import { extractGpsFromPhotoBlob } from '../utils/photoExif';
+import { buildCafeCoffeeShot } from '../utils/cafeCoffee';
+import { isCafeDrinkComplete } from '../utils/drinks';
+import { toDatetimeLocalValue } from '../utils/datetime';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
+import { CafeDrinkPicker } from './CafeDrinkPicker';
 import { CafePlaceField } from './CafePlaceField';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
+import { StarRating } from './StarRating';
+import { WeatherDisplay } from './WeatherDisplay';
 
 interface AddCafeFormProps {
-  onAddCafe: (payload: AddCafePayload) => void | Promise<void> | Promise<Cafe>;
-  /** When cafés already exist, collapse add form until expanded. */
+  beans: Bean[];
+  onAddVisit: (payload: AddCafeVisitPayload) => Promise<Cafe>;
+  /** When cafés already exist, collapse until expanded. */
   defaultCollapsed?: boolean;
 }
 
@@ -20,17 +35,60 @@ interface PendingPhoto extends PhotoBlobInput {
   previewUrl: string;
 }
 
-export function AddCafeForm({ onAddCafe, defaultCollapsed = false }: AddCafeFormProps) {
+export function AddCafeForm({ beans, onAddVisit, defaultCollapsed = false }: AddCafeFormProps) {
   const [expanded, setExpanded] = useState(!defaultCollapsed);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [notes, setNotes] = useState('');
+  const [cafeNotes, setCafeNotes] = useState('');
   const [selectedPlace, setSelectedPlace] = useState<CafePlaceSuggestion | null>(null);
   const [photoSuggestions, setPhotoSuggestions] = useState<CafePlaceSuggestion[]>([]);
-  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
+  const [cafePhotos, setCafePhotos] = useState<PendingPhoto[]>([]);
+  const [brewedAt, setBrewedAt] = useState(() => toDatetimeLocalValue(new Date()));
+  const [beverageType, setBeverageType] = useState<BeverageType | ''>('');
+  const [extraShot, setExtraShot] = useState(false);
+  const [alternativeMilk, setAlternativeMilk] = useState(false);
+  const [beanId, setBeanId] = useState('');
+  const [priceAud, setPriceAud] = useState('');
+  const [wouldOrderAgain, setWouldOrderAgain] = useState(true);
+  const [tastingNotes, setTastingNotes] = useState('');
+  const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(4);
+  const [weatherPreview, setWeatherPreview] = useState<ShotWeather | null>(null);
+  const [coffeePhotos, setCoffeePhotos] = useState<PendingPhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  const resetCoffeeFields = () => {
+    setBrewedAt(toDatetimeLocalValue(new Date()));
+    setBeverageType('');
+    setExtraShot(false);
+    setAlternativeMilk(false);
+    setBeanId('');
+    setPriceAud('');
+    setWouldOrderAgain(true);
+    setTastingNotes('');
+    setRating(4);
+    setWeatherPreview(null);
+    for (const item of coffeePhotos) {
+      revokePhotoObjectUrl(item.previewUrl);
+    }
+    setCoffeePhotos([]);
+  };
+
+  const resetForm = () => {
+    setName('');
+    setAddress('');
+    setCafeNotes('');
+    setSelectedPlace(null);
+    setPhotoSuggestions([]);
+    for (const item of cafePhotos) {
+      revokePhotoObjectUrl(item.previewUrl);
+    }
+    setCafePhotos([]);
+    resetCoffeeFields();
+    setStatusMessage(null);
+    setExpanded(false);
+  };
 
   const resolveLocationFromPhoto = async (blob: Blob) => {
     const gps = await extractGpsFromPhotoBlob(blob);
@@ -43,45 +101,60 @@ export function AddCafeForm({ onAddCafe, defaultCollapsed = false }: AddCafeForm
         const nearby = await searchCafesNearLocation(gps.latitude, gps.longitude);
         setPhotoSuggestions(nearby);
         if (nearby.length > 0) {
-          setStatusMessage(
-            `Photo GPS found — pick a nearby café below or keep typing a name.`,
-          );
+          setStatusMessage('Photo GPS found — pick a nearby café below or keep typing a name.');
           return;
         }
       } catch {
-        // fall through to reverse geocode label
+        // fall through
       }
     }
 
     const label = await reverseGeocodePlaceLabel(gps.latitude, gps.longitude);
     if (label) {
       setAddress(label);
-      setStatusMessage('Photo GPS found — address filled. Add the café name or pick from suggestions when available.');
+      setStatusMessage('Photo GPS found — address filled. Add the café name or pick from suggestions.');
     } else {
       setStatusMessage('Photo GPS found but could not resolve an address — enter details manually.');
     }
   };
 
-  const handlePhotosAdded = (inputs: PhotoBlobInput[]) => {
-    setPendingPhotos((current) => [
+  const handleCafePhotosAdded = (inputs: PhotoBlobInput[]) => {
+    setCafePhotos((current) => [
       ...current,
       ...inputs.map((input) => ({
         ...input,
         previewUrl: createPhotoObjectUrl(input.blob),
       })),
     ]);
-
     if (inputs[0]) {
       void resolveLocationFromPhoto(inputs[0].blob);
     }
   };
 
-  const handleRemovePending = (photoId: string) => {
-    setPendingPhotos((current) => {
-      const target = current.find((p) => p.photo.id === photoId);
-      if (target) revokePhotoObjectUrl(target.previewUrl);
-      return current.filter((p) => p.photo.id !== photoId);
-    });
+  const handleCoffeePhotosAdded = (inputs: PhotoBlobInput[]) => {
+    setCoffeePhotos((current) => [
+      ...current,
+      ...inputs.map((input) => ({
+        ...input,
+        previewUrl: createPhotoObjectUrl(input.blob),
+      })),
+    ]);
+  };
+
+  const previewWeather = async (latitude: number, longitude: number, at: Date) => {
+    setStatusMessage('Fetching weather for this visit…');
+    try {
+      const weather = await fetchWeatherAt({ latitude, longitude, at });
+      setWeatherPreview(weather);
+      setStatusMessage(null);
+    } catch (err) {
+      setWeatherPreview(null);
+      setStatusMessage(
+        err instanceof Error
+          ? `${err.message} Visit will be saved without weather.`
+          : 'Weather unavailable. Visit will be saved without weather.',
+      );
+    }
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -92,6 +165,17 @@ export function AddCafeForm({ onAddCafe, defaultCollapsed = false }: AddCafeForm
     const trimmedName = name.trim();
     if (!trimmedName) {
       setError('Café name is required.');
+      return;
+    }
+
+    if (!isCafeDrinkComplete(beverageType)) {
+      setError('Pick the coffee you ordered from the menu.');
+      return;
+    }
+
+    const brewed = new Date(brewedAt);
+    if (Number.isNaN(brewed.getTime())) {
+      setError('Please enter a valid date and time.');
       return;
     }
 
@@ -115,38 +199,71 @@ export function AddCafeForm({ onAddCafe, defaultCollapsed = false }: AddCafeForm
         resolvedAddress = resolvedAddress || place.address;
       }
 
-      await onAddCafe({
+      let weather = weatherPreview;
+      if (!weather) {
+        try {
+          weather = await fetchWeatherAt({
+            latitude,
+            longitude,
+            at: brewed,
+          });
+        } catch (err) {
+          setStatusMessage(
+            err instanceof Error
+              ? `${err.message} Visit will be saved without weather.`
+              : 'Weather unavailable. Visit will be saved without weather.',
+          );
+        }
+      }
+
+      const price = priceAud.trim() ? parseFloat(priceAud) : undefined;
+      const drink = beverageType as BeverageType;
+
+      const cafe = await onAddVisit({
         cafe: {
-          name: trimmedName,
-          address: resolvedAddress,
-          latitude,
-          longitude,
-          googlePlaceId,
-          notes: notes.trim(),
-          photos: pendingPhotos.map((p) => p.photo),
+          cafe: {
+            name: trimmedName,
+            address: resolvedAddress,
+            latitude,
+            longitude,
+            googlePlaceId,
+            notes: cafeNotes.trim(),
+            photos: cafePhotos.map((p) => p.photo),
+          },
+          photoBlobs: cafePhotos.map(({ photo, blob }) => ({ photo, blob })),
         },
-        photoBlobs: pendingPhotos.map(({ photo, blob }) => ({ photo, blob })),
+        coffee: {
+          shot: buildCafeCoffeeShot('pending', {
+            beverageType: drink,
+            extraShot,
+            alternativeMilk,
+            beanId,
+            brewedAtIso: brewed.toISOString(),
+            rating,
+            tastingNotes,
+            priceAud: price !== undefined && !Number.isNaN(price) ? price : undefined,
+            wouldOrderAgain,
+            weather: weather ?? undefined,
+            photos: coffeePhotos.map((p) => p.photo),
+          }),
+          photoBlobs: coffeePhotos.map(({ photo, blob }) => ({ photo, blob })),
+        },
       });
 
-      for (const item of pendingPhotos) {
-        revokePhotoObjectUrl(item.previewUrl);
-      }
-      setName('');
-      setAddress('');
-      setNotes('');
-      setSelectedPlace(null);
-      setPhotoSuggestions([]);
-      setPendingPhotos([]);
-      setExpanded(false);
-      setStatusMessage('Café saved — log your coffees in the panel above.');
+      resetForm();
+      setStatusMessage(`Saved ${cafe.name} and your ${drink.replace('_', ' ')}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add café.');
+      setError(err instanceof Error ? err.message : 'Failed to save visit.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const pendingDisplay = pendingPhotos.map(({ photo, previewUrl }) => ({
+  const cafePhotoDisplay = cafePhotos.map(({ photo, previewUrl }) => ({
+    photo,
+    url: previewUrl,
+  }));
+  const coffeePhotoDisplay = coffeePhotos.map(({ photo, previewUrl }) => ({
     photo,
     url: previewUrl,
   }));
@@ -155,11 +272,11 @@ export function AddCafeForm({ onAddCafe, defaultCollapsed = false }: AddCafeForm
     <section className="panel add-cafe-form" aria-labelledby="add-cafe-heading">
       <header className="add-cafe-form__header">
         <div>
-          <h2 id="add-cafe-heading">Add a café</h2>
+          <h2 id="add-cafe-heading">Log a café visit</h2>
           <p className="panel__intro">
             {expanded
-              ? 'Save a new place, then log coffees in the panel above.'
-              : 'Add another place you visit.'}
+              ? 'One step — save the place, your notes, and the coffee you ordered.'
+              : 'Log another café visit with the coffee you had there.'}
           </p>
         </div>
         {defaultCollapsed ? (
@@ -169,50 +286,193 @@ export function AddCafeForm({ onAddCafe, defaultCollapsed = false }: AddCafeForm
             aria-expanded={expanded}
             onClick={() => setExpanded((open) => !open)}
           >
-            {expanded ? 'Hide' : 'Add café'}
+            {expanded ? 'Hide' : 'New visit'}
           </button>
         ) : null}
       </header>
       {expanded ? (
-      <form className="shot-form" onSubmit={handleSubmit} noValidate>
-        <CafePlaceField
-          name={name}
-          address={address}
-          photoSuggestions={photoSuggestions}
-          onNameChange={setName}
-          onAddressChange={setAddress}
-          onSelectPlace={setSelectedPlace}
-        />
-        <div className="form-row">
-          <label htmlFor="cafeNotes">Notes</label>
-          <textarea
-            id="cafeNotes"
-            rows={2}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Vibe, favourite table, roaster on site…"
+        <form className="shot-form" onSubmit={handleSubmit} noValidate>
+          <CafePlaceField
+            name={name}
+            address={address}
+            photoSuggestions={photoSuggestions}
+            onNameChange={(value) => {
+              setName(value);
+              setWeatherPreview(null);
+            }}
+            onAddressChange={(value) => {
+              setAddress(value);
+              setWeatherPreview(null);
+            }}
+            onSelectPlace={setSelectedPlace}
           />
-        </div>
-        <PhotoUpload
-          existingCount={pendingPhotos.length}
-          onPhotosAdded={handlePhotosAdded}
-          label="Café photos"
-        />
-        <PhotoGalleryEditable
-          items={pendingDisplay}
-          label="Photos to attach"
-          onRemove={handleRemovePending}
-        />
-        {statusMessage ? (
-          <p className="photo-upload__hint" aria-live="polite">{statusMessage}</p>
-        ) : null}
-        {error ? (
-          <p className="form-error" role="alert">{error}</p>
-        ) : null}
-        <button type="submit" className="btn-primary" disabled={submitting}>
-          {submitting ? 'Saving…' : 'Save café'}
-        </button>
-      </form>
+
+          <div className="form-row form-row--pair">
+            <div>
+              <label htmlFor="visitWhen">When</label>
+              <input
+                id="visitWhen"
+                type="datetime-local"
+                value={brewedAt}
+                onChange={(e) => {
+                  setBrewedAt(e.target.value);
+                  setWeatherPreview(null);
+                }}
+                required
+              />
+            </div>
+            <div className="log-cafe-coffee__weather">
+              <span className="form-label">Weather at café</span>
+              {weatherPreview ? (
+                <WeatherDisplay weather={weatherPreview} />
+              ) : (
+                <button
+                  type="button"
+                  className="btn-ghost log-cafe-coffee__weather-btn"
+                  onClick={() => {
+                    const brewed = new Date(brewedAt);
+                    if (Number.isNaN(brewed.getTime())) {
+                      setError('Enter a valid date and time before checking weather.');
+                      return;
+                    }
+                    const lat = selectedPlace?.latitude;
+                    const lng = selectedPlace?.longitude;
+                    if (lat === undefined || lng === undefined) {
+                      setError('Pick a Google address or enter a location before checking weather.');
+                      return;
+                    }
+                    void previewWeather(lat, lng, brewed);
+                  }}
+                >
+                  Check weather for this time
+                </button>
+              )}
+            </div>
+          </div>
+
+          <CafeDrinkPicker
+            beverageType={beverageType}
+            extraShot={extraShot}
+            alternativeMilk={alternativeMilk}
+            onBeverageTypeChange={setBeverageType}
+            onExtraShotChange={setExtraShot}
+            onAlternativeMilkChange={setAlternativeMilk}
+          />
+
+          <div className="form-row">
+            <label htmlFor="cafeNotes">Café notes</label>
+            <textarea
+              id="cafeNotes"
+              rows={2}
+              value={cafeNotes}
+              onChange={(e) => setCafeNotes(e.target.value)}
+              placeholder="Vibe, favourite table, roaster on site…"
+            />
+          </div>
+
+          <div className="form-row">
+            <label htmlFor="coffeeTastingNotes">Coffee tasting notes</label>
+            <textarea
+              id="coffeeTastingNotes"
+              rows={2}
+              value={tastingNotes}
+              onChange={(e) => setTastingNotes(e.target.value)}
+              placeholder="Chocolate, too bitter, perfect temp…"
+            />
+          </div>
+
+          <div className="form-row">
+            <span className="form-label">Rating</span>
+            <StarRating value={rating} onChange={setRating} />
+          </div>
+
+          {beans.length > 0 ? (
+            <div className="form-row">
+              <label htmlFor="visitBeanId">Bean (optional)</label>
+              <select
+                id="visitBeanId"
+                value={beanId}
+                onChange={(e) => setBeanId(e.target.value)}
+              >
+                <option value="">Unknown / not listed</option>
+                {beans.map((bean) => (
+                  <option key={bean.id} value={bean.id}>
+                    {bean.roaster} — {bean.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+
+          <div className="form-row form-row--pair">
+            <div>
+              <label htmlFor="visitPrice">Price (AUD)</label>
+              <input
+                id="visitPrice"
+                type="number"
+                min="0"
+                step="0.5"
+                value={priceAud}
+                onChange={(e) => setPriceAud(e.target.value)}
+                placeholder="Optional"
+              />
+            </div>
+            <div className="form-row--checkbox">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={wouldOrderAgain}
+                  onChange={(e) => setWouldOrderAgain(e.target.checked)}
+                />
+                Would order again
+              </label>
+            </div>
+          </div>
+
+          <PhotoUpload
+            existingCount={cafePhotos.length}
+            onPhotosAdded={handleCafePhotosAdded}
+            label="Café photos"
+          />
+          <PhotoGalleryEditable
+            items={cafePhotoDisplay}
+            label="Café photos to attach"
+            onRemove={(photoId) => {
+              setCafePhotos((current) => {
+                const target = current.find((p) => p.photo.id === photoId);
+                if (target) revokePhotoObjectUrl(target.previewUrl);
+                return current.filter((p) => p.photo.id !== photoId);
+              });
+            }}
+          />
+
+          <PhotoUpload
+            existingCount={coffeePhotos.length}
+            onPhotosAdded={handleCoffeePhotosAdded}
+            label="Coffee photos"
+          />
+          <PhotoGalleryEditable
+            items={coffeePhotoDisplay}
+            label="Coffee photos to attach"
+            onRemove={(photoId) => {
+              setCoffeePhotos((current) => {
+                const target = current.find((p) => p.photo.id === photoId);
+                if (target) revokePhotoObjectUrl(target.previewUrl);
+                return current.filter((p) => p.photo.id !== photoId);
+              });
+            }}
+          />
+
+          {statusMessage ? (
+            <p className="photo-upload__hint" aria-live="polite">{statusMessage}</p>
+          ) : null}
+          {error ? (
+            <p className="form-error" role="alert">{error}</p>
+          ) : null}
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting ? 'Saving…' : 'Save visit'}
+          </button>
+        </form>
       ) : null}
     </section>
   );

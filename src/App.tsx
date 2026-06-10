@@ -37,7 +37,7 @@ function JournalApp({
     resolvePhotos,
     addShot,
     addBean,
-    addCafe,
+    addCafeVisit,
     addBeanPhotos,
     removeBeanPhoto,
     addCafePhotos,
@@ -143,7 +143,7 @@ function JournalApp({
               resolvePhotos={resolvePhotos}
               onAddShot={addShot}
               onAddBean={addBean}
-              onAddCafe={addCafe}
+              onAddVisit={addCafeVisit}
               onAddBeanPhotos={addBeanPhotos}
               onRemoveBeanPhoto={removeBeanPhoto}
               onAddCafePhotos={addCafePhotos}

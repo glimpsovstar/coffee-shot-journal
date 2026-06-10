@@ -4,7 +4,7 @@ import { CafeCatalogue } from './CafeCatalogue';
 import { ImportShotForm } from './ImportShotForm';
 import type {
   AddBeanPayload,
-  AddCafePayload,
+  AddCafeVisitPayload,
   AddShotPayload,
   Bean,
   Cafe,
@@ -24,7 +24,7 @@ interface LogPageProps {
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
   onAddShot: (payload: AddShotPayload) => void;
   onAddBean: (payload: AddBeanPayload) => void;
-  onAddCafe: (payload: AddCafePayload) => Promise<Cafe>;
+  onAddVisit: (payload: AddCafeVisitPayload) => Promise<Cafe>;
   onAddBeanPhotos: (beanId: string, inputs: PhotoBlobInput[]) => void;
   onRemoveBeanPhoto: (beanId: string, photoId: string) => void;
   onAddCafePhotos: (cafeId: string, inputs: PhotoBlobInput[]) => void;
@@ -47,11 +47,11 @@ export function LogPage({
   resolvePhotos,
   onAddShot,
   onAddBean,
-  onAddCafe,
+  onAddVisit,
   onAddBeanPhotos,
   onRemoveBeanPhoto,
-  onAddCafePhotos,
-  onRemoveCafePhoto,
+  onAddCafePhotos: _onAddCafePhotos,
+  onRemoveCafePhoto: _onRemoveCafePhoto,
 }: LogPageProps) {
   return (
     <div className="log-page">
@@ -86,10 +86,8 @@ export function LogPage({
           shots={shots}
           beans={beans}
           resolvePhotos={resolvePhotos}
-          onAddCafe={onAddCafe}
+          onAddVisit={onAddVisit}
           onAddShot={onAddShot}
-          onAddCafePhotos={onAddCafePhotos}
-          onRemoveCafePhoto={onRemoveCafePhoto}
         />
       ) : section === 'beans' ? (
         <BeanCatalogue

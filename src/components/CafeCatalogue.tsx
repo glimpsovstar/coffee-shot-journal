@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import type {
-  AddCafePayload,
+  AddCafeVisitPayload,
   AddShotPayload,
   Bean,
   Cafe,
-  PhotoBlobInput,
   PhotoDisplay,
   Shot,
 } from '../types';
@@ -16,10 +15,17 @@ interface CafeCatalogueProps {
   shots: Shot[];
   beans: Bean[];
   resolvePhotos: (photos: Cafe['photos']) => PhotoDisplay[];
-  onAddCafe: (payload: AddCafePayload) => Promise<Cafe>;
+  onAddVisit: (payload: AddCafeVisitPayload) => Promise<Cafe>;
   onAddShot: (payload: AddShotPayload) => void;
-  onAddCafePhotos: (cafeId: string, inputs: PhotoBlobInput[]) => void;
-  onRemoveCafePhoto: (cafeId: string, photoId: string) => void;
+}
+
+function scrollToCafeDetail(cafeId: string) {
+  requestAnimationFrame(() => {
+    document.getElementById(`cafe-detail-${cafeId}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  });
 }
 
 function scrollToLogCoffee(cafeId: string) {
@@ -36,7 +42,7 @@ export function CafeCatalogue({
   shots,
   beans,
   resolvePhotos,
-  onAddCafe,
+  onAddVisit,
   onAddShot,
 }: CafeCatalogueProps) {
   const [selectedId, setSelectedId] = useState<string | null>(cafes[0]?.id ?? null);
@@ -52,10 +58,10 @@ export function CafeCatalogue({
     scrollToLogCoffee(cafeId);
   };
 
-  const handleAddCafe = async (payload: AddCafePayload) => {
-    const cafe = await onAddCafe(payload);
+  const handleAddVisit = async (payload: AddCafeVisitPayload) => {
+    const cafe = await onAddVisit(payload);
     setSelectedId(cafe.id);
-    scrollToLogCoffee(cafe.id);
+    scrollToCafeDetail(cafe.id);
     return cafe;
   };
 
@@ -103,11 +109,15 @@ export function CafeCatalogue({
         </div>
       ) : cafes.length === 0 ? (
         <p className="empty-state panel">
-          No cafés yet — add one below, then log the coffees you ordered there.
+          No cafés yet — log your first visit below with the café and the coffee you ordered.
         </p>
       ) : null}
 
-      <AddCafeForm onAddCafe={handleAddCafe} defaultCollapsed={cafes.length > 0} />
+      <AddCafeForm
+        beans={beans}
+        onAddVisit={handleAddVisit}
+        defaultCollapsed={cafes.length > 0}
+      />
     </div>
   );
 }
