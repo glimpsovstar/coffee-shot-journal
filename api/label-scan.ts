@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { callOpenAiLabelScan } from '../src/services/labelScanOpenai';
-import { parseLabelScanRequestBody } from '../src/services/labelScanRequest';
+import { callOpenAiLabelScan } from '../src/services/labelScanOpenai.js';
+import { parseLabelScanRequestBody } from '../src/services/labelScanRequest.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

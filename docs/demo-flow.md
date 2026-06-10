@@ -71,8 +71,8 @@ P5:         Product backlog (filters, charts, export enhancements)
 | **Relying Party name** | e.g. `coffee snob.` |
 | **Allowed origins** | `https://coffeesnob.withdevo.net` only (localhost is incompatible with RP ID `withdevo.net`) |
 
-1. **Social providers** (Authentication → Providers): enable **Google**, **Apple**, and/or **GitHub**; paste OAuth client IDs/secrets from each provider console. Redirect URI is your Supabase callback URL (`https://<project-ref>.supabase.co/auth/v1/callback`).
-2. **Enable sign-ups** if you want “Create account” via Google/Apple/GitHub on the landing page (or keep invite-only and create users in the dashboard).
+1. **Social providers** (Authentication → Providers): enable **Google**, **Apple**, and/or **GitHub**. You must paste **both Client ID and Client Secret** from each provider console — `missing OAuth secret` means the secret field is empty. Redirect URI is your Supabase callback URL (`https://<project-ref>.supabase.co/auth/v1/callback`).
+2. **Enable sign-ups** if you want friends (or “Create account”) via Google/Apple/GitHub on the landing page (or keep invite-only and create users in the dashboard).
 3. Enable **Passkeys** in Supabase Auth settings.
 4. **First visit:** landing page → **Continue with Google** (or Apple/GitHub) → journal opens.
 5. **Add passkey (optional):** while signed in, open **Backup & restore** → **Sign-in options** → **Add passkey**.
@@ -123,6 +123,7 @@ Validate **V-1** through **V-4** in the design spec (phone add → laptop sees d
 | Issue | Check |
 |-------|--------|
 | Domain not resolving | DNS propagation; Vercel domain config |
+| Google login `missing OAuth secret` | Supabase → Auth → Providers → Google → paste **Client secret** from Google Cloud (not just Client ID) |
 | Passkey / QR fails | Relying Party ID = `withdevo.net`; origins include prod URL; hybrid transport not stripped |
 | Label scan 401/500 | Vercel function logs; `OPENAI_API_KEY` set in Production |
 | Data not syncing | Supabase RLS policies; signed-in `auth.uid()` matches row `user_id` |

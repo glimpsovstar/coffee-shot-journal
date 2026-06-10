@@ -1,4 +1,4 @@
-import type { BagSize, Bean, BeanKind, BlendComponent, NewBean, RoastStyle } from '../types';
+import type { BagSize, Bean, BeanKind, BlendComponent, NewBean, RoastStyle } from '../types/index.js';
 
 export const BAG_SIZES: BagSize[] = ['200g', '250g', '500g', '1kg'];
 export const ROAST_STYLES: RoastStyle[] = ['light', 'medium', 'dark'];

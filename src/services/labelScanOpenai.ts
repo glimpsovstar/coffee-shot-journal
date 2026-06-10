@@ -1,4 +1,8 @@
-import { LABEL_SCAN_SYSTEM_PROMPT, parseLabelScanContent, type LabelScanResult } from './labelScanParse';
+import {
+  LABEL_SCAN_SYSTEM_PROMPT,
+  parseLabelScanContent,
+  type LabelScanResult,
+} from './labelScanParse.js';
 
 export async function callOpenAiLabelScan(
   apiKey: string,

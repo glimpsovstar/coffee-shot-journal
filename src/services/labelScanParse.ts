@@ -1,5 +1,5 @@
-import type { BagSize, BeanDraft, BeanKind, RoastStyle } from '../types';
-import { BAG_SIZES, ROAST_STYLES } from '../utils/beans';
+import type { BagSize, BeanDraft, BeanKind, RoastStyle } from '../types/index.js';
+import { BAG_SIZES, ROAST_STYLES } from '../utils/beans.js';
 
 export interface LabelScanResult {
   draft: BeanDraft;

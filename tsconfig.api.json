@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": [
+    "api/**/*.ts",
+    "src/services/labelScanOpenai.ts",
+    "src/services/labelScanParse.ts",
+    "src/services/labelScanRequest.ts",
+    "src/utils/beans.ts",
+    "src/types/index.ts"
+  ]
+}
