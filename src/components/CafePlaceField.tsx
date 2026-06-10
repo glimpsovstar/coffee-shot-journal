@@ -9,7 +9,6 @@ import {
 interface CafePlaceFieldProps {
   name: string;
   address: string;
-  selectedPlace: CafePlaceSuggestion | null;
   photoSuggestions: CafePlaceSuggestion[];
   onNameChange: (value: string) => void;
   onAddressChange: (value: string) => void;
@@ -19,7 +18,6 @@ interface CafePlaceFieldProps {
 export function CafePlaceField({
   name,
   address,
-  selectedPlace,
   photoSuggestions,
   onNameChange,
   onAddressChange,
@@ -31,6 +29,7 @@ export function CafePlaceField({
   const [activeIndex, setActiveIndex] = useState(0);
   const [searchResults, setSearchResults] = useState<CafePlaceSuggestion[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const placesEnabled = isGooglePlacesEnabled();
@@ -39,16 +38,27 @@ export function CafePlaceField({
   useEffect(() => {
     if (!placesEnabled || name.trim().length < 2) {
       setSearchResults([]);
+      setSearchError(null);
       return;
     }
 
     const handle = window.setTimeout(async () => {
       setSearching(true);
+      setSearchError(null);
       try {
         const results = await autocompleteCafePlaces(name);
         setSearchResults(results);
-      } catch {
+        if (results.length === 0) {
+          setSearchError('No matches — try suburb or street in the name, or enter address manually.');
+        }
+      } catch (err) {
         setSearchResults([]);
+        const message = err instanceof Error ? err.message : 'Places search failed.';
+        setSearchError(
+          message.includes('403') || message.includes('PERMISSION_DENIED')
+            ? 'Google Places blocked this site — check API key referrer restrictions for your Vercel URL.'
+            : 'Could not reach Google Places — check API key and that Places API (New) is enabled.',
+        );
       } finally {
         setSearching(false);
       }
@@ -60,6 +70,7 @@ export function CafePlaceField({
   const applyPlace = async (place: CafePlaceSuggestion) => {
     onNameChange(place.name);
     onAddressChange(place.address);
+    setSearchError(null);
     if (place.latitude !== undefined && place.longitude !== undefined) {
       onSelectPlace(place);
       setOpen(false);
@@ -78,7 +89,7 @@ export function CafePlaceField({
 
   return (
     <div className="cafe-place-field">
-      <div className="form-row">
+      <div className="suburb-autocomplete">
         <label htmlFor={nameId}>Name</label>
         <input
           id={nameId}
@@ -87,6 +98,11 @@ export function CafePlaceField({
           aria-expanded={open && suggestions.length > 0}
           aria-controls={listId}
           aria-autocomplete="list"
+          aria-activedescendant={
+            open && suggestions[activeIndex]
+              ? `${nameId}-option-${activeIndex}`
+              : undefined
+          }
           value={name}
           onChange={(e) => {
             onNameChange(e.target.value);
@@ -112,6 +128,8 @@ export function CafePlaceField({
             } else if (e.key === 'Enter' && suggestions[activeIndex]) {
               e.preventDefault();
               applyPlace(suggestions[activeIndex]);
+            } else if (e.key === 'Escape') {
+              setOpen(false);
             }
           }}
           placeholder="Start typing a café name"
@@ -128,28 +146,29 @@ export function CafePlaceField({
         {open && suggestions.length > 0 ? (
           <ul id={listId} className="suburb-autocomplete__list" role="listbox">
             {suggestions.map((place, index) => (
-              <li
-                key={place.placeId}
-                id={`${nameId}-option-${index}`}
-                role="option"
-                aria-selected={index === activeIndex}
-                className={
-                  index === activeIndex
-                    ? 'suburb-autocomplete__option suburb-autocomplete__option--active'
-                    : 'suburb-autocomplete__option'
-                }
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  applyPlace(place);
-                }}
-              >
-                <span className="cafe-place-field__suggestion-name">{place.name}</span>
-                {place.address ? (
-                  <span className="cafe-place-field__suggestion-address">{place.address}</span>
-                ) : null}
+              <li key={place.placeId} role="presentation">
+                <button
+                  type="button"
+                  id={`${nameId}-option-${index}`}
+                  role="option"
+                  aria-selected={index === activeIndex}
+                  className={
+                    index === activeIndex ? 'suburb-autocomplete__option--active' : undefined
+                  }
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => applyPlace(place)}
+                >
+                  <span className="cafe-place-field__suggestion-name">{place.name}</span>
+                  {place.address ? (
+                    <span className="cafe-place-field__suggestion-address">{place.address}</span>
+                  ) : null}
+                </button>
               </li>
             ))}
           </ul>
+        ) : null}
+        {searchError && !searching ? (
+          <p className="photo-upload__hint" role="status">{searchError}</p>
         ) : null}
       </div>
 
@@ -163,8 +182,7 @@ export function CafePlaceField({
             onAddressChange(e.target.value);
             onSelectPlace(null);
           }}
-          placeholder="Filled when you pick a Google suggestion"
-          readOnly={Boolean(selectedPlace?.address && placesEnabled)}
+          placeholder="Filled when you pick a Google suggestion, or type manually"
         />
       </div>
 
@@ -180,7 +198,9 @@ export function CafePlaceField({
                   onClick={() => applyPlace(place)}
                 >
                   <span>{place.name}</span>
-                  {place.address ? <span className="cafe-place-field__suggestion-address">{place.address}</span> : null}
+                  {place.address ? (
+                    <span className="cafe-place-field__suggestion-address">{place.address}</span>
+                  ) : null}
                 </button>
               </li>
             ))}

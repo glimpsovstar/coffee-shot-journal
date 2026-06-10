@@ -157,7 +157,6 @@ export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
         <CafePlaceField
           name={name}
           address={address}
-          selectedPlace={selectedPlace}
           photoSuggestions={photoSuggestions}
           onNameChange={setName}
           onAddressChange={setAddress}

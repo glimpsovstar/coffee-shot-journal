@@ -33,4 +33,18 @@ describe('PhotoUpload', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/not a supported image type/);
     expect(onPhotosAdded).not.toHaveBeenCalled();
   });
+
+  it('dismisses upload errors', async () => {
+    const onPhotosAdded = vi.fn();
+
+    render(<PhotoUpload existingCount={0} onPhotosAdded={onPhotosAdded} />);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = createMockImageFile('doc.pdf', 'application/pdf', 64);
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });

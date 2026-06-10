@@ -10,6 +10,9 @@ export interface CafePlaceSuggestion {
 
 const PLACES_BASE = 'https://places.googleapis.com/v1';
 
+/** AU/NZ bias for café search — app focus region. */
+const REGION_CODES = ['au', 'nz'];
+
 function apiKey(): string {
   const key = getGoogleMapsApiKey();
   if (!key) throw new Error('Google Maps API key is not configured.');
@@ -18,6 +21,12 @@ function apiKey(): string {
 
 function parsePlaceResourceId(place: string): string {
   return place.startsWith('places/') ? place.slice('places/'.length) : place;
+}
+
+function resolvePlaceId(placeId?: string, placeResource?: string): string | undefined {
+  if (placeId?.trim()) return placeId.trim();
+  if (placeResource?.trim()) return parsePlaceResourceId(placeResource.trim());
+  return undefined;
 }
 
 async function placesFetch<T>(path: string, init: RequestInit): Promise<T> {
@@ -51,12 +60,7 @@ interface PlaceDetailsResponse {
 }
 
 interface NearbySearchResponse {
-  places?: Array<{
-    id?: string;
-    displayName?: { text?: string };
-    formattedAddress?: string;
-    location?: { latitude?: number; longitude?: number };
-  }>;
+  places?: PlaceDetailsResponse[];
 }
 
 function mapPlaceDetails(data: PlaceDetailsResponse): CafePlaceSuggestion | null {
@@ -73,12 +77,22 @@ function mapPlaceDetails(data: PlaceDetailsResponse): CafePlaceSuggestion | null
   };
 }
 
-/** Autocomplete café / coffee shop names (requires Places API on the Maps key). */
-export async function autocompleteCafePlaces(input: string): Promise<CafePlaceSuggestion[]> {
-  if (!isGooglePlacesEnabled()) return [];
-  const trimmed = input.trim();
-  if (trimmed.length < 2) return [];
+function mapAutocompletePrediction(
+  prediction: NonNullable<AutocompleteResponse['suggestions']>[number]['placePrediction'],
+): CafePlaceSuggestion | null {
+  if (!prediction) return null;
+  const placeId = resolvePlaceId(prediction.placeId, prediction.place);
+  if (!placeId) return null;
+  const name =
+    prediction.structuredFormat?.mainText?.text?.trim() ??
+    prediction.text?.text?.trim() ??
+    '';
+  if (!name) return null;
+  const address = prediction.structuredFormat?.secondaryText?.text?.trim() ?? '';
+  return { placeId, name, address };
+}
 
+async function autocompletePlaces(input: string): Promise<CafePlaceSuggestion[]> {
   const data = await placesFetch<AutocompleteResponse>('/places:autocomplete', {
     method: 'POST',
     headers: {
@@ -86,29 +100,49 @@ export async function autocompleteCafePlaces(input: string): Promise<CafePlaceSu
       'X-Goog-Api-Key': apiKey(),
     },
     body: JSON.stringify({
-      input: trimmed,
-      includedPrimaryTypes: ['cafe', 'coffee_shop'],
+      input,
+      includedRegionCodes: REGION_CODES,
       languageCode: 'en',
     }),
   });
 
   return (data.suggestions ?? [])
-    .map((item) => {
-      const prediction = item.placePrediction;
-      if (!prediction?.placeId) return null;
-      const name =
-        prediction.structuredFormat?.mainText?.text?.trim() ??
-        prediction.text?.text?.trim() ??
-        '';
-      if (!name) return null;
-      const address = prediction.structuredFormat?.secondaryText?.text?.trim() ?? '';
-      return {
-        placeId: prediction.placeId,
-        name,
-        address,
-      };
-    })
+    .map((item) => mapAutocompletePrediction(item.placePrediction))
     .filter((item): item is CafePlaceSuggestion => item !== null);
+}
+
+/** Text search fallback when autocomplete returns no place predictions. */
+async function searchTextPlaces(query: string): Promise<CafePlaceSuggestion[]> {
+  const data = await placesFetch<NearbySearchResponse>('/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey(),
+      'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location',
+    },
+    body: JSON.stringify({
+      textQuery: query,
+      maxResultCount: 5,
+      languageCode: 'en',
+      regionCode: 'nz',
+    }),
+  });
+
+  return (data.places ?? [])
+    .map((place) => mapPlaceDetails(place))
+    .filter((item): item is CafePlaceSuggestion => item !== null);
+}
+
+/** Autocomplete café / coffee shop names (requires Places API on the Maps key). */
+export async function autocompleteCafePlaces(input: string): Promise<CafePlaceSuggestion[]> {
+  if (!isGooglePlacesEnabled()) return [];
+  const trimmed = input.trim();
+  if (trimmed.length < 2) return [];
+
+  const autocomplete = await autocompletePlaces(trimmed);
+  if (autocomplete.length > 0) return autocomplete;
+
+  return searchTextPlaces(trimmed);
 }
 
 /** Resolve a place id to coordinates and formatted address. */
@@ -142,18 +176,38 @@ export async function searchCafesNearLocation(
       'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location',
     },
     body: JSON.stringify({
-      includedTypes: ['cafe', 'coffee_shop'],
+      includedTypes: ['cafe', 'coffee_shop', 'restaurant'],
       maxResultCount: 5,
       locationRestriction: {
         circle: {
           center: { latitude, longitude },
-          radius: 200,
+          radius: 300,
         },
       },
     }),
   });
 
-  return (data.places ?? [])
+  const nearby = (data.places ?? [])
     .map((place) => mapPlaceDetails(place))
     .filter((item): item is CafePlaceSuggestion => item !== null);
+
+  if (nearby.length > 0) return nearby;
+
+  const label = await reverseGeocodeLabel(latitude, longitude);
+  if (!label) return [];
+
+  return searchTextPlaces(`${label} cafe`);
+}
+
+async function reverseGeocodeLabel(latitude: number, longitude: number): Promise<string | null> {
+  const url = new URL('https://geocoding-api.open-meteo.com/v1/reverse');
+  url.searchParams.set('latitude', String(latitude));
+  url.searchParams.set('longitude', String(longitude));
+  url.searchParams.set('count', '1');
+  url.searchParams.set('language', 'en');
+
+  const response = await fetch(url);
+  if (!response.ok) return null;
+  const data = (await response.json()) as { results?: Array<{ name?: string }> };
+  return data.results?.[0]?.name?.trim() ?? null;
 }

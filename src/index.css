@@ -417,6 +417,22 @@ dl {
   color: var(--text-muted);
 }
 
+.photo-upload__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.photo-upload__error .form-error {
+  margin: 0;
+}
+
+.photo-upload__dismiss {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+}
+
 .photo-remove {
   font: inherit;
   font-size: 0.75rem;
@@ -1261,6 +1277,10 @@ dl {
   margin-bottom: 0.75rem;
   font-size: 1rem;
   font-weight: 600;
+}
+
+.cafe-place-field .suburb-autocomplete {
+  margin-bottom: 0.75rem;
 }
 
 .cafe-place-field__suggestion-name {
