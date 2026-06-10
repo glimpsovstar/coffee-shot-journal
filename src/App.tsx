@@ -1,19 +1,20 @@
 import { useState } from 'react';
-import { AddShotForm } from './components/AddShotForm';
 import { AnalyticsPage } from './components/AnalyticsPage';
 import { AuthScreen } from './components/AuthScreen';
-import { BeanCatalogue } from './components/BeanCatalogue';
 import { CloudImportPrompt } from './components/CloudImportPrompt';
 import { EditorialHeader } from './components/EditorialHeader';
 import { FloatingShotHero } from './components/FloatingShotHero';
 import { JournalBackupPanel } from './components/JournalBackupPanel';
+import { JournalStatusBar } from './components/JournalStatusBar';
 import { AccountSignInPanel } from './components/AccountSignInPanel';
-import { ImportShotForm } from './components/ImportShotForm';
+import { LogPage, type LogSection } from './components/LogPage';
 import { ShotList } from './components/ShotList';
 import { useAuth } from './hooks/useAuth';
 import { useJournal } from './hooks/useJournal';
+import { formatBeanChoiceLabel } from './utils/beans';
+import { getBeanById, sortShotsNewestFirst } from './utils/shots';
 
-type AppPage = 'journal' | 'analytics' | 'import' | 'backup';
+type AppPage = 'journal' | 'log' | 'analytics' | 'backup';
 
 function JournalApp({
   cloudUserId,
@@ -25,6 +26,7 @@ function JournalApp({
   onRegisterPasskey?: () => Promise<void>;
 }) {
   const [page, setPage] = useState<AppPage>('journal');
+  const [logSection, setLogSection] = useState<LogSection>('shot');
   const {
     beans,
     shots,
@@ -37,6 +39,10 @@ function JournalApp({
     removeBeanPhoto,
     reloadJournal,
   } = useJournal(cloudUserId);
+
+  const newestShot = sortShotsNewestFirst(shots)[0];
+  const currentBean = newestShot ? getBeanById(beans, newestShot.beanId) : undefined;
+  const currentBeanLabel = currentBean ? formatBeanChoiceLabel(currentBean) : undefined;
 
   if (loading) {
     return (
@@ -69,19 +75,19 @@ function JournalApp({
         </button>
         <button
           type="button"
+          className={page === 'log' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
+          aria-current={page === 'log' ? 'page' : undefined}
+          onClick={() => setPage('log')}
+        >
+          Log
+        </button>
+        <button
+          type="button"
           className={page === 'analytics' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
           aria-current={page === 'analytics' ? 'page' : undefined}
           onClick={() => setPage('analytics')}
         >
           Analytics
-        </button>
-        <button
-          type="button"
-          className={page === 'import' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
-          aria-current={page === 'import' ? 'page' : undefined}
-          onClick={() => setPage('import')}
-        >
-          Import past shot
         </button>
         <button
           type="button"
@@ -93,6 +99,10 @@ function JournalApp({
         </button>
       </nav>
 
+      {page === 'journal' ? (
+        <JournalStatusBar shotCount={shots.length} currentBeanLabel={currentBeanLabel} />
+      ) : null}
+
       {cloudUserId ? (
         <CloudImportPrompt userId={cloudUserId} onImported={() => reloadJournal()} />
       ) : null}
@@ -102,16 +112,28 @@ function JournalApp({
           {page === 'journal' ? (
             <>
               <FloatingShotHero shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
-              <ShotList shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
-              <AddShotForm beans={beans} onAddShot={addShot} />
+              <ShotList
+                shots={shots}
+                beans={beans}
+                resolvePhotos={resolvePhotos}
+                heading="Past history"
+                intro="Newest first — your extraction log."
+                emptyMessage="No shots yet. Open Log to record your first pull."
+              />
             </>
+          ) : page === 'log' ? (
+            <LogPage
+              section={logSection}
+              onSectionChange={setLogSection}
+              beans={beans}
+              resolvePhotos={resolvePhotos}
+              onAddShot={addShot}
+              onAddBean={addBean}
+              onAddBeanPhotos={addBeanPhotos}
+              onRemoveBeanPhoto={removeBeanPhoto}
+            />
           ) : page === 'analytics' ? (
             <AnalyticsPage shots={shots} />
-          ) : page === 'import' ? (
-            <>
-              <ImportShotForm beans={beans} onImportShot={addShot} />
-              <ShotList shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
-            </>
           ) : (
             <>
               {onRegisterPasskey ? (
@@ -121,17 +143,6 @@ function JournalApp({
             </>
           )}
         </main>
-        {page === 'journal' || page === 'import' ? (
-          <aside className="app-sidebar">
-            <BeanCatalogue
-              beans={beans}
-              resolvePhotos={resolvePhotos}
-              onAddBean={addBean}
-              onAddBeanPhotos={addBeanPhotos}
-              onRemoveBeanPhoto={removeBeanPhoto}
-            />
-          </aside>
-        ) : null}
       </div>
     </div>
   );

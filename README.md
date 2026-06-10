@@ -8,14 +8,14 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 
 ## What the app does today
 
-- **Bean catalogue** — seed beans plus **add bean** (manual entry, bag/label photos)
+- **Bean catalogue** — seed beans; **add bean** under the **Log** tab
 - **Bean metadata** — purchase date, bag size, single origin vs blend with composition %
 - **Label scan** — OpenAI vision prefill from a bag photo via `/api/label-scan` on Vercel (`OPENAI_API_KEY` server-only); local dev can use `VITE_OPENAI_API_KEY` in `.env.local` for demo
 - **Shot history** — espresso pulls sorted newest first, with optional puck/cup photos
-- **Add-shot form** — log a new pull with photos; it appears at the top of the list
+- **Log tab** — new shot, import past shot, and bean catalogue (separate from the read-first **Journal** home)
 - **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (Google/Apple/GitHub on the landing page; optional passkey under **Backup & restore**). Local-only mode remains when Supabase env is unset.
 - **Branded landing** — coffee snob. sign-in page with logo assets in `public/branding/`
-- **Editorial journal** — centered hero header, floating latest-shot card, **Analytics** tab with extraction ratio & duration chart (Recharts)
+- **Editorial journal** — centered hero header, floating extraction photo gallery, past history list, **Log** / **Analytics** / **Backup** nav
 
 ### Bean fields
 
