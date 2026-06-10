@@ -40,4 +40,20 @@ describe('ImportShotForm', () => {
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
+
+  it('keeps imported shot details visible when saving fails', async () => {
+    const onImportShot = vi.fn().mockRejectedValue(new Error('Cloud import failed'));
+    const user = userEvent.setup();
+
+    render(<ImportShotForm beans={mockBeans} onImportShot={onImportShot} />);
+
+    await user.clear(screen.getByLabelText('Brewed'));
+    await user.type(screen.getByLabelText('Brewed'), '2024-01-15T08:00');
+    await user.type(screen.getByLabelText('Tasting notes (optional)'), 'Backfilled shot');
+    await user.click(screen.getByRole('button', { name: 'Import shot' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Cloud import failed');
+    expect(screen.getByLabelText('Brewed')).toHaveValue('2024-01-15T08:00');
+    expect(screen.getByLabelText('Tasting notes (optional)')).toHaveValue('Backfilled shot');
+  });
 });

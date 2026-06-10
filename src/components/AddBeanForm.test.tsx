@@ -30,6 +30,23 @@ describe('AddBeanForm', () => {
     expect(payload.bean.roastStyle).toBe('light');
   });
 
+  it('keeps bean details visible when saving fails', async () => {
+    const user = userEvent.setup();
+    const onAddBean = vi.fn().mockRejectedValue(new Error('Cloud write failed'));
+
+    render(<AddBeanForm onAddBean={onAddBean} />);
+
+    await user.type(screen.getByLabelText('Name'), 'New Ethiopia');
+    await user.type(screen.getByLabelText('Roaster'), 'Test Roasters');
+    await user.type(screen.getByLabelText('Origin'), 'Yirgacheffe, Ethiopia');
+    await user.type(screen.getByLabelText('Roast date'), '2026-05-01');
+    await user.click(screen.getByRole('button', { name: 'Add bean' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Cloud write failed');
+    expect(screen.getByLabelText('Name')).toHaveValue('New Ethiopia');
+    expect(screen.getByLabelText('Roaster')).toHaveValue('Test Roasters');
+  });
+
   it('shows blend name label and placeholder when kind is blend', async () => {
     const user = userEvent.setup();
     render(<AddBeanForm onAddBean={vi.fn()} />);

@@ -15,7 +15,7 @@ import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFrom
 
 interface ImportShotFormProps {
   beans: Bean[];
-  onImportShot: (payload: AddShotPayload) => void;
+  onImportShot: (payload: AddShotPayload) => Promise<void>;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -156,7 +156,7 @@ export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
         }
       }
 
-      onImportShot({
+      await onImportShot({
         shot: {
           beanId: form.beanId,
           brewedAt: brewedAt.toISOString(),
@@ -181,6 +181,8 @@ export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
       setForm(defaultFormState(beans));
       setStatusMessage('Shot imported.');
       setTimeout(() => setStatusMessage(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to import shot.');
     } finally {
       setSubmitting(false);
     }

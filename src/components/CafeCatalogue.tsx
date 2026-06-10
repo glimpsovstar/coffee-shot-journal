@@ -16,7 +16,7 @@ interface CafeCatalogueProps {
   beans: Bean[];
   resolvePhotos: (photos: Cafe['photos']) => PhotoDisplay[];
   onAddVisit: (payload: AddCafeVisitPayload) => Promise<Cafe>;
-  onAddShot: (payload: AddShotPayload) => void;
+  onAddShot: (payload: AddShotPayload) => Promise<void>;
 }
 
 function scrollToCafeDetail(cafeId: string) {

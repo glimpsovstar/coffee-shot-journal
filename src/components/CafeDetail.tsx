@@ -10,7 +10,7 @@ interface CafeDetailProps {
   shots: Shot[];
   beans: Bean[];
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
-  onAddCoffee: (payload: AddShotPayload) => void;
+  onAddCoffee: (payload: AddShotPayload) => Promise<void>;
 }
 
 export function CafeDetail({ cafe, shots, beans, resolvePhotos, onAddCoffee }: CafeDetailProps) {

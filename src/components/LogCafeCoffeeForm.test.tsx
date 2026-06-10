@@ -58,6 +58,29 @@ describe('LogCafeCoffeeForm', () => {
     });
   });
 
+  it('keeps the coffee details visible when saving fails', async () => {
+    const user = userEvent.setup();
+    const onAddCoffee = vi.fn().mockRejectedValue(new Error('Storage unavailable'));
+    vi.mocked(weather.fetchWeatherAt).mockResolvedValue({
+      temperatureC: 18,
+      humidityPercent: 62,
+      description: 'Partly cloudy',
+      source: 'open-meteo',
+      observedAt: '2026-06-10T12:00:00.000Z',
+    });
+
+    render(
+      <LogCafeCoffeeForm cafe={mockCafe} beans={mockBeans} onAddCoffee={onAddCoffee} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Flat white' }));
+    await user.type(screen.getByLabelText('Tasting notes'), 'Saved-looking but failed');
+    await user.click(screen.getByRole('button', { name: 'Log coffee' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Storage unavailable');
+    expect(screen.getByLabelText('Tasting notes')).toHaveValue('Saved-looking but failed');
+  });
+
   it('requires a drink selection', async () => {
     const user = userEvent.setup();
     const onAddCoffee = vi.fn();

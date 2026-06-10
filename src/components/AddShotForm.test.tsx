@@ -83,6 +83,22 @@ describe('AddShotForm', () => {
     });
   });
 
+  it('keeps the shot details visible when saving fails', async () => {
+    const user = userEvent.setup();
+    const onAddShot = vi.fn().mockRejectedValue(new Error('IndexedDB quota exceeded'));
+
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
+
+    await user.type(within(form).getByLabelText('Grind setting'), '14.5');
+    await user.type(within(form).getByLabelText('Tasting notes'), 'Do not erase me');
+    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
+
+    expect(await within(form).findByRole('alert')).toHaveTextContent('IndexedDB quota exceeded');
+    expect(within(form).getByLabelText('Tasting notes')).toHaveValue('Do not erase me');
+    expect(within(form).getByLabelText('Grind setting')).toHaveValue('14.5');
+  });
+
   it('updates brewed time and nearest suburb from photo metadata', async () => {
     const user = userEvent.setup();
     vi.mocked(photoExif.extractShotMetadataFromBlob).mockResolvedValue({

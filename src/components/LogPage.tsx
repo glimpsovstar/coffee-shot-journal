@@ -22,13 +22,13 @@ interface LogPageProps {
   cafes: Cafe[];
   shots: Shot[];
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
-  onAddShot: (payload: AddShotPayload) => void;
-  onAddBean: (payload: AddBeanPayload) => void;
+  onAddShot: (payload: AddShotPayload) => Promise<void>;
+  onAddBean: (payload: AddBeanPayload) => Promise<void>;
   onAddVisit: (payload: AddCafeVisitPayload) => Promise<Cafe>;
-  onAddBeanPhotos: (beanId: string, inputs: PhotoBlobInput[]) => void;
-  onRemoveBeanPhoto: (beanId: string, photoId: string) => void;
-  onAddCafePhotos: (cafeId: string, inputs: PhotoBlobInput[]) => void;
-  onRemoveCafePhoto: (cafeId: string, photoId: string) => void;
+  onAddBeanPhotos: (beanId: string, inputs: PhotoBlobInput[]) => Promise<void>;
+  onRemoveBeanPhoto: (beanId: string, photoId: string) => Promise<void>;
+  onAddCafePhotos: (cafeId: string, inputs: PhotoBlobInput[]) => Promise<void>;
+  onRemoveCafePhoto: (cafeId: string, photoId: string) => Promise<void>;
 }
 
 const LOG_SECTIONS: { id: LogSection; label: string }[] = [
