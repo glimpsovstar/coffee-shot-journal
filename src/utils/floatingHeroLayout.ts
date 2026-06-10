@@ -1,10 +1,17 @@
-/** Horizontal shift options for hero cards (percent of card width). */
-export const HERO_OFFSET_X_OPTIONS = [-20, 0, 20] as const;
+/** Per-card rotation range (degrees). */
+export const HERO_ROTATION_MIN = -20;
+export const HERO_ROTATION_MAX = 20;
+
+/** Overlap as a fraction of card width (e.g. 0.25 = 25% overlap). */
+export const HERO_OVERLAP_MIN = 0.12;
+export const HERO_OVERLAP_MAX = 0.42;
 
 export interface HeroCardLayout {
-  /** translateX as % of the card's own width (−20, 0, or +20). */
-  offsetXPercent: number;
-  /** Small vertical shift for a less grid-like stack. */
+  /** Stable rotation in degrees (−20 to +20). */
+  rotationDeg: number;
+  /** Fraction of card width overlapping the previous card (0 for first). */
+  overlapFactor: number;
+  /** Small vertical shift for a less grid-like stack (% of card height). */
   offsetYPercent: number;
   zIndex: number;
 }
@@ -17,14 +24,25 @@ function hashString(value: string): number {
   return Math.abs(hash);
 }
 
-/** Stable per-card offsets so overlap and drift feel organic but do not jitter on re-render. */
+/** Stable per-card offsets so overlap and tilt feel organic but do not jitter on re-render. */
 export function getHeroCardLayout(cardId: string, index: number): HeroCardLayout {
   const hash = hashString(cardId);
-  const offsetXPercent = HERO_OFFSET_X_OPTIONS[hash % HERO_OFFSET_X_OPTIONS.length];
+  const overlapHash = hashString(`${cardId}:overlap`);
+
+  const rotationSpan = HERO_ROTATION_MAX - HERO_ROTATION_MIN + 1;
+  const rotationDeg = HERO_ROTATION_MIN + (hash % rotationSpan);
+
+  const overlapSpan = Math.round((HERO_OVERLAP_MAX - HERO_OVERLAP_MIN) * 100);
+  const overlapFactor =
+    index === 0
+      ? 0
+      : HERO_OVERLAP_MIN + (overlapHash % (overlapSpan + 1)) / 100;
+
   const offsetYPercent = ((hash % 5) - 2) * 2;
 
   return {
-    offsetXPercent,
+    rotationDeg,
+    overlapFactor,
     offsetYPercent,
     zIndex: index + 1,
   };

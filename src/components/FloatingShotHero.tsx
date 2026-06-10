@@ -58,8 +58,9 @@ export function FloatingShotHero({ shots, beans, resolvePhotos }: FloatingShotHe
               style={
                 {
                   '--hero-delay': `${index * 0.35}s`,
-                  '--hero-offset-x': `${layout.offsetXPercent}%`,
                   '--hero-offset-y': `${layout.offsetYPercent}%`,
+                  '--hero-overlap': layout.overlapFactor,
+                  '--hero-rotate': `${layout.rotationDeg}deg`,
                   zIndex: layout.zIndex,
                 } as CSSProperties
               }

@@ -949,11 +949,10 @@ dl {
 @keyframes hero-float-card {
   0%,
   100% {
-    transform: translateX(var(--hero-offset-x, 0)) translateY(var(--hero-offset-y, 0));
+    transform: translateY(var(--hero-offset-y, 0)) rotate(var(--hero-rotate, 0deg));
   }
   50% {
-    transform: translateX(var(--hero-offset-x, 0))
-      translateY(calc(var(--hero-offset-y, 0) - 10px));
+    transform: translateY(calc(var(--hero-offset-y, 0) - 10px)) rotate(var(--hero-rotate, 0deg));
   }
 }
 
@@ -989,8 +988,8 @@ dl {
   flex: 0 0 var(--hero-card-width);
   width: var(--hero-card-width);
   scroll-snap-align: center;
-  /* Overlap ~30% of card width — % margins use container width and collapse the row */
-  margin-left: calc(var(--hero-card-width) * -0.3);
+  /* Per-card overlap — % margins use container width, so scale by card width variable */
+  margin-left: calc(var(--hero-card-width) * -1 * var(--hero-overlap, 0.28));
   padding: 0;
   border: none;
   background: transparent;

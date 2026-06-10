@@ -1,10 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { getHeroCardLayout, HERO_OFFSET_X_OPTIONS } from './floatingHeroLayout';
+import {
+  getHeroCardLayout,
+  HERO_OVERLAP_MAX,
+  HERO_OVERLAP_MIN,
+  HERO_ROTATION_MAX,
+  HERO_ROTATION_MIN,
+} from './floatingHeroLayout';
 
 describe('floatingHeroLayout', () => {
-  it('assigns horizontal offsets within ±20%', () => {
+  it('assigns rotation within ±20°', () => {
     const layout = getHeroCardLayout('shot-1:photo-1', 0);
-    expect(HERO_OFFSET_X_OPTIONS).toContain(layout.offsetXPercent);
+    expect(layout.rotationDeg).toBeGreaterThanOrEqual(HERO_ROTATION_MIN);
+    expect(layout.rotationDeg).toBeLessThanOrEqual(HERO_ROTATION_MAX);
+  });
+
+  it('assigns variable overlap for cards after the first', () => {
+    const layout = getHeroCardLayout('shot-1:photo-2', 1);
+    expect(layout.overlapFactor).toBeGreaterThanOrEqual(HERO_OVERLAP_MIN);
+    expect(layout.overlapFactor).toBeLessThanOrEqual(HERO_OVERLAP_MAX);
+  });
+
+  it('does not overlap the first card', () => {
+    expect(getHeroCardLayout('shot-1:photo-1', 0).overlapFactor).toBe(0);
   });
 
   it('is stable for the same card id', () => {

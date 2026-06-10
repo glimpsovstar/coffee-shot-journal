@@ -12,7 +12,7 @@ Premium editorial journal layout: centered brand hero, floating featured shot, d
 | Component | Role |
 |-----------|------|
 | `EditorialHeader` | Centered stacked logo, tagline, social placeholders (Instagram, Day One), sign out |
-| `FloatingShotHero` | Last **10** photos; overlapping stack with ±20% horizontal drift; staggered float; per-card hover/tap recipe |
+| `FloatingShotHero` | Last **10** photos; overlapping stack with per-card rotation (−20° to +20°) and variable overlap; staggered float; per-card hover/tap recipe |
 | `AnalyticsPage` | Recharts dual-axis line chart (ratio + duration) |
 | `SocialPlaceholders` | Disabled future-integration buttons |
 
