@@ -236,7 +236,7 @@ export function useJournal(cloudUserId: string | null) {
   );
 
   const addCafe = useCallback(
-    async (payload: AddCafePayload) => {
+    async (payload: AddCafePayload): Promise<Cafe> => {
       for (const { photo, blob } of payload.photoBlobs) {
         await storePhotoBlob(photo.id, blob);
       }
@@ -249,6 +249,7 @@ export function useJournal(cloudUserId: string | null) {
       await persistCafes(nextCafes);
       registerPhotoUrls(payload.photoBlobs);
       setCafes(nextCafes);
+      return cafe;
     },
     [cafes, persistCafes, registerPhotoUrls, storePhotoBlob],
   );

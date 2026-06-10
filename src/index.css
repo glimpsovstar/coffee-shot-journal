@@ -1256,6 +1256,75 @@ dl {
   color: var(--text-muted);
 }
 
+.cafe-catalogue__picker {
+  margin-bottom: 1rem;
+}
+
+.cafe-picker {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cafe-picker li {
+  list-style: none;
+  max-width: 100%;
+}
+
+.cafe-picker__option {
+  display: block;
+  max-width: 100%;
+  text-align: left;
+  font: inherit;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.cafe-picker__option--active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.cafe-picker__option--active .cafe-picker__meta {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cafe-picker__name {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.cafe-picker__meta {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 16rem;
+}
+
+.add-cafe-form__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.add-cafe-form__toggle {
+  flex-shrink: 0;
+}
+
 .cafe-catalogue__detail {
   scroll-margin-top: 1rem;
 }

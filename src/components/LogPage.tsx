@@ -24,7 +24,7 @@ interface LogPageProps {
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
   onAddShot: (payload: AddShotPayload) => void;
   onAddBean: (payload: AddBeanPayload) => void;
-  onAddCafe: (payload: AddCafePayload) => void | Promise<void>;
+  onAddCafe: (payload: AddCafePayload) => Promise<Cafe>;
   onAddBeanPhotos: (beanId: string, inputs: PhotoBlobInput[]) => void;
   onRemoveBeanPhoto: (beanId: string, photoId: string) => void;
   onAddCafePhotos: (cafeId: string, inputs: PhotoBlobInput[]) => void;

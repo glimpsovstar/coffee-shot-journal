@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import type { AddCafePayload, PhotoBlobInput } from '../types';
+import type { AddCafePayload, Cafe, PhotoBlobInput } from '../types';
 import { reverseGeocodePlaceLabel } from '../services/geocoding';
 import { searchCafesNearLocation, type CafePlaceSuggestion } from '../services/googlePlaces';
 import { isGooglePlacesEnabled } from '../lib/mapsConfig';
@@ -11,14 +11,17 @@ import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
 
 interface AddCafeFormProps {
-  onAddCafe: (payload: AddCafePayload) => void | Promise<void>;
+  onAddCafe: (payload: AddCafePayload) => void | Promise<void> | Promise<Cafe>;
+  /** When cafés already exist, collapse add form until expanded. */
+  defaultCollapsed?: boolean;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
   previewUrl: string;
 }
 
-export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
+export function AddCafeForm({ onAddCafe, defaultCollapsed = false }: AddCafeFormProps) {
+  const [expanded, setExpanded] = useState(!defaultCollapsed);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
@@ -134,7 +137,8 @@ export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
       setSelectedPlace(null);
       setPhotoSuggestions([]);
       setPendingPhotos([]);
-      setStatusMessage(null);
+      setExpanded(false);
+      setStatusMessage('Café saved — log your coffees in the panel above.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add café.');
     } finally {
@@ -148,11 +152,28 @@ export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
   }));
 
   return (
-    <section className="panel" aria-labelledby="add-cafe-heading">
-      <h2 id="add-cafe-heading">Add a café</h2>
-      <p className="panel__intro">
-        Type a café name for Google suggestions, or upload a photo with location data to pin nearby places.
-      </p>
+    <section className="panel add-cafe-form" aria-labelledby="add-cafe-heading">
+      <header className="add-cafe-form__header">
+        <div>
+          <h2 id="add-cafe-heading">Add a café</h2>
+          <p className="panel__intro">
+            {expanded
+              ? 'Save a new place, then log coffees in the panel above.'
+              : 'Add another place you visit.'}
+          </p>
+        </div>
+        {defaultCollapsed ? (
+          <button
+            type="button"
+            className="btn-ghost add-cafe-form__toggle"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((open) => !open)}
+          >
+            {expanded ? 'Hide' : 'Add café'}
+          </button>
+        ) : null}
+      </header>
+      {expanded ? (
       <form className="shot-form" onSubmit={handleSubmit} noValidate>
         <CafePlaceField
           name={name}
@@ -189,9 +210,10 @@ export function AddCafeForm({ onAddCafe }: AddCafeFormProps) {
           <p className="form-error" role="alert">{error}</p>
         ) : null}
         <button type="submit" className="btn-primary" disabled={submitting}>
-          {submitting ? 'Saving…' : 'Add café'}
+          {submitting ? 'Saving…' : 'Save café'}
         </button>
       </form>
+      ) : null}
     </section>
   );
 }
