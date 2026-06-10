@@ -969,9 +969,19 @@ dl {
   margin-bottom: 0.75rem;
 }
 
+.floating-hero__gallery {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 0.25rem 0 0.75rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
 .floating-hero__card {
   display: block;
-  width: 100%;
+  flex: 0 0 min(220px, 42vw);
+  scroll-snap-align: start;
   padding: 0;
   border: none;
   background: transparent;
@@ -990,20 +1000,31 @@ dl {
 .floating-hero__image {
   display: block;
   width: 100%;
-  max-height: 420px;
+  height: 200px;
   object-fit: cover;
   animation: hero-float 5s ease-in-out infinite;
+  animation-delay: var(--hero-delay, 0s);
   transition: transform 0.35s ease;
 }
 
-.floating-hero:hover .floating-hero__image,
-.floating-hero--revealed .floating-hero__image {
+@media (min-width: 768px) {
+  .floating-hero__image {
+    height: 240px;
+  }
+
+  .floating-hero__card {
+    flex-basis: min(200px, 18%);
+  }
+}
+
+.floating-hero__card:hover .floating-hero__image,
+.floating-hero__card--revealed .floating-hero__image {
   animation: none;
   transform: scale(1.05);
 }
 
-.floating-hero:hover .floating-hero__media,
-.floating-hero--revealed .floating-hero__media {
+.floating-hero__card:hover .floating-hero__media,
+.floating-hero__card--revealed .floating-hero__media {
   box-shadow: 0 20px 48px rgba(46, 31, 22, 0.28);
 }
 
@@ -1025,8 +1046,8 @@ dl {
   transition: opacity 0.35s ease;
 }
 
-.floating-hero:hover .floating-hero__overlay,
-.floating-hero--revealed .floating-hero__overlay {
+.floating-hero__card:hover .floating-hero__overlay,
+.floating-hero__card--revealed .floating-hero__overlay {
   opacity: 1;
 }
 

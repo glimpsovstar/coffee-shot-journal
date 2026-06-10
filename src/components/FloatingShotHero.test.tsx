@@ -5,6 +5,13 @@ import { mockBeans } from '../test/fixtures';
 import type { Shot } from '../types';
 import { FloatingShotHero } from './FloatingShotHero';
 
+const photo = {
+  id: 'photo-hero',
+  fileName: 'puck.jpg',
+  mimeType: 'image/jpeg' as const,
+  createdAt: '2026-06-04T10:00:00',
+};
+
 const shotWithPhoto: Shot = {
   id: 'shot-hero',
   beanId: 'bean-a',
@@ -16,14 +23,7 @@ const shotWithPhoto: Shot = {
   extractionTime: 19,
   tastingNotes: '',
   rating: 5,
-  photos: [
-    {
-      id: 'photo-hero',
-      fileName: 'puck.jpg',
-      mimeType: 'image/jpeg',
-      createdAt: '2026-06-04T10:00:00',
-    },
-  ],
+  photos: [photo],
   weather: {
     temperatureC: 8.2,
     humidityPercent: 55,
@@ -34,21 +34,40 @@ const shotWithPhoto: Shot = {
 };
 
 describe('FloatingShotHero', () => {
-  it('renders featured shot and reveals recipe on tap', async () => {
+  it('renders a gallery of recent extraction photos', () => {
+    const older: Shot = {
+      ...shotWithPhoto,
+      id: 'shot-old',
+      brewedAt: '2026-06-01T10:00:00',
+      photos: [{ ...photo, id: 'photo-old' }],
+    };
+    const resolvePhotos = (photos: Shot['photos']) =>
+      photos.map((p) => ({ photo: p, url: `blob:${p.id}` }));
+
+    render(
+      <FloatingShotHero
+        shots={[older, shotWithPhoto]}
+        beans={mockBeans}
+        resolvePhotos={resolvePhotos}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Recent extractions' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Test Ethiopia/i })).toHaveLength(2);
+    expect(screen.getByText(/Showing the last 2 extraction photos/)).toBeInTheDocument();
+  });
+
+  it('reveals recipe on tap for one card', async () => {
     const user = userEvent.setup();
-    const resolvePhotos = () => [
-      { photo: shotWithPhoto.photos[0]!, url: 'blob:hero' },
-    ];
+    const resolvePhotos = () => [{ photo, url: 'blob:hero' }];
 
     render(
       <FloatingShotHero shots={[shotWithPhoto]} beans={mockBeans} resolvePhotos={resolvePhotos} />,
     );
 
-    expect(screen.getByRole('heading', { name: 'Latest extraction' })).toBeInTheDocument();
-    expect(screen.getByText('15.5g in ➔ 35g out | 19s at 8.2°C')).toBeInTheDocument();
-
     const card = screen.getByRole('button', { name: /Test Ethiopia/i });
     expect(card).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('15.5g in ➔ 35g out | 19s at 8.2°C')).toBeInTheDocument();
 
     await user.click(card);
     expect(card).toHaveAttribute('aria-expanded', 'true');

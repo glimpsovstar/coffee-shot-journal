@@ -5,7 +5,9 @@ import {
   extractionRatioValue,
   formatExtractionRatioLabel,
   formatHeroRecipeLine,
+  FLOATING_HERO_PHOTO_LIMIT,
   getFeaturedShotWithPhoto,
+  getRecentExtractionPhotos,
 } from './analytics';
 
 const baseShot: Shot = {
@@ -55,6 +57,21 @@ describe('analytics', () => {
       yieldOut: 35,
     };
     expect(formatHeroRecipeLine(shot)).toBe('15.5g in ➔ 35g out | 19s at 8.2°C');
+  });
+
+  it('collects recent extraction photos newest first up to limit', () => {
+    const photo = baseShot.photos[0]!;
+    const shots: Shot[] = Array.from({ length: 12 }, (_, i) => ({
+      ...baseShot,
+      id: `s${i}`,
+      brewedAt: `2026-06-${String(i + 1).padStart(2, '0')}T08:00:00`,
+      photos: [{ ...photo, id: `p${i}` }],
+    }));
+
+    const recent = getRecentExtractionPhotos(shots);
+    expect(recent.length).toBe(FLOATING_HERO_PHOTO_LIMIT);
+    expect(recent[0]?.shot.id).toBe('s11');
+    expect(recent[9]?.shot.id).toBe('s2');
   });
 
   it('builds chronological chart series', () => {

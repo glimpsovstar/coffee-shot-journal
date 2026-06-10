@@ -1,5 +1,13 @@
-import type { Shot } from '../types';
+import type { Photo, Shot } from '../types';
 import { formatBrewedAt, hasShotRecipe, sortShotsNewestFirst } from './shots';
+
+/** Max extraction photos in the floating hero gallery (newest first). */
+export const FLOATING_HERO_PHOTO_LIMIT = 10;
+
+export interface RecentExtractionPhoto {
+  shot: Shot;
+  photo: Photo;
+}
 
 export interface ShotChartPoint {
   id: string;
@@ -22,6 +30,24 @@ export function formatExtractionRatioLabel(ratio: number): string {
 export function getFeaturedShotWithPhoto(shots: Shot[]): Shot | null {
   const sorted = sortShotsNewestFirst(shots);
   return sorted.find((shot) => shot.photos.length > 0) ?? null;
+}
+
+/** Recent extraction photos across shots, newest pulls first (up to `limit`). */
+export function getRecentExtractionPhotos(
+  shots: Shot[],
+  limit = FLOATING_HERO_PHOTO_LIMIT,
+): RecentExtractionPhoto[] {
+  const sorted = sortShotsNewestFirst(shots);
+  const results: RecentExtractionPhoto[] = [];
+
+  for (const shot of sorted) {
+    for (const photo of shot.photos) {
+      if (results.length >= limit) return results;
+      results.push({ shot, photo });
+    }
+  }
+
+  return results;
 }
 
 /** One-line recipe for hero overlay (dose, yield, time, optional weather temp). */

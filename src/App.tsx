@@ -12,7 +12,6 @@ import { ImportShotForm } from './components/ImportShotForm';
 import { ShotList } from './components/ShotList';
 import { useAuth } from './hooks/useAuth';
 import { useJournal } from './hooks/useJournal';
-import { getFeaturedShotWithPhoto } from './utils/analytics';
 
 type AppPage = 'journal' | 'analytics' | 'import' | 'backup';
 
@@ -38,8 +37,6 @@ function JournalApp({
     removeBeanPhoto,
     reloadJournal,
   } = useJournal(cloudUserId);
-
-  const featuredShotId = getFeaturedShotWithPhoto(shots)?.id;
 
   if (loading) {
     return (
@@ -105,12 +102,7 @@ function JournalApp({
           {page === 'journal' ? (
             <>
               <FloatingShotHero shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
-              <ShotList
-                shots={shots}
-                beans={beans}
-                resolvePhotos={resolvePhotos}
-                excludeShotId={featuredShotId}
-              />
+              <ShotList shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
               <AddShotForm beans={beans} onAddShot={addShot} />
             </>
           ) : page === 'analytics' ? (
