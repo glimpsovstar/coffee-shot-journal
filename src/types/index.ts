@@ -61,7 +61,7 @@ export type MilkCategory = 'black' | 'milk';
 
 export type BlackBeverageType = 'espresso' | 'ristretto' | 'long_black';
 
-export type MilkBeverageType = 'latte' | 'cappuccino' | 'flat_white' | 'mocha';
+export type MilkBeverageType = 'latte' | 'cappuccino' | 'flat_white' | 'mocha' | 'magic';
 
 export type BeverageType = BlackBeverageType | MilkBeverageType;
 
@@ -87,6 +87,10 @@ export interface Shot {
   beverageType?: BeverageType;
   shotSize?: ShotSize;
   shotSizeCustom?: string;
+  /** Café drink was stronger than default (extra shot). */
+  extraShot?: boolean;
+  /** Café drink used oat, almond, etc. instead of regular milk. */
+  alternativeMilk?: boolean;
   priceAud?: number;
   wouldOrderAgain?: boolean;
   brewedAt: string;

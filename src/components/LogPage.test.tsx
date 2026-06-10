@@ -24,7 +24,7 @@ describe('LogPage', () => {
   it('shows new shot form by default section', () => {
     render(<LogPage {...defaultProps} />);
 
-    expect(screen.getByRole('heading', { name: 'Log a shot' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Log a home shot' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Bean catalogue' })).not.toBeInTheDocument();
   });
 

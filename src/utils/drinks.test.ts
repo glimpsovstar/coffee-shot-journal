@@ -1,15 +1,37 @@
 import { describe, expect, it } from 'vitest';
-import { formatDrinkSummary, isDrinkSelectionComplete } from './drinks';
+import {
+  formatDrinkSummary,
+  isCafeDrinkComplete,
+  isDrinkSelectionComplete,
+  milkCategoryForBeverage,
+  shotSizeFromExtraShot,
+} from './drinks';
 
 describe('drinks', () => {
-  it('formats drink summary', () => {
+  it('formats drink summary with extra shot and alt milk', () => {
     expect(
       formatDrinkSummary({
-        milkCategory: 'milk',
         beverageType: 'flat_white',
+        extraShot: true,
+        alternativeMilk: true,
         shotSize: 'double',
       } as never),
-    ).toBe('Milk-based · Flat white · Double');
+    ).toBe('Flat white · extra shot · alt milk');
+  });
+
+  it('infers milk category from beverage', () => {
+    expect(milkCategoryForBeverage('magic')).toBe('milk');
+    expect(milkCategoryForBeverage('long_black')).toBe('black');
+  });
+
+  it('maps extra shot to double size', () => {
+    expect(shotSizeFromExtraShot(true)).toBe('double');
+    expect(shotSizeFromExtraShot(false)).toBe('single');
+  });
+
+  it('validates cafe drink selection', () => {
+    expect(isCafeDrinkComplete('')).toBe(false);
+    expect(isCafeDrinkComplete('latte')).toBe(true);
   });
 
   it('validates custom shot size needs label', () => {

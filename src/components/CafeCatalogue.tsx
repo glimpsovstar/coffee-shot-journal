@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import type { AddCafePayload, Bean, Cafe, PhotoBlobInput, PhotoDisplay, Shot } from '../types';
+import type {
+  AddCafePayload,
+  AddShotPayload,
+  Bean,
+  Cafe,
+  PhotoBlobInput,
+  PhotoDisplay,
+  Shot,
+} from '../types';
 import { AddCafeForm } from './AddCafeForm';
 import { CafeDetail } from './CafeDetail';
 import { PhotoGallery } from './PhotoGallery';
@@ -10,6 +18,7 @@ interface CafeCatalogueProps {
   beans: Bean[];
   resolvePhotos: (photos: Cafe['photos']) => PhotoDisplay[];
   onAddCafe: (payload: AddCafePayload) => void | Promise<void>;
+  onAddShot: (payload: AddShotPayload) => void;
   onAddCafePhotos: (cafeId: string, inputs: PhotoBlobInput[]) => void;
   onRemoveCafePhoto: (cafeId: string, photoId: string) => void;
 }
@@ -20,6 +29,7 @@ export function CafeCatalogue({
   beans,
   resolvePhotos,
   onAddCafe,
+  onAddShot,
 }: CafeCatalogueProps) {
   const [selectedId, setSelectedId] = useState<string | null>(cafes[0]?.id ?? null);
   const selected = cafes.find((c) => c.id === selectedId) ?? null;
@@ -29,7 +39,9 @@ export function CafeCatalogue({
       <AddCafeForm onAddCafe={onAddCafe} />
       <section className="panel" aria-labelledby="cafe-catalogue-heading">
         <h2 id="cafe-catalogue-heading">Your cafés</h2>
-        <p className="panel__intro">Places you visit — open one for the map and your logged coffees.</p>
+        <p className="panel__intro">
+          Places you visit — open one to log a coffee, see the map, and review past orders.
+        </p>
         {cafes.length === 0 ? (
           <p className="empty-state">No cafés yet. Add one above.</p>
         ) : (
@@ -63,6 +75,7 @@ export function CafeCatalogue({
           shots={shots}
           beans={beans}
           resolvePhotos={resolvePhotos}
+          onAddCoffee={onAddShot}
         />
       ) : null}
     </>

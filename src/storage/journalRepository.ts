@@ -63,6 +63,12 @@ function normalizeShots(shots: Shot[]): Shot[] {
       if (normalized.priceAud === undefined || Number.isNaN(normalized.priceAud)) {
         delete normalized.priceAud;
       }
+      if (!normalized.extraShot) {
+        delete normalized.extraShot;
+      }
+      if (!normalized.alternativeMilk) {
+        delete normalized.alternativeMilk;
+      }
     } else {
       delete normalized.context;
       delete normalized.cafeId;
@@ -70,6 +76,8 @@ function normalizeShots(shots: Shot[]): Shot[] {
       delete normalized.beverageType;
       delete normalized.shotSize;
       delete normalized.shotSizeCustom;
+      delete normalized.extraShot;
+      delete normalized.alternativeMilk;
       delete normalized.priceAud;
       delete normalized.wouldOrderAgain;
     }

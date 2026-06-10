@@ -1,6 +1,7 @@
-import type { Bean, Cafe, PhotoDisplay, Shot } from '../types';
+import type { AddShotPayload, Bean, Cafe, PhotoDisplay, Shot } from '../types';
 import { getShotsForCafe } from '../utils/shots';
 import { CafeMapEmbed } from './CafeMapEmbed';
+import { LogCafeCoffeeForm } from './LogCafeCoffeeForm';
 import { PhotoGallery } from './PhotoGallery';
 import { ShotCard } from './ShotCard';
 
@@ -9,9 +10,10 @@ interface CafeDetailProps {
   shots: Shot[];
   beans: Bean[];
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
+  onAddCoffee: (payload: AddShotPayload) => void;
 }
 
-export function CafeDetail({ cafe, shots, beans, resolvePhotos }: CafeDetailProps) {
+export function CafeDetail({ cafe, shots, beans, resolvePhotos, onAddCoffee }: CafeDetailProps) {
   const cafeShots = getShotsForCafe(shots, cafe.id);
 
   return (
@@ -30,6 +32,8 @@ export function CafeDetail({ cafe, shots, beans, resolvePhotos }: CafeDetailProp
       {cafe.notes ? <p className="cafe-detail__notes">{cafe.notes}</p> : null}
 
       <PhotoGallery items={resolvePhotos(cafe.photos)} label="Café photos" />
+
+      <LogCafeCoffeeForm cafe={cafe} beans={beans} onAddCoffee={onAddCoffee} />
 
       <section aria-labelledby={`cafe-shots-${cafe.id}`}>
         <h4 id={`cafe-shots-${cafe.id}`} className="cafe-detail__shots-heading">

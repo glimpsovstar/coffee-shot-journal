@@ -32,7 +32,7 @@ interface LogPageProps {
 }
 
 const LOG_SECTIONS: { id: LogSection; label: string }[] = [
-  { id: 'shot', label: 'New shot' },
+  { id: 'shot', label: 'Home shot' },
   { id: 'cafes', label: 'Café' },
   { id: 'beans', label: 'Beans' },
   { id: 'import', label: 'Import past shot' },
@@ -58,7 +58,7 @@ export function LogPage({
       <header className="log-page__header">
         <h2 className="log-page__title">Log</h2>
         <p className="log-page__intro">
-          Home pulls, café coffees, beans, and places you visit.
+          Home espresso pulls, café visits and coffees, and your bean catalogue.
         </p>
       </header>
 
@@ -79,7 +79,7 @@ export function LogPage({
       </nav>
 
       {section === 'shot' ? (
-        <AddShotForm beans={beans} cafes={cafes} onAddShot={onAddShot} />
+        <AddShotForm beans={beans} onAddShot={onAddShot} />
       ) : section === 'cafes' ? (
         <CafeCatalogue
           cafes={cafes}
@@ -87,6 +87,7 @@ export function LogPage({
           beans={beans}
           resolvePhotos={resolvePhotos}
           onAddCafe={onAddCafe}
+          onAddShot={onAddShot}
           onAddCafePhotos={onAddCafePhotos}
           onRemoveCafePhoto={onRemoveCafePhoto}
         />

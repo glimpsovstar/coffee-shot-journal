@@ -22,7 +22,7 @@ describe('AddShotForm', () => {
   });
 
   it('lists beans as roaster and name in the selector', () => {
-    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={vi.fn()} />);
+    render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
     const select = screen.getByLabelText('Bean');
 
     expect(select).toHaveTextContent('Test Roasters — Test Ethiopia');
@@ -30,7 +30,7 @@ describe('AddShotForm', () => {
   });
 
   it('shows message when bean catalogue is empty', () => {
-    render(<AddShotForm beans={[]} cafes={[]} onAddShot={vi.fn()} />);
+    render(<AddShotForm beans={[]} onAddShot={vi.fn()} />);
 
     expect(
       screen.getByText(/Add beans to the catalogue before logging home shots/),
@@ -39,8 +39,8 @@ describe('AddShotForm', () => {
 
   it('shows validation error when grind setting is missing', async () => {
     const user = userEvent.setup();
-    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={vi.fn()} />);
-    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+    render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
 
     await user.click(within(form).getByRole('button', { name: 'Add shot' }));
 
@@ -51,8 +51,8 @@ describe('AddShotForm', () => {
     const user = userEvent.setup();
     const onAddShot = vi.fn();
 
-    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={onAddShot} />);
-    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Grind setting'), '14.5');
     await user.clear(within(form).getByLabelText('Dose in (g)'));
@@ -91,8 +91,8 @@ describe('AddShotForm', () => {
       messages: ['Set brewed date and time from photo.', 'GPS found — pick the nearest suburb from suggestions.'],
     });
 
-    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={vi.fn()} />);
-    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+    render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
 
     const file = new File([new Uint8Array(64)], 'shot.jpg', { type: 'image/jpeg' });
     const input = within(form).getByLabelText('Shot photos').parentElement!.querySelector(
@@ -119,8 +119,8 @@ describe('AddShotForm', () => {
       observedAt: '2026-06-04T09:00',
     });
 
-    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={onAddShot} />);
-    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Suburb'), 'Melbourne');
     await user.type(within(form).getByLabelText('Grind setting'), '14');
@@ -141,8 +141,8 @@ describe('AddShotForm', () => {
       observedAt: '2026-06-04T09:00',
     });
 
-    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={onAddShot} />);
-    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
 
     const suburbInput = within(form).getByLabelText('Suburb');
     await user.click(suburbInput);
@@ -165,8 +165,8 @@ describe('AddShotForm', () => {
     const user = userEvent.setup();
     const onAddShot = vi.fn();
 
-    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={onAddShot} />);
-    const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Grind setting'), '14');
     await user.clear(within(form).getByLabelText('Dose in (g)'));
