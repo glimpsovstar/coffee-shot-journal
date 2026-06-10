@@ -128,6 +128,7 @@ Validate **V-1** through **V-4** in the design spec (phone add → laptop sees d
 | Label scan 401/500 | Vercel function logs; `OPENAI_API_KEY` set in Production |
 | Data not syncing | Supabase RLS policies; signed-in `auth.uid()` matches row `user_id` |
 | Import banner keeps appearing | Cloud already has data → should not show; hard refresh after deploy; use Skip once (stored per user in local/session storage) |
+| Tab still shows Vercel favicon | Chrome caches favicons aggressively; site must serve `/favicon.ico` (not only SVG). Hard refresh or clear site data; redeploy without build cache if icon file changed on Vercel |
 | Stranger sees journal | Should not — unauthenticated users see landing / sign-in only |
 
 ## Five-minute demo script (Vercel + Supabase audience)
