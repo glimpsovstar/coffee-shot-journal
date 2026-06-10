@@ -1,8 +1,8 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { Bean, Shot } from '../types';
+import type { Bean, Cafe, Shot } from '../types';
 
 export const DB_NAME = 'coffee-shot-journal';
-export const DB_VERSION = 4;
+export const DB_VERSION = 5;
 export const JOURNAL_KEY = 'journal' as const;
 
 export interface JournalDB extends DBSchema {
@@ -13,6 +13,10 @@ export interface JournalDB extends DBSchema {
   shots: {
     key: typeof JOURNAL_KEY;
     value: Shot[];
+  };
+  cafes: {
+    key: typeof JOURNAL_KEY;
+    value: Cafe[];
   };
   photoBlobs: {
     key: string;
@@ -25,7 +29,7 @@ let dbPromise: Promise<IDBPDatabase<JournalDB>> | null = null;
 export function getDb(): Promise<IDBPDatabase<JournalDB>> {
   if (!dbPromise) {
     dbPromise = openDB<JournalDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
+      upgrade(db, oldVersion) {
         if (!db.objectStoreNames.contains('beans')) {
           db.createObjectStore('beans');
         }
@@ -34,6 +38,9 @@ export function getDb(): Promise<IDBPDatabase<JournalDB>> {
         }
         if (!db.objectStoreNames.contains('photoBlobs')) {
           db.createObjectStore('photoBlobs');
+        }
+        if (oldVersion < 5 && !db.objectStoreNames.contains('cafes')) {
+          db.createObjectStore('cafes');
         }
       },
     }).catch((err) => {

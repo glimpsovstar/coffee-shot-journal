@@ -4,20 +4,25 @@ import { describe, expect, it, vi } from 'vitest';
 import { mockBeans } from '../test/fixtures';
 import { LogPage } from './LogPage';
 
+const defaultProps = {
+  section: 'shot' as const,
+  onSectionChange: vi.fn(),
+  beans: mockBeans,
+  cafes: [],
+  shots: [],
+  resolvePhotos: () => [],
+  onAddShot: vi.fn(),
+  onAddBean: vi.fn(),
+  onAddCafe: vi.fn(),
+  onAddBeanPhotos: vi.fn(),
+  onRemoveBeanPhoto: vi.fn(),
+  onAddCafePhotos: vi.fn(),
+  onRemoveCafePhoto: vi.fn(),
+};
+
 describe('LogPage', () => {
   it('shows new shot form by default section', () => {
-    render(
-      <LogPage
-        section="shot"
-        onSectionChange={vi.fn()}
-        beans={mockBeans}
-        resolvePhotos={() => []}
-        onAddShot={vi.fn()}
-        onAddBean={vi.fn()}
-        onAddBeanPhotos={vi.fn()}
-        onRemoveBeanPhoto={vi.fn()}
-      />,
-    );
+    render(<LogPage {...defaultProps} />);
 
     expect(screen.getByRole('heading', { name: 'Log a shot' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Bean catalogue' })).not.toBeInTheDocument();
@@ -27,36 +32,24 @@ describe('LogPage', () => {
     const user = userEvent.setup();
     const onSectionChange = vi.fn();
 
-    render(
-      <LogPage
-        section="shot"
-        onSectionChange={onSectionChange}
-        beans={mockBeans}
-        resolvePhotos={() => []}
-        onAddShot={vi.fn()}
-        onAddBean={vi.fn()}
-        onAddBeanPhotos={vi.fn()}
-        onRemoveBeanPhoto={vi.fn()}
-      />,
-    );
+    render(<LogPage {...defaultProps} onSectionChange={onSectionChange} />);
 
     await user.click(screen.getByRole('button', { name: 'Beans' }));
     expect(onSectionChange).toHaveBeenCalledWith('beans');
   });
 
+  it('switches to cafés section when requested', async () => {
+    const user = userEvent.setup();
+    const onSectionChange = vi.fn();
+
+    render(<LogPage {...defaultProps} onSectionChange={onSectionChange} />);
+
+    await user.click(screen.getByRole('button', { name: 'Cafés' }));
+    expect(onSectionChange).toHaveBeenCalledWith('cafes');
+  });
+
   it('renders import form when section is import', () => {
-    render(
-      <LogPage
-        section="import"
-        onSectionChange={vi.fn()}
-        beans={mockBeans}
-        resolvePhotos={() => []}
-        onAddShot={vi.fn()}
-        onAddBean={vi.fn()}
-        onAddBeanPhotos={vi.fn()}
-        onRemoveBeanPhoto={vi.fn()}
-      />,
-    );
+    render(<LogPage {...defaultProps} section="import" />);
 
     expect(screen.getByRole('heading', { name: 'Import past shot' })).toBeInTheDocument();
   });

@@ -6,6 +6,7 @@ import {
   loadJournal,
   putPhotoBlob,
   saveBeans,
+  saveCafes,
   saveShots,
 } from '../storage/journalRepository';
 import {
@@ -14,12 +15,15 @@ import {
   loadJournalFromCloud,
   putPhotoBlobToCloud,
   saveBeansToCloud,
+  saveCafesToCloud,
   saveShotsToCloud,
 } from '../storage/supabaseJournalRepository';
 import type {
   AddBeanPayload,
+  AddCafePayload,
   AddShotPayload,
   Bean,
+  Cafe,
   Photo,
   PhotoBlobInput,
   PhotoDisplay,
@@ -29,8 +33,12 @@ import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 
 export type { PhotoDisplay };
 
-function collectPhotos(beans: Bean[], shots: Shot[]): Photo[] {
-  return [...beans.flatMap((b) => b.photos), ...shots.flatMap((s) => s.photos)];
+function collectPhotos(beans: Bean[], shots: Shot[], cafes: Cafe[]): Photo[] {
+  return [
+    ...beans.flatMap((b) => b.photos),
+    ...shots.flatMap((s) => s.photos),
+    ...cafes.flatMap((c) => c.photos),
+  ];
 }
 
 export function useJournal(cloudUserId: string | null) {
@@ -39,6 +47,7 @@ export function useJournal(cloudUserId: string | null) {
 
   const [beans, setBeans] = useState<Bean[]>([]);
   const [shots, setShots] = useState<Shot[]>([]);
+  const [cafes, setCafes] = useState<Cafe[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +67,8 @@ export function useJournal(cloudUserId: string | null) {
   );
 
   const hydratePhotoUrls = useCallback(
-    async (beansData: Bean[], shotsData: Shot[]) => {
-      const photos = collectPhotos(beansData, shotsData);
+    async (beansData: Bean[], shotsData: Shot[], cafesData: Cafe[]) => {
+      const photos = collectPhotos(beansData, shotsData, cafesData);
       const next = new Map<string, string>();
 
       for (const photo of photos) {
@@ -87,7 +96,8 @@ export function useJournal(cloudUserId: string | null) {
       const data = await loadJournalData();
       setBeans(data.beans);
       setShots(data.shots);
-      await hydratePhotoUrls(data.beans, data.shots);
+      setCafes(data.cafes);
+      await hydratePhotoUrls(data.beans, data.shots, data.cafes);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load journal');
     } finally {
@@ -130,7 +140,8 @@ export function useJournal(cloudUserId: string | null) {
         if (cancelled) return;
         setBeans(data.beans);
         setShots(data.shots);
-        await hydratePhotoUrls(data.beans, data.shots);
+        setCafes(data.cafes);
+        await hydratePhotoUrls(data.beans, data.shots, data.cafes);
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load journal');
@@ -189,6 +200,14 @@ export function useJournal(cloudUserId: string | null) {
     [useCloud, userId],
   );
 
+  const persistCafes = useCallback(
+    async (nextCafes: Cafe[]) => {
+      if (useCloud) await saveCafesToCloud(userId, nextCafes);
+      else await saveCafes(nextCafes);
+    },
+    [useCloud, userId],
+  );
+
   const addBean = useCallback(
     async (payload: AddBeanPayload) => {
       for (const { photo, blob } of payload.photoBlobs) {
@@ -205,6 +224,24 @@ export function useJournal(cloudUserId: string | null) {
       setBeans(nextBeans);
     },
     [beans, persistBeans, registerPhotoUrls, storePhotoBlob],
+  );
+
+  const addCafe = useCallback(
+    async (payload: AddCafePayload) => {
+      for (const { photo, blob } of payload.photoBlobs) {
+        await storePhotoBlob(photo.id, blob);
+      }
+
+      const cafe: Cafe = {
+        ...payload.cafe,
+        id: crypto.randomUUID(),
+      };
+      const nextCafes = [cafe, ...cafes];
+      await persistCafes(nextCafes);
+      registerPhotoUrls(payload.photoBlobs);
+      setCafes(nextCafes);
+    },
+    [cafes, persistCafes, registerPhotoUrls, storePhotoBlob],
   );
 
   const addShot = useCallback(
@@ -259,16 +296,54 @@ export function useJournal(cloudUserId: string | null) {
     [beans, persistBeans, removePhotoBlob, unregisterPhotoUrl],
   );
 
+  const addCafePhotos = useCallback(
+    async (cafeId: string, inputs: PhotoBlobInput[]) => {
+      for (const { photo, blob } of inputs) {
+        await storePhotoBlob(photo.id, blob);
+      }
+
+      const nextCafes = cafes.map((cafe) =>
+        cafe.id === cafeId
+          ? { ...cafe, photos: [...cafe.photos, ...inputs.map((i) => i.photo)] }
+          : cafe,
+      );
+      await persistCafes(nextCafes);
+      registerPhotoUrls(inputs);
+      setCafes(nextCafes);
+    },
+    [cafes, persistCafes, registerPhotoUrls, storePhotoBlob],
+  );
+
+  const removeCafePhoto = useCallback(
+    async (cafeId: string, photoId: string) => {
+      await removePhotoBlob(photoId);
+      unregisterPhotoUrl(photoId);
+
+      const nextCafes = cafes.map((cafe) =>
+        cafe.id === cafeId
+          ? { ...cafe, photos: cafe.photos.filter((p) => p.id !== photoId) }
+          : cafe,
+      );
+      await persistCafes(nextCafes);
+      setCafes(nextCafes);
+    },
+    [cafes, persistCafes, removePhotoBlob, unregisterPhotoUrl],
+  );
+
   return {
     beans,
     shots,
+    cafes,
     loading,
     error,
     resolvePhotos,
     addShot,
     addBean,
+    addCafe,
     addBeanPhotos,
     removeBeanPhoto,
+    addCafePhotos,
+    removeCafePhoto,
     reloadJournal,
   };
 }

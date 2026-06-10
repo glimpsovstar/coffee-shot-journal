@@ -22,7 +22,7 @@ describe('AddShotForm', () => {
   });
 
   it('lists beans as roaster and name in the selector', () => {
-    render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
+    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={vi.fn()} />);
     const select = screen.getByLabelText('Bean');
 
     expect(select).toHaveTextContent('Test Roasters — Test Ethiopia');
@@ -30,16 +30,16 @@ describe('AddShotForm', () => {
   });
 
   it('shows message when bean catalogue is empty', () => {
-    render(<AddShotForm beans={[]} onAddShot={vi.fn()} />);
+    render(<AddShotForm beans={[]} cafes={[]} onAddShot={vi.fn()} />);
 
     expect(
-      screen.getByText(/Add beans to the catalogue before logging shots/),
+      screen.getByText(/Add beans to the catalogue before logging home shots/),
     ).toBeInTheDocument();
   });
 
   it('shows validation error when grind setting is missing', async () => {
     const user = userEvent.setup();
-    render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
+    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={vi.fn()} />);
     const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
 
     await user.click(within(form).getByRole('button', { name: 'Add shot' }));
@@ -51,14 +51,14 @@ describe('AddShotForm', () => {
     const user = userEvent.setup();
     const onAddShot = vi.fn();
 
-    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={onAddShot} />);
     const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Grind setting'), '14.5');
     await user.clear(within(form).getByLabelText('Dose in (g)'));
     await user.type(within(form).getByLabelText('Dose in (g)'), '18.2');
-    await user.clear(within(form).getByLabelText('Brewed'));
-    await user.type(within(form).getByLabelText('Brewed'), '2026-06-04T09:30');
+    await user.clear(within(form).getByLabelText('When'));
+    await user.type(within(form).getByLabelText('When'), '2026-06-04T09:30');
     await user.type(within(form).getByLabelText('Tasting notes'), 'Bright acidity.');
     const ratingRadios = within(form).getAllByRole('radio');
     await user.click(ratingRadios[ratingRadios.length - 1]!);
@@ -67,6 +67,7 @@ describe('AddShotForm', () => {
     expect(onAddShot).toHaveBeenCalledOnce();
     expect(onAddShot).toHaveBeenCalledWith({
       shot: {
+        context: 'home_pulled',
         beanId: 'bean-a',
         brewedAt: new Date('2026-06-04T09:30').toISOString(),
         grinder: 'Niche Zero',
@@ -90,7 +91,7 @@ describe('AddShotForm', () => {
       messages: ['Set brewed date and time from photo.', 'GPS found — pick the nearest suburb from suggestions.'],
     });
 
-    render(<AddShotForm beans={mockBeans} onAddShot={vi.fn()} />);
+    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={vi.fn()} />);
     const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
 
     const file = new File([new Uint8Array(64)], 'shot.jpg', { type: 'image/jpeg' });
@@ -102,7 +103,7 @@ describe('AddShotForm', () => {
     await user.click(within(form).getByRole('button', { name: 'Update from photo' }));
 
     await waitFor(() => {
-      expect(within(form).getByLabelText('Brewed')).toHaveValue('2026-06-04T09:30');
+      expect(within(form).getByLabelText('When')).toHaveValue('2026-06-04T09:30');
       expect(within(form).getByLabelText('Suburb')).toHaveValue('Melbourne, VIC, Australia');
     });
   });
@@ -118,7 +119,7 @@ describe('AddShotForm', () => {
       observedAt: '2026-06-04T09:00',
     });
 
-    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={onAddShot} />);
     const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Suburb'), 'Melbourne');
@@ -140,7 +141,7 @@ describe('AddShotForm', () => {
       observedAt: '2026-06-04T09:00',
     });
 
-    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={onAddShot} />);
     const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
 
     const suburbInput = within(form).getByLabelText('Suburb');
@@ -164,7 +165,7 @@ describe('AddShotForm', () => {
     const user = userEvent.setup();
     const onAddShot = vi.fn();
 
-    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    render(<AddShotForm beans={mockBeans} cafes={[]} onAddShot={onAddShot} />);
     const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Grind setting'), '14');

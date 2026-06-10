@@ -12,7 +12,8 @@ import { ShotList } from './components/ShotList';
 import { useAuth } from './hooks/useAuth';
 import { useJournal } from './hooks/useJournal';
 import { formatBeanChoiceLabel } from './utils/beans';
-import { getBeanById, sortShotsNewestFirst } from './utils/shots';
+import { getCafeById } from './utils/cafes';
+import { getBeanById, isCafeShot, sortShotsNewestFirst } from './utils/shots';
 
 type AppPage = 'journal' | 'log' | 'analytics' | 'backup';
 
@@ -30,19 +31,29 @@ function JournalApp({
   const {
     beans,
     shots,
+    cafes,
     loading,
     error,
     resolvePhotos,
     addShot,
     addBean,
+    addCafe,
     addBeanPhotos,
     removeBeanPhoto,
+    addCafePhotos,
+    removeCafePhoto,
     reloadJournal,
   } = useJournal(cloudUserId);
 
   const newestShot = sortShotsNewestFirst(shots)[0];
-  const currentBean = newestShot ? getBeanById(beans, newestShot.beanId) : undefined;
-  const currentBeanLabel = currentBean ? formatBeanChoiceLabel(currentBean) : undefined;
+  const currentBeanLabel = newestShot
+    ? isCafeShot(newestShot)
+      ? getCafeById(cafes, newestShot.cafeId ?? '')?.name
+      : (() => {
+          const bean = getBeanById(beans, newestShot.beanId);
+          return bean ? formatBeanChoiceLabel(bean) : undefined;
+        })()
+    : undefined;
 
   if (loading) {
     return (
@@ -115,6 +126,7 @@ function JournalApp({
               <ShotList
                 shots={shots}
                 beans={beans}
+                cafes={cafes}
                 resolvePhotos={resolvePhotos}
                 heading="Past history"
                 intro="Newest first — your extraction log."
@@ -126,11 +138,16 @@ function JournalApp({
               section={logSection}
               onSectionChange={setLogSection}
               beans={beans}
+              cafes={cafes}
+              shots={shots}
               resolvePhotos={resolvePhotos}
               onAddShot={addShot}
               onAddBean={addBean}
+              onAddCafe={addCafe}
               onAddBeanPhotos={addBeanPhotos}
               onRemoveBeanPhoto={removeBeanPhoto}
+              onAddCafePhotos={addCafePhotos}
+              onRemoveCafePhoto={removeCafePhoto}
             />
           ) : page === 'analytics' ? (
             <AnalyticsPage shots={shots} />

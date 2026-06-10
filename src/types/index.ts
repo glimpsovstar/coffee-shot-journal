@@ -55,9 +55,40 @@ export interface ShotWeather {
   observedAt: string;
 }
 
+export type ShotContext = 'home_pulled' | 'cafe_purchased';
+
+export type MilkCategory = 'black' | 'milk';
+
+export type BlackBeverageType = 'espresso' | 'ristretto' | 'long_black';
+
+export type MilkBeverageType = 'latte' | 'cappuccino' | 'flat_white' | 'mocha';
+
+export type BeverageType = BlackBeverageType | MilkBeverageType;
+
+export type ShotSize = 'half' | 'single' | 'double' | 'custom';
+
+export interface Cafe {
+  id: string;
+  name: string;
+  googlePlaceId?: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
+  notes: string;
+  photos: Photo[];
+}
+
 export interface Shot {
   id: string;
+  context?: ShotContext;
   beanId: string;
+  cafeId?: string;
+  milkCategory?: MilkCategory;
+  beverageType?: BeverageType;
+  shotSize?: ShotSize;
+  shotSizeCustom?: string;
+  priceAud?: number;
+  wouldOrderAgain?: boolean;
   brewedAt: string;
   /** AU/NZ suburb selected from catalogue. */
   brewSuburb?: StoredBrewSuburb;
@@ -76,6 +107,7 @@ export interface Shot {
 }
 
 export type NewBean = Omit<Bean, 'id'>;
+export type NewCafe = Omit<Cafe, 'id'>;
 export type NewShot = Omit<Shot, 'id'>;
 
 export interface PhotoBlobInput {
@@ -90,6 +122,11 @@ export interface AddShotPayload {
 
 export interface AddBeanPayload {
   bean: NewBean;
+  photoBlobs: PhotoBlobInput[];
+}
+
+export interface AddCafePayload {
+  cafe: NewCafe;
   photoBlobs: PhotoBlobInput[];
 }
 

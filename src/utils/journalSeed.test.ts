@@ -4,7 +4,7 @@ import { collectPhotoIds, journalDiffersFromSeed } from './journalSeed';
 
 describe('journalSeed', () => {
   it('detects seed-only journal', () => {
-    expect(journalDiffersFromSeed({ beans: seedBeans, shots: seedShots })).toBe(false);
+    expect(journalDiffersFromSeed({ beans: seedBeans, shots: seedShots, cafes: [] })).toBe(false);
   });
 
   it('detects custom beans', () => {
@@ -12,6 +12,7 @@ describe('journalSeed', () => {
       journalDiffersFromSeed({
         beans: [{ ...seedBeans[0], name: 'Custom' }, ...seedBeans.slice(1)],
         shots: seedShots,
+        cafes: [],
       }),
     ).toBe(true);
   });

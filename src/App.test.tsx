@@ -55,8 +55,8 @@ describe('App', () => {
     const form = screen.getByRole('heading', { name: 'Log a shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Grind setting'), '15');
-    await user.clear(within(form).getByLabelText('Brewed'));
-    await user.type(within(form).getByLabelText('Brewed'), '2026-06-05T12:00');
+    await user.clear(within(form).getByLabelText('When'));
+    await user.type(within(form).getByLabelText('When'), '2026-06-05T12:00');
     await user.selectOptions(within(form).getByLabelText('Bean'), 'bean-house');
     await user.type(within(form).getByLabelText('Tasting notes'), 'Great pull.');
     await user.click(within(form).getByRole('button', { name: 'Add shot' }));
