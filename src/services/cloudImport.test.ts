@@ -4,9 +4,10 @@ import { seedBeans, seedShots } from '../data/seed';
 import { markCloudImportPromptHandled } from '../lib/cloudConfig';
 import { resetDbForTests } from '../storage/db';
 import { clearJournalForTests, saveBeans, saveShots } from '../storage/journalRepository';
-import { loadJournalFromCloud } from '../storage/supabaseJournalRepository';
+import { loadJournalFromCloud, saveCafesToCloud } from '../storage/supabaseJournalRepository';
 import {
   hasCustomLocalJournal,
+  importJournalDataToCloud,
   importLocalJournalToCloud,
   shouldOfferCloudImportPrompt,
 } from './cloudImport';
@@ -16,11 +17,16 @@ vi.mock('../storage/supabaseJournalRepository', async (importOriginal) => {
   return {
     ...actual,
     loadJournalFromCloud: vi.fn(),
+    putPhotoBlobToCloud: vi.fn().mockResolvedValue(undefined),
+    saveBeansToCloud: vi.fn().mockResolvedValue(undefined),
+    saveCafesToCloud: vi.fn().mockResolvedValue(undefined),
+    saveShotsToCloud: vi.fn().mockResolvedValue(undefined),
   };
 });
 
 describe('cloudImport', () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     resetDbForTests();
     await clearJournalForTests();
     resetDbForTests();
@@ -80,5 +86,17 @@ describe('cloudImport', () => {
     await saveShots(seedShots);
 
     expect(await shouldOfferCloudImportPrompt('user-3')).toBe(false);
+  });
+
+  it('skips café sync when importing legacy backup data without cafés', async () => {
+    const result = await importJournalDataToCloud(
+      'user-4',
+      { beans: [], shots: [], cafes: [] },
+      new Map(),
+      { syncCafes: false },
+    );
+
+    expect(result.cafes).toBe(0);
+    expect(saveCafesToCloud).not.toHaveBeenCalled();
   });
 });

@@ -23,6 +23,10 @@ export interface CloudImportResult {
   photos: number;
 }
 
+interface ImportJournalDataOptions {
+  syncCafes?: boolean;
+}
+
 export async function importLocalJournalToCloud(userId: string): Promise<CloudImportResult> {
   const local = await readLocalJournalForImport();
   if (!local) {
@@ -87,6 +91,7 @@ export async function importJournalDataToCloud(
   userId: string,
   data: JournalData,
   photoBlobs: Map<string, Blob>,
+  options: ImportJournalDataOptions = {},
 ): Promise<CloudImportResult> {
   const photoIds = collectPhotoIds(data.beans, data.shots, data.cafes);
   let photosUploaded = 0;
@@ -100,7 +105,9 @@ export async function importJournalDataToCloud(
 
   await saveBeansToCloud(userId, data.beans);
   await saveShotsToCloud(userId, data.shots);
-  await saveCafesToCloud(userId, data.cafes);
+  if (options.syncCafes !== false) {
+    await saveCafesToCloud(userId, data.cafes);
+  }
   markCloudImportPromptHandled(userId);
 
   return {

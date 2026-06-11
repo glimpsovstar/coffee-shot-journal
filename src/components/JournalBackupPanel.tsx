@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { markCloudImportDone } from '../lib/cloudConfig';
 import { importJournalDataToCloud } from '../services/cloudImport';
 import {
+  backupIncludesCafes,
   buildJournalBackupFromIndexedDb,
   downloadJournalBackupFile,
   journalDataFromBackup,
@@ -52,6 +53,7 @@ export function JournalBackupPanel({ cloudUserId, onRestored }: JournalBackupPan
           cloudUserId,
           journalDataFromBackup(backup),
           photoBlobsFromBackup(backup),
+          { syncCafes: backupIncludesCafes(backup) },
         );
         markCloudImportDone(cloudUserId);
         setMessage(
