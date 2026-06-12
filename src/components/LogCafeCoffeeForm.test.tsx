@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as weather from '../services/weather';
-import { mockBeans } from '../test/fixtures';
+import { createMockImageFile, mockBeans } from '../test/fixtures';
 import type { Cafe } from '../types';
 import { LogCafeCoffeeForm } from './LogCafeCoffeeForm';
 
@@ -20,7 +20,28 @@ const mockCafe: Cafe = {
   photos: [],
 };
 
+function rejectedSave(message: string): Promise<void> {
+  return {
+    then(_onFulfilled, onRejected) {
+      onRejected?.(new Error(message));
+    },
+  } as Promise<void>;
+}
+
+function stubPhotoPreviewUrls() {
+  vi.stubGlobal('URL', {
+    ...URL,
+    createObjectURL: vi.fn(() => 'blob:preview'),
+    revokeObjectURL: vi.fn(),
+  });
+}
+
 describe('LogCafeCoffeeForm', () => {
+  afterEach(() => {
+    vi.mocked(weather.fetchWeatherAt).mockReset();
+    vi.unstubAllGlobals();
+  });
+
   it('logs a café coffee with menu selection, weather, and options', async () => {
     const user = userEvent.setup();
     const onAddCoffee = vi.fn();
@@ -70,5 +91,36 @@ describe('LogCafeCoffeeForm', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/pick a coffee/i);
     expect(onAddCoffee).not.toHaveBeenCalled();
+  });
+
+  it('keeps the coffee draft when saving fails', async () => {
+    const user = userEvent.setup();
+    const onAddCoffee = vi.fn(() => rejectedSave('Cloud write failed'));
+    vi.mocked(weather.fetchWeatherAt).mockResolvedValue({
+      temperatureC: 18,
+      humidityPercent: 62,
+      description: 'Partly cloudy',
+      source: 'open-meteo',
+      observedAt: '2026-06-10T12:00:00.000Z',
+    });
+
+    render(
+      <LogCafeCoffeeForm cafe={mockCafe} beans={mockBeans} onAddCoffee={onAddCoffee} />,
+    );
+    stubPhotoPreviewUrls();
+
+    const file = createMockImageFile('failed-coffee.jpg');
+    const input = screen.getByLabelText('Coffee photos').parentElement!.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    await user.upload(input, file);
+    expect(await screen.findByAltText('failed-coffee.jpg')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Flat white' }));
+    await user.type(screen.getByLabelText('Tasting notes'), 'Too bitter to reorder');
+    await user.click(screen.getByRole('button', { name: 'Log coffee' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Cloud write failed');
+    expect(screen.getByLabelText('Tasting notes')).toHaveValue('Too bitter to reorder');
+    expect(screen.getByAltText('failed-coffee.jpg')).toBeInTheDocument();
   });
 });

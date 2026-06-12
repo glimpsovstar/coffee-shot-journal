@@ -1,7 +1,7 @@
 import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { mockBeans } from '../test/fixtures';
+import { createMockImageFile, mockBeans } from '../test/fixtures';
 import * as photoExif from '../utils/photoExif';
 import * as weather from '../services/weather';
 import { AddShotForm } from './AddShotForm';
@@ -15,10 +15,27 @@ vi.mock('../services/weather', () => ({
   fetchWeatherAt: vi.fn(),
 }));
 
+function rejectedSave(message: string): Promise<void> {
+  return {
+    then(_onFulfilled, onRejected) {
+      onRejected?.(new Error(message));
+    },
+  } as Promise<void>;
+}
+
+function stubPhotoPreviewUrls() {
+  vi.stubGlobal('URL', {
+    ...URL,
+    createObjectURL: vi.fn(() => 'blob:preview'),
+    revokeObjectURL: vi.fn(),
+  });
+}
+
 describe('AddShotForm', () => {
   afterEach(() => {
     vi.mocked(photoExif.extractShotMetadataFromBlob).mockReset();
     vi.mocked(weather.fetchWeatherAt).mockReset();
+    vi.unstubAllGlobals();
   });
 
   it('lists beans as roaster and name in the selector', () => {
@@ -81,6 +98,30 @@ describe('AddShotForm', () => {
       },
       photoBlobs: [],
     });
+  });
+
+  it('keeps the shot draft when saving fails', async () => {
+    const user = userEvent.setup();
+    const onAddShot = vi.fn(() => rejectedSave('Cloud write failed'));
+
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
+    stubPhotoPreviewUrls();
+
+    const file = createMockImageFile('failed-shot.jpg');
+    const input = within(form).getByLabelText('Shot photos').parentElement!.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    await user.upload(input, file);
+    expect(await within(form).findByAltText('failed-shot.jpg')).toBeInTheDocument();
+    await user.type(within(form).getByLabelText('Grind setting'), '14.5');
+    await user.type(within(form).getByLabelText('Tasting notes'), 'Sweet and balanced');
+    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
+
+    expect(await within(form).findByRole('alert')).toHaveTextContent('Cloud write failed');
+    expect(within(form).getByLabelText('Grind setting')).toHaveValue('14.5');
+    expect(within(form).getByLabelText('Tasting notes')).toHaveValue('Sweet and balanced');
+    expect(within(form).getByAltText('failed-shot.jpg')).toBeInTheDocument();
   });
 
   it('updates brewed time and nearest suburb from photo metadata', async () => {

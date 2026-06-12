@@ -15,7 +15,7 @@ import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFrom
 
 interface AddShotFormProps {
   beans: Bean[];
-  onAddShot: (payload: AddShotPayload) => void;
+  onAddShot: (payload: AddShotPayload) => Promise<void>;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -154,7 +154,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
         }
       }
 
-      onAddShot({
+      await onAddShot({
         shot: {
           context: 'home_pulled',
           beanId: form.beanId,
@@ -179,6 +179,8 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       setSuburbQuery('');
       setForm(defaultHomeForm(beans));
       setStatusMessage(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add shot.');
     } finally {
       setSubmitting(false);
     }
