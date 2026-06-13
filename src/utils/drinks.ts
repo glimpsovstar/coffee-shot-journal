@@ -81,6 +81,14 @@ export function formatDrinkSummary(shot: Shot): string | undefined {
   if (shot.alternativeMilk) parts.push('alt milk');
 
   if (
+    shot.beverageType === 'long_black' &&
+    shot.longBlackWaterMl !== undefined &&
+    shot.longBlackEspressoMl !== undefined
+  ) {
+    parts.push(`${shot.longBlackWaterMl}ml water · ${shot.longBlackEspressoMl}ml espresso`);
+  }
+
+  if (
     shot.shotSize &&
     shot.shotSize !== 'single' &&
     shot.shotSize !== 'double' &&

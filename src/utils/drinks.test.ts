@@ -52,4 +52,16 @@ describe('drinks', () => {
       }),
     ).toBe(true);
   });
+
+  it('formats long black with water and espresso volumes', () => {
+    expect(
+      formatDrinkSummary({
+        beverageType: 'long_black',
+        longBlackWaterMl: 150,
+        longBlackEspressoMl: 40,
+        milkCategory: 'black',
+        shotSize: 'single',
+      } as never),
+    ).toContain('150ml water · 40ml espresso');
+  });
 });
