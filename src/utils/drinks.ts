@@ -24,6 +24,21 @@ export const MILK_BEVERAGES: { id: MilkBeverageType; label: string }[] = [
   { id: 'cappuccino', label: 'Cappuccino' },
   { id: 'mocha', label: 'Mocha' },
   { id: 'magic', label: 'Magic' },
+  { id: 'affogato', label: 'Affogato' },
+];
+
+/** Milk drinks offered on the home shot form (#48 subset). */
+export const HOME_MILK_BEVERAGES: { id: MilkBeverageType; label: string }[] = [
+  { id: 'latte', label: 'Latte' },
+  { id: 'cappuccino', label: 'Cappuccino' },
+  { id: 'magic', label: 'Magic' },
+  { id: 'affogato', label: 'Affogato' },
+];
+
+/** Home shot drink picker — black + selected milk drinks. */
+export const HOME_DRINK_BEVERAGES: { id: BeverageType; label: string }[] = [
+  ...BLACK_BEVERAGES,
+  ...HOME_MILK_BEVERAGES,
 ];
 
 /** Flat café menu — milk drinks first, then black. */

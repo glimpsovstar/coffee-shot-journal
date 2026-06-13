@@ -200,4 +200,21 @@ describe('AddShotForm', () => {
     expect(payload.shot.longBlackWaterMl).toBe(150);
     expect(payload.shot.longBlackEspressoMl).toBe(40);
   });
+
+  it('submits milk-based home drink with milk category', async () => {
+    const user = userEvent.setup();
+    const onAddShot = vi.fn();
+
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
+
+    await user.click(within(form).getByRole('button', { name: 'Affogato' }));
+    await user.type(within(form).getByLabelText('Grind setting'), '14');
+    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
+
+    expect(onAddShot).toHaveBeenCalledOnce();
+    const payload = onAddShot.mock.calls[0]![0];
+    expect(payload.shot.beverageType).toBe('affogato');
+    expect(payload.shot.milkCategory).toBe('milk');
+  });
 });
