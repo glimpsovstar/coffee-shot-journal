@@ -275,30 +275,54 @@ export function useJournal(cloudUserId: string | null) {
 
   const addCafeVisit = useCallback(
     async (payload: AddCafeVisitPayload): Promise<Cafe> => {
-      for (const { photo, blob } of payload.cafe.photoBlobs) {
-        await storePhotoBlob(photo.id, blob);
-      }
-
       const cafe: Cafe = {
         ...payload.cafe.cafe,
         id: crypto.randomUUID(),
       };
       const nextCafes = [cafe, ...cafes];
-      await persistCafes(nextCafes);
-      registerPhotoUrls(payload.cafe.photoBlobs);
-
-      for (const { photo, blob } of payload.coffee.photoBlobs) {
-        await storePhotoBlob(photo.id, blob);
-      }
-
       const shot: Shot = {
         ...payload.coffee.shot,
         id: crypto.randomUUID(),
         cafeId: cafe.id,
       };
       const nextShots = [shot, ...shots];
-      await persistShots(nextShots);
-      registerPhotoUrls(payload.coffee.photoBlobs);
+
+      for (const { photo, blob } of payload.cafe.photoBlobs) {
+        await storePhotoBlob(photo.id, blob);
+      }
+      for (const { photo, blob } of payload.coffee.photoBlobs) {
+        await storePhotoBlob(photo.id, blob);
+      }
+
+      let shotsPersistStarted = false;
+      let cafesPersistStarted = false;
+      try {
+        shotsPersistStarted = true;
+        await persistShots(nextShots);
+        cafesPersistStarted = true;
+        await persistCafes(nextCafes);
+      } catch (err) {
+        let shouldRollbackShots = shotsPersistStarted;
+        if (cafesPersistStarted) {
+          try {
+            await persistCafes(cafes);
+            shouldRollbackShots = true;
+          } catch {
+            shouldRollbackShots = false;
+            // Preserve the original write error shown to the user.
+          }
+        }
+        if (shouldRollbackShots) {
+          try {
+            await persistShots(shots);
+          } catch {
+            // Preserve the original write error shown to the user.
+          }
+        }
+        throw err;
+      }
+
+      registerPhotoUrls([...payload.cafe.photoBlobs, ...payload.coffee.photoBlobs]);
 
       setCafes(nextCafes);
       setShots(nextShots);

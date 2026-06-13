@@ -71,4 +71,31 @@ describe('LogCafeCoffeeForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/pick a coffee/i);
     expect(onAddCoffee).not.toHaveBeenCalled();
   });
+
+  it('keeps the form filled and shows an error when saving fails', async () => {
+    const user = userEvent.setup();
+    const onAddCoffee = vi.fn().mockRejectedValue(new Error('Cloud save failed'));
+    vi.mocked(weather.fetchWeatherAt).mockResolvedValue({
+      temperatureC: 18,
+      humidityPercent: 62,
+      description: 'Partly cloudy',
+      source: 'open-meteo',
+      observedAt: '2026-06-10T12:00:00.000Z',
+    });
+
+    render(
+      <LogCafeCoffeeForm cafe={mockCafe} beans={mockBeans} onAddCoffee={onAddCoffee} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Flat white' }));
+    await user.type(screen.getByLabelText('Tasting notes'), 'Great texture');
+    await user.click(screen.getByRole('button', { name: 'Log coffee' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Cloud save failed');
+    expect(screen.getByRole('button', { name: 'Flat white' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByLabelText('Tasting notes')).toHaveValue('Great texture');
+  });
 });

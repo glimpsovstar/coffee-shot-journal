@@ -17,7 +17,7 @@ import { WeatherDisplay } from './WeatherDisplay';
 interface LogCafeCoffeeFormProps {
   cafe: Cafe;
   beans: Bean[];
-  onAddCoffee: (payload: AddShotPayload) => void;
+  onAddCoffee: (payload: AddShotPayload) => Promise<void>;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -139,6 +139,7 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
             longitude: cafe.longitude,
             at: brewed,
           });
+          setStatusMessage(null);
         } catch (err) {
           setStatusMessage(
             err instanceof Error
@@ -148,7 +149,7 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
         }
       }
 
-      onAddCoffee({
+      await onAddCoffee({
         shot: {
           context: 'cafe_purchased',
           cafeId: cafe.id,
@@ -175,6 +176,7 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
       });
       resetForm();
     } catch (err) {
+      setStatusMessage(null);
       setError(err instanceof Error ? err.message : 'Failed to log coffee.');
     } finally {
       setSubmitting(false);
