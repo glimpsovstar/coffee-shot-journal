@@ -91,6 +91,10 @@ export interface Shot {
   extraShot?: boolean;
   /** Café drink used oat, almond, etc. instead of regular milk. */
   alternativeMilk?: boolean;
+  /** Hot water (ml) when assembling a long black at home. */
+  longBlackWaterMl?: number;
+  /** Espresso volume in cup (ml) for long black; may differ from extraction yield. */
+  longBlackEspressoMl?: number;
   priceAud?: number;
   wouldOrderAgain?: boolean;
   brewedAt: string;

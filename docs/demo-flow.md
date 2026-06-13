@@ -59,7 +59,7 @@ P5:         Product backlog (filters, charts, export enhancements)
 1. New project in Supabase dashboard (Free tier OK for personal use).
 2. Note **Project URL**, **publishable key** (`sb_publishable_…`), and **secret key** (`sb_secret_…`) — use new key format, not legacy anon/service_role JWT keys.
 3. Add to Vercel env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (or equivalent); secret key server-side only if needed.
-4. Define schema (beans, shots), Storage bucket for photos, **RLS** policies: `auth.uid() = user_id`.
+4. Run SQL migrations in order: `supabase/migrations/001_journal.sql` then **`002_cafes.sql`** (café catalogue). Storage bucket + **RLS**: `auth.uid() = user_id`.
 
 ### 3b — Auth: social login + passkeys
 
@@ -127,6 +127,7 @@ Validate **V-1** through **V-4** in the design spec (phone add → laptop sees d
 | Passkey / QR fails | Relying Party ID = `withdevo.net`; origins include prod URL; hybrid transport not stripped |
 | Label scan 401/500 | Vercel function logs; `OPENAI_API_KEY` set in Production |
 | Data not syncing | Supabase RLS policies; signed-in `auth.uid()` matches row `user_id` |
+| **Save visit** fails on Log → Café | Table Editor missing `cafes` → run `supabase/migrations/002_cafes.sql`; check Network tab for `rest/v1/cafes` errors |
 | Import banner keeps appearing | Cloud already has data → should not show; hard refresh after deploy; use Skip once (stored per user in local/session storage) |
 | Tab still shows Vercel favicon | Chrome caches favicons aggressively; site must serve `/favicon.ico` (not only SVG). Hard refresh or clear site data; redeploy without build cache if icon file changed on Vercel |
 | Stranger sees journal | Should not — unauthenticated users see landing / sign-in only |

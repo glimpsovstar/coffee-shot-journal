@@ -1260,6 +1260,19 @@ dl {
   margin-bottom: 1rem;
 }
 
+.cafe-catalogue__picker-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.cafe-catalogue__new-visit {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .cafe-picker {
   list-style: none;
   margin: 0.75rem 0 0;
@@ -1352,8 +1365,20 @@ dl {
   font-weight: 600;
 }
 
+.cafe-place-field {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
 .cafe-place-field .suburb-autocomplete {
   margin-bottom: 0.75rem;
+  width: 100%;
+}
+
+.cafe-place-field .suburb-autocomplete input,
+.cafe-place-field .form-row input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cafe-drink-picker {

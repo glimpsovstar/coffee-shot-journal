@@ -69,6 +69,8 @@ describe('AddShotForm', () => {
       shot: {
         context: 'home_pulled',
         beanId: 'bean-a',
+        milkCategory: 'black',
+        beverageType: 'espresso',
         brewedAt: new Date('2026-06-04T09:30').toISOString(),
         grinder: 'Niche Zero',
         grindSetting: '14.5',
@@ -175,5 +177,27 @@ describe('AddShotForm', () => {
 
     expect(within(form).getByRole('alert')).toHaveTextContent('Dose must be a positive number.');
     expect(onAddShot).not.toHaveBeenCalled();
+  });
+
+  it('submits long black with water and espresso volumes', async () => {
+    const user = userEvent.setup();
+    const onAddShot = vi.fn();
+
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
+
+    await user.click(within(form).getByRole('button', { name: 'Long black' }));
+    await user.type(within(form).getByLabelText('Hot water (ml)'), '150');
+    const espressoInput = within(form).getByLabelText('Espresso in cup (ml)');
+    await user.clear(espressoInput);
+    await user.type(espressoInput, '40');
+    await user.type(within(form).getByLabelText('Grind setting'), '14');
+    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
+
+    expect(onAddShot).toHaveBeenCalledOnce();
+    const payload = onAddShot.mock.calls[0]![0];
+    expect(payload.shot.beverageType).toBe('long_black');
+    expect(payload.shot.longBlackWaterMl).toBe(150);
+    expect(payload.shot.longBlackEspressoMl).toBe(40);
   });
 });

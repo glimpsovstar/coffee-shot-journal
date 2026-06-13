@@ -30,18 +30,10 @@ import type {
   PhotoDisplay,
   Shot,
 } from '../types';
+import { formatUnknownError } from '../utils/errors';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 
 export type { PhotoDisplay };
-
-function journalErrorMessage(err: unknown, fallback: string): string {
-  if (err instanceof Error && err.message) return err.message;
-  if (typeof err === 'object' && err !== null && 'message' in err) {
-    const message = (err as { message?: string }).message;
-    if (message) return message;
-  }
-  return fallback;
-}
 
 function collectPhotos(beans: Bean[], shots: Shot[], cafes: Cafe[]): Photo[] {
   return [
@@ -109,7 +101,7 @@ export function useJournal(cloudUserId: string | null) {
       setCafes(data.cafes);
       await hydratePhotoUrls(data.beans, data.shots, data.cafes);
     } catch (err) {
-      setError(journalErrorMessage(err, 'Failed to load journal'));
+      setError(formatUnknownError(err, 'Failed to load journal'));
     } finally {
       setLoading(false);
     }
@@ -154,7 +146,7 @@ export function useJournal(cloudUserId: string | null) {
         await hydratePhotoUrls(data.beans, data.shots, data.cafes);
       } catch (err) {
         if (!cancelled) {
-          setError(journalErrorMessage(err, 'Failed to load journal'));
+          setError(formatUnknownError(err, 'Failed to load journal'));
         }
       } finally {
         if (!cancelled) setLoading(false);

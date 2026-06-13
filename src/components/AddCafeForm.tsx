@@ -14,6 +14,7 @@ import { isGooglePlacesEnabled } from '../lib/mapsConfig';
 import { geocodePlaceQuery } from '../services/geocoding';
 import { extractGpsFromPhotoBlob } from '../utils/photoExif';
 import { buildCafeCoffeeShot } from '../utils/cafeCoffee';
+import { formatUnknownError } from '../utils/errors';
 import { isCafeDrinkComplete } from '../utils/drinks';
 import { toDatetimeLocalValue } from '../utils/datetime';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
@@ -27,16 +28,31 @@ import { WeatherDisplay } from './WeatherDisplay';
 interface AddCafeFormProps {
   beans: Bean[];
   onAddVisit: (payload: AddCafeVisitPayload) => Promise<Cafe>;
-  /** When cafés already exist, collapse until expanded. */
-  defaultCollapsed?: boolean;
+  id?: string;
+  /** Controlled expand/collapse (used when opening from café picker header). */
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
   previewUrl: string;
 }
 
-export function AddCafeForm({ beans, onAddVisit, defaultCollapsed = false }: AddCafeFormProps) {
-  const [expanded, setExpanded] = useState(!defaultCollapsed);
+export function AddCafeForm({
+  beans,
+  onAddVisit,
+  id,
+  expanded: expandedProp,
+  onExpandedChange,
+}: AddCafeFormProps) {
+  const [internalExpanded, setInternalExpanded] = useState(true);
+  const isControlled = expandedProp !== undefined;
+  const expanded = isControlled ? expandedProp : internalExpanded;
+
+  const setExpanded = (value: boolean) => {
+    if (isControlled) onExpandedChange?.(value);
+    else setInternalExpanded(value);
+  };
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [cafeNotes, setCafeNotes] = useState('');
@@ -253,7 +269,8 @@ export function AddCafeForm({ beans, onAddVisit, defaultCollapsed = false }: Add
       resetForm();
       setStatusMessage(`Saved ${cafe.name} and your ${drink.replace('_', ' ')}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save visit.');
+      console.error('Failed to save café visit', err);
+      setError(formatUnknownError(err, 'Failed to save visit.'));
     } finally {
       setSubmitting(false);
     }
@@ -269,24 +286,26 @@ export function AddCafeForm({ beans, onAddVisit, defaultCollapsed = false }: Add
   }));
 
   return (
-    <section className="panel add-cafe-form" aria-labelledby="add-cafe-heading">
+    <section
+      id={id}
+      className="panel add-cafe-form"
+      aria-labelledby="add-cafe-heading"
+    >
       <header className="add-cafe-form__header">
         <div>
           <h2 id="add-cafe-heading">Log a café visit</h2>
           <p className="panel__intro">
-            {expanded
-              ? 'One step — save the place, your notes, and the coffee you ordered.'
-              : 'Log another café visit with the coffee you had there.'}
+            One step — save the place, your notes, and the coffee you ordered.
           </p>
         </div>
-        {defaultCollapsed ? (
+        {isControlled ? (
           <button
             type="button"
             className="btn-ghost add-cafe-form__toggle"
             aria-expanded={expanded}
-            onClick={() => setExpanded((open) => !open)}
+            onClick={() => setExpanded(false)}
           >
-            {expanded ? 'Hide' : 'New visit'}
+            Hide form
           </button>
         ) : null}
       </header>

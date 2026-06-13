@@ -1,12 +1,13 @@
 # Supabase setup (P3)
 
-## 1. Run migration
+## 1. Run migrations
 
-In Supabase Dashboard → **SQL Editor**, paste and run:
+In Supabase Dashboard → **SQL Editor**, paste and run **in order**:
 
-`migrations/001_journal.sql`
+1. `migrations/001_journal.sql` — `beans`, `shots`, RLS, `journal-photos` storage bucket.
+2. `migrations/002_cafes.sql` — `cafes` table and RLS (**required** for Log → Café save; journal load works without it but **Save visit** fails until this is applied).
 
-This creates `beans`, `shots`, RLS policies, and the `journal-photos` storage bucket.
+After both, Table Editor should list `beans`, `shots`, and `cafes`.
 
 ## 2. Environment variables
 

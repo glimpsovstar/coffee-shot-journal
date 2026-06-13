@@ -19,22 +19,17 @@ interface CafeCatalogueProps {
   onAddShot: (payload: AddShotPayload) => void;
 }
 
-function scrollToCafeDetail(cafeId: string) {
+function scrollElementIntoView(elementId: string) {
   requestAnimationFrame(() => {
-    document.getElementById(`cafe-detail-${cafeId}`)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
+    const el = document.getElementById(elementId);
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
 }
 
 function scrollToLogCoffee(cafeId: string) {
-  requestAnimationFrame(() => {
-    document.getElementById(`log-coffee-${cafeId}`)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  });
+  scrollElementIntoView(`log-coffee-${cafeId}`);
 }
 
 export function CafeCatalogue({
@@ -46,6 +41,7 @@ export function CafeCatalogue({
   onAddShot,
 }: CafeCatalogueProps) {
   const [selectedId, setSelectedId] = useState<string | null>(cafes[0]?.id ?? null);
+  const [newVisitOpen, setNewVisitOpen] = useState(false);
   const selected = cafes.find((c) => c.id === selectedId) ?? null;
 
   useEffect(() => {
@@ -55,24 +51,42 @@ export function CafeCatalogue({
 
   const handleSelectCafe = (cafeId: string) => {
     setSelectedId(cafeId);
+    setNewVisitOpen(false);
     scrollToLogCoffee(cafeId);
   };
 
   const handleAddVisit = async (payload: AddCafeVisitPayload) => {
     const cafe = await onAddVisit(payload);
     setSelectedId(cafe.id);
-    scrollToCafeDetail(cafe.id);
+    setNewVisitOpen(false);
+    scrollToLogCoffee(cafe.id);
     return cafe;
+  };
+
+  const openNewVisit = () => {
+    setNewVisitOpen(true);
+    scrollElementIntoView('new-cafe-visit-form');
   };
 
   return (
     <div className="cafe-catalogue">
       {cafes.length > 0 ? (
         <section className="panel cafe-catalogue__picker" aria-labelledby="cafe-catalogue-heading">
-          <h2 id="cafe-catalogue-heading">Log coffees at a café</h2>
-          <p className="panel__intro">
-            Pick where you went, then choose what you drank — flat white, latte, magic, and so on.
-          </p>
+          <header className="cafe-catalogue__picker-header">
+            <div>
+              <h2 id="cafe-catalogue-heading">Your cafés</h2>
+              <p className="panel__intro">
+                Pick a café to log another coffee, or start a visit at a new place.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn-primary cafe-catalogue__new-visit"
+              onClick={openNewVisit}
+            >
+              Log new café visit
+            </button>
+          </header>
           <ul className="cafe-picker">
             {cafes.map((cafe) => (
               <li key={cafe.id}>
@@ -97,6 +111,16 @@ export function CafeCatalogue({
         </section>
       ) : null}
 
+      {cafes.length > 0 && newVisitOpen ? (
+        <AddCafeForm
+          id="new-cafe-visit-form"
+          beans={beans}
+          onAddVisit={handleAddVisit}
+          expanded
+          onExpandedChange={setNewVisitOpen}
+        />
+      ) : null}
+
       {selected ? (
         <div id={`cafe-detail-${selected.id}`} className="cafe-catalogue__detail">
           <CafeDetail
@@ -113,11 +137,9 @@ export function CafeCatalogue({
         </p>
       ) : null}
 
-      <AddCafeForm
-        beans={beans}
-        onAddVisit={handleAddVisit}
-        defaultCollapsed={cafes.length > 0}
-      />
+      {cafes.length === 0 ? (
+        <AddCafeForm beans={beans} onAddVisit={handleAddVisit} />
+      ) : null}
     </div>
   );
 }

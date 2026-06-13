@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { SuburbEntry } from '../data/auNzSuburbs';
-import type { AddShotPayload, Bean, PhotoBlobInput } from '../types';
+import type { AddShotPayload, Bean, BlackBeverageType, PhotoBlobInput } from '../types';
 import { fetchWeatherAt } from '../services/weather';
 import { formatBeanChoiceLabel } from '../utils/beans';
 import { toDatetimeLocalValue } from '../utils/datetime';
@@ -12,6 +12,7 @@ import { PhotoUpload } from './PhotoUpload';
 import { StarRating } from './StarRating';
 import { SuburbAutocomplete } from './SuburbAutocomplete';
 import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFromPhotoButton';
+import { HomeBlackDrinkPicker } from './HomeBlackDrinkPicker';
 
 interface AddShotFormProps {
   beans: Bean[];
@@ -25,6 +26,9 @@ interface PendingPhoto extends PhotoBlobInput {
 const defaultHomeForm = (beans: Bean[]) => ({
   beanId: beans[0]?.id ?? '',
   brewedAt: toDatetimeLocalValue(new Date()),
+  beverageType: 'espresso' as BlackBeverageType,
+  longBlackWaterMl: '',
+  longBlackEspressoMl: '',
   grinder: 'Niche Zero',
   grindSetting: '',
   doseIn: '18',
@@ -115,6 +119,21 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       return;
     }
 
+    let longBlackWaterMl: number | undefined;
+    let longBlackEspressoMl: number | undefined;
+    if (form.beverageType === 'long_black') {
+      longBlackWaterMl = parseFloat(form.longBlackWaterMl);
+      longBlackEspressoMl = parseFloat(form.longBlackEspressoMl);
+      if (Number.isNaN(longBlackWaterMl) || longBlackWaterMl <= 0) {
+        setError('Water volume must be a positive number for long black.');
+        return;
+      }
+      if (Number.isNaN(longBlackEspressoMl) || longBlackEspressoMl <= 0) {
+        setError('Espresso volume must be a positive number for long black.');
+        return;
+      }
+    }
+
     const trimmedSuburbQuery = suburbQuery.trim();
     const suburbSuggestions = searchSuburbs(trimmedSuburbQuery, 20);
     let resolvedSuburb =
@@ -158,9 +177,14 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
         shot: {
           context: 'home_pulled',
           beanId: form.beanId,
+          milkCategory: 'black',
+          beverageType: form.beverageType,
           brewedAt: brewedAt.toISOString(),
           ...(resolvedSuburb ? { brewSuburb: toStoredSuburb(resolvedSuburb) } : {}),
           ...(weather ? { weather } : {}),
+          ...(form.beverageType === 'long_black' && longBlackWaterMl !== undefined
+            ? { longBlackWaterMl, longBlackEspressoMl }
+            : {}),
           grinder: form.grinder.trim(),
           grindSetting: form.grindSetting.trim(),
           doseIn,
@@ -216,10 +240,58 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
     <section className="panel" aria-labelledby="add-shot-heading">
       <h2 id="add-shot-heading">Log a home shot</h2>
       <p className="panel__intro">
-        Espresso you pulled at home — grinder, dose, yield, and tasting notes. For café coffees, use
-        Log → Café.
+        Black coffee you pulled at home — drink style, extraction, and tasting notes. For café
+        coffees, use Log → Café.
       </p>
       <form className="shot-form" onSubmit={handleSubmit} noValidate>
+        <HomeBlackDrinkPicker
+          beverageType={form.beverageType}
+          onBeverageTypeChange={(beverageType) => {
+            setForm((f) => {
+              const next = { ...f, beverageType };
+              if (
+                beverageType === 'long_black' &&
+                !f.longBlackEspressoMl.trim() &&
+                f.yieldOut.trim()
+              ) {
+                next.longBlackEspressoMl = f.yieldOut;
+              }
+              return next;
+            });
+          }}
+        />
+
+        {form.beverageType === 'long_black' ? (
+          <div className="form-row form-row--pair">
+            <div>
+              <label htmlFor="longBlackWaterMl">Hot water (ml)</label>
+              <input
+                id="longBlackWaterMl"
+                type="number"
+                min="1"
+                step="1"
+                value={form.longBlackWaterMl}
+                onChange={(e) => setForm((f) => ({ ...f, longBlackWaterMl: e.target.value }))}
+                placeholder="e.g. 150"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="longBlackEspressoMl">Espresso in cup (ml)</label>
+              <input
+                id="longBlackEspressoMl"
+                type="number"
+                min="1"
+                step="1"
+                value={form.longBlackEspressoMl}
+                onChange={(e) => setForm((f) => ({ ...f, longBlackEspressoMl: e.target.value }))}
+                placeholder="Often matches yield"
+                required
+              />
+            </div>
+          </div>
+        ) : null}
+
         <div className="form-row form-row--pair">
           <div>
             <label htmlFor="brewedAt">When</label>

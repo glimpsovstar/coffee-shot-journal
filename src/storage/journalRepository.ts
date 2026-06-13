@@ -3,6 +3,7 @@ import { seedBeans, seedShots } from '../data/seed';
 import type { Bean, Cafe, Shot } from '../types';
 import { normalizeBean } from '../utils/beans';
 import { normalizeCafe } from '../utils/cafes';
+import { milkCategoryForBeverage } from '../utils/drinks';
 import { isCafeShot } from '../utils/shots';
 import { getDb, JOURNAL_KEY, resetDbForTests, type JournalDB } from './db';
 
@@ -71,14 +72,40 @@ function normalizeShots(shots: Shot[]): Shot[] {
     } else {
       delete normalized.context;
       delete normalized.cafeId;
-      delete normalized.milkCategory;
-      delete normalized.beverageType;
-      delete normalized.shotSize;
-      delete normalized.shotSizeCustom;
       delete normalized.extraShot;
       delete normalized.alternativeMilk;
       delete normalized.priceAud;
       delete normalized.wouldOrderAgain;
+      delete normalized.shotSize;
+      delete normalized.shotSizeCustom;
+
+      if (!normalized.beverageType) {
+        delete normalized.milkCategory;
+        delete normalized.beverageType;
+        delete normalized.longBlackWaterMl;
+        delete normalized.longBlackEspressoMl;
+      } else {
+        normalized.milkCategory = milkCategoryForBeverage(normalized.beverageType);
+        if (normalized.beverageType !== 'long_black') {
+          delete normalized.longBlackWaterMl;
+          delete normalized.longBlackEspressoMl;
+        } else {
+          if (
+            normalized.longBlackWaterMl === undefined ||
+            Number.isNaN(normalized.longBlackWaterMl) ||
+            normalized.longBlackWaterMl <= 0
+          ) {
+            delete normalized.longBlackWaterMl;
+          }
+          if (
+            normalized.longBlackEspressoMl === undefined ||
+            Number.isNaN(normalized.longBlackEspressoMl) ||
+            normalized.longBlackEspressoMl <= 0
+          ) {
+            delete normalized.longBlackEspressoMl;
+          }
+        }
+      }
     }
 
     return normalized;
