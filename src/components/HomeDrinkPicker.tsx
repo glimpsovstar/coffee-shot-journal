@@ -1,20 +1,17 @@
-import type { BlackBeverageType } from '../types';
-import { BLACK_BEVERAGES } from '../utils/drinks';
+import type { BeverageType } from '../types';
+import { HOME_DRINK_BEVERAGES } from '../utils/drinks';
 
-interface HomeBlackDrinkPickerProps {
-  beverageType: BlackBeverageType;
-  onBeverageTypeChange: (value: BlackBeverageType) => void;
+interface HomeDrinkPickerProps {
+  beverageType: BeverageType;
+  onBeverageTypeChange: (value: BeverageType) => void;
 }
 
-export function HomeBlackDrinkPicker({
-  beverageType,
-  onBeverageTypeChange,
-}: HomeBlackDrinkPickerProps) {
+export function HomeDrinkPicker({ beverageType, onBeverageTypeChange }: HomeDrinkPickerProps) {
   return (
-    <fieldset className="cafe-drink-picker home-black-drink-picker">
+    <fieldset className="cafe-drink-picker home-drink-picker">
       <legend className="cafe-drink-picker__legend">What did you drink?</legend>
       <ul className="cafe-drink-picker__menu">
-        {BLACK_BEVERAGES.map((item) => (
+        {HOME_DRINK_BEVERAGES.map((item) => (
           <li key={item.id}>
             <button
               type="button"

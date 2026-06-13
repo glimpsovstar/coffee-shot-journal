@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { SuburbEntry } from '../data/auNzSuburbs';
-import type { AddShotPayload, Bean, BlackBeverageType, PhotoBlobInput } from '../types';
+import type { AddShotPayload, Bean, BeverageType, PhotoBlobInput } from '../types';
+import { milkCategoryForBeverage } from '../utils/drinks';
 import { fetchWeatherAt } from '../services/weather';
 import { formatBeanChoiceLabel } from '../utils/beans';
 import { toDatetimeLocalValue } from '../utils/datetime';
@@ -12,7 +13,7 @@ import { PhotoUpload } from './PhotoUpload';
 import { StarRating } from './StarRating';
 import { SuburbAutocomplete } from './SuburbAutocomplete';
 import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFromPhotoButton';
-import { HomeBlackDrinkPicker } from './HomeBlackDrinkPicker';
+import { HomeDrinkPicker } from './HomeDrinkPicker';
 
 interface AddShotFormProps {
   beans: Bean[];
@@ -26,7 +27,7 @@ interface PendingPhoto extends PhotoBlobInput {
 const defaultHomeForm = (beans: Bean[]) => ({
   beanId: beans[0]?.id ?? '',
   brewedAt: toDatetimeLocalValue(new Date()),
-  beverageType: 'espresso' as BlackBeverageType,
+  beverageType: 'espresso' as BeverageType,
   longBlackWaterMl: '',
   longBlackEspressoMl: '',
   grinder: 'Niche Zero',
@@ -177,7 +178,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
         shot: {
           context: 'home_pulled',
           beanId: form.beanId,
-          milkCategory: 'black',
+          milkCategory: milkCategoryForBeverage(form.beverageType),
           beverageType: form.beverageType,
           brewedAt: brewedAt.toISOString(),
           ...(resolvedSuburb ? { brewSuburb: toStoredSuburb(resolvedSuburb) } : {}),
@@ -240,11 +241,11 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
     <section className="panel" aria-labelledby="add-shot-heading">
       <h2 id="add-shot-heading">Log a home shot</h2>
       <p className="panel__intro">
-        Black coffee you pulled at home — drink style, extraction, and tasting notes. For café
-        coffees, use Log → Café.
+        Coffee you pulled or assembled at home — drink style, extraction, and tasting notes. For
+        café coffees, use Log → Café.
       </p>
       <form className="shot-form" onSubmit={handleSubmit} noValidate>
-        <HomeBlackDrinkPicker
+        <HomeDrinkPicker
           beverageType={form.beverageType}
           onBeverageTypeChange={(beverageType) => {
             setForm((f) => {

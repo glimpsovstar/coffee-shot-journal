@@ -21,6 +21,7 @@ describe('drinks', () => {
 
   it('infers milk category from beverage', () => {
     expect(milkCategoryForBeverage('magic')).toBe('milk');
+    expect(milkCategoryForBeverage('affogato')).toBe('milk');
     expect(milkCategoryForBeverage('long_black')).toBe('black');
   });
 

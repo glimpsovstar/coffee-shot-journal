@@ -61,7 +61,7 @@ export type MilkCategory = 'black' | 'milk';
 
 export type BlackBeverageType = 'espresso' | 'ristretto' | 'long_black';
 
-export type MilkBeverageType = 'latte' | 'cappuccino' | 'flat_white' | 'mocha' | 'magic';
+export type MilkBeverageType = 'latte' | 'cappuccino' | 'flat_white' | 'mocha' | 'magic' | 'affogato';
 
 export type BeverageType = BlackBeverageType | MilkBeverageType;
 
