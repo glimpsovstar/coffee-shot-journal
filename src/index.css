@@ -554,6 +554,27 @@ dl {
   gap: 0.35rem;
 }
 
+.suburb-autocomplete input {
+  font: inherit;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.suburb-autocomplete input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.suburb-autocomplete input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .suburb-autocomplete__list {
   position: absolute;
   z-index: 20;
@@ -1372,13 +1393,6 @@ dl {
 
 .cafe-place-field .suburb-autocomplete {
   margin-bottom: 0.75rem;
-  width: 100%;
-}
-
-.cafe-place-field .suburb-autocomplete input,
-.cafe-place-field .form-row input {
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .cafe-drink-picker {

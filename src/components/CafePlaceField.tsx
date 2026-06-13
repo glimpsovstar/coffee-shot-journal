@@ -89,7 +89,7 @@ export function CafePlaceField({
 
   return (
     <div className="cafe-place-field">
-      <div className="suburb-autocomplete">
+      <div className="form-row suburb-autocomplete">
         <label htmlFor={nameId}>Name</label>
         <input
           id={nameId}
