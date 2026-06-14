@@ -13,7 +13,7 @@ describe('AddBeanForm', () => {
     await user.type(screen.getByLabelText('Name'), 'New Ethiopia');
     await user.type(screen.getByLabelText('Roaster'), 'Test Roasters');
     await user.type(screen.getByLabelText('Origin'), 'Yirgacheffe, Ethiopia');
-    await user.selectOptions(screen.getByLabelText('Roast style'), 'light');
+    await user.click(screen.getByRole('button', { name: 'Light' }));
     await user.type(screen.getByLabelText('Roast date'), '2026-05-01');
     await user.clear(screen.getByLabelText('Purchased'));
     await user.type(screen.getByLabelText('Purchased'), '2026-05-02');
@@ -34,7 +34,7 @@ describe('AddBeanForm', () => {
     const user = userEvent.setup();
     render(<AddBeanForm onAddBean={vi.fn()} />);
     expect(screen.getByPlaceholderText(/Yirgacheffe/)).toBeInTheDocument();
-    await user.click(screen.getByLabelText('Blend'));
+    await user.click(screen.getByRole('button', { name: 'Blend' }));
     expect(screen.getByLabelText('Blend name')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/House espresso/)).toBeInTheDocument();
   });
@@ -45,7 +45,7 @@ describe('AddBeanForm', () => {
 
     render(<AddBeanForm onAddBean={onAddBean} />);
 
-    await user.click(screen.getByLabelText('Blend'));
+    await user.click(screen.getByRole('button', { name: 'Blend' }));
     await user.type(screen.getByLabelText('Name'), 'Bad Blend');
     await user.type(screen.getByLabelText('Roaster'), 'Test');
     await user.type(screen.getByLabelText('Blend name'), 'House mix');

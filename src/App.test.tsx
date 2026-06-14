@@ -43,10 +43,10 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Log' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Log brew/i })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: 'Log' }));
+    await user.click(screen.getByRole('button', { name: /Log brew/i }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Log a home shot' })).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('App', () => {
     await user.clear(within(form).getByLabelText('When'));
     await user.type(within(form).getByLabelText('When'), '2026-06-05T12:00');
     await user.selectOptions(within(form).getByLabelText('Bean'), 'bean-house');
-    await user.type(within(form).getByLabelText('Tasting notes'), 'Great pull.');
+    await user.type(within(form).getByLabelText('Extra tasting notes'), 'Great pull.');
     await user.click(within(form).getByRole('button', { name: 'Add shot' }));
 
     await user.click(screen.getByRole('button', { name: 'Journal' }));
@@ -74,7 +74,7 @@ describe('App', () => {
     expect(within(items[0]).getByRole('heading', { level: 3 })).toHaveTextContent(
       'Northside Roasters — House Espresso',
     );
-    expect(within(items[0]).getByText('Great pull.')).toBeInTheDocument();
+    expect(within(items[0]).getByText(/Great pull/i)).toBeInTheDocument();
   });
 
   it('adds a new bean from the Log tab', async () => {
@@ -86,10 +86,10 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Log' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Log brew/i })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: 'Log' }));
+    await user.click(screen.getByRole('button', { name: /Log brew/i }));
     await user.click(screen.getByRole('button', { name: 'Beans' }));
 
     await waitFor(() => {

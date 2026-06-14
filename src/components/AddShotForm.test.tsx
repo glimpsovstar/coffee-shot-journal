@@ -67,11 +67,9 @@ describe('AddShotForm', () => {
     const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Grind setting'), '14.5');
-    await user.clear(within(form).getByLabelText('Dose in (g)'));
-    await user.type(within(form).getByLabelText('Dose in (g)'), '18.2');
     await user.clear(within(form).getByLabelText('When'));
     await user.type(within(form).getByLabelText('When'), '2026-06-04T09:30');
-    await user.type(within(form).getByLabelText('Tasting notes'), 'Bright acidity.');
+    await user.type(within(form).getByLabelText('Extra tasting notes'), 'Bright acidity.');
     const ratingRadios = within(form).getAllByRole('radio');
     await user.click(ratingRadios[ratingRadios.length - 1]!);
     await user.click(within(form).getByRole('button', { name: 'Add shot' }));
@@ -86,10 +84,10 @@ describe('AddShotForm', () => {
         brewedAt: new Date('2026-06-04T09:30').toISOString(),
         grinder: 'Niche Zero',
         grindSetting: '14.5',
-        doseIn: 18.2,
+        doseIn: 18,
         yieldOut: 36,
         extractionTime: 28,
-        tastingNotes: 'Bright acidity.',
+        tastingNotes: 'acidity: balanced, body: balanced, sweetness: balanced. Bright acidity.',
         rating: 5,
         photos: [],
       },
@@ -175,22 +173,6 @@ describe('AddShotForm', () => {
     expect(payload.shot.brewSuburb?.label).toMatch(/Fitzroy/);
   });
 
-  it('rejects non-positive dose', async () => {
-    const user = userEvent.setup();
-    const onAddShot = vi.fn();
-
-    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
-    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
-
-    await user.type(within(form).getByLabelText('Grind setting'), '14');
-    await user.clear(within(form).getByLabelText('Dose in (g)'));
-    await user.type(within(form).getByLabelText('Dose in (g)'), '0');
-    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
-
-    expect(within(form).getByRole('alert')).toHaveTextContent('Dose must be a positive number.');
-    expect(onAddShot).not.toHaveBeenCalled();
-  });
-
   it('submits long black with water and espresso volumes', async () => {
     const user = userEvent.setup();
     const onAddShot = vi.fn();
@@ -238,11 +220,11 @@ describe('AddShotForm', () => {
     const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
 
     await user.type(within(form).getByLabelText('Grind setting'), '14.5');
-    await user.type(within(form).getByLabelText('Tasting notes'), 'Keep this note');
+    await user.type(within(form).getByLabelText('Extra tasting notes'), 'Keep this note');
     await user.click(within(form).getByRole('button', { name: 'Add shot' }));
 
     expect(within(form).getByRole('alert')).toHaveTextContent('Storage failed');
     expect(within(form).getByLabelText('Grind setting')).toHaveValue('14.5');
-    expect(within(form).getByLabelText('Tasting notes')).toHaveValue('Keep this note');
+    expect(within(form).getByLabelText('Extra tasting notes')).toHaveValue('Keep this note');
   });
 });

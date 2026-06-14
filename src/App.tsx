@@ -108,7 +108,7 @@ function JournalApp({
       ) : null}
 
       <div className="app-layout">
-        <main className="app-main app-main--view" key={page}>
+        <main className={`app-main app-main--view${page === 'log' ? ' app-main--log-sheet' : ''}`} key={page}>
           {page === 'journal' ? (
             <ShotList
               shots={shots}

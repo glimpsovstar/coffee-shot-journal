@@ -1,4 +1,5 @@
 import { FloatingShotHero } from './FloatingShotHero';
+import { MagneticButton } from './MagneticButton';
 import type { Bean, Shot } from '../types';
 import type { PhotoDisplay } from '../types';
 import { getRecentExtractionPhotos } from '../utils/analytics';
@@ -62,9 +63,9 @@ export function JournalHero({
           </p>
         ) : null}
 
-        <button type="button" className="btn-primary journal-hero__cta" onClick={onLogClick}>
-          Log a pull
-        </button>
+      <MagneticButton type="button" className="btn-primary journal-hero__cta" onClick={onLogClick}>
+        Log a pull
+      </MagneticButton>
       </div>
     </section>
   );

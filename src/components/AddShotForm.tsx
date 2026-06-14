@@ -14,7 +14,10 @@ import { PhotoUpload } from './PhotoUpload';
 import { StarRating } from './StarRating';
 import { SuburbAutocomplete } from './SuburbAutocomplete';
 import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFromPhotoButton';
+import { FlavorProfilePicker } from './FlavorProfilePicker';
 import { HomeDrinkPicker } from './HomeDrinkPicker';
+import { ScrubField } from './ScrubField';
+import { SubmitBurstButton } from './SubmitBurstButton';
 
 interface AddShotFormProps {
   beans: Bean[];
@@ -54,7 +57,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
   const [selectedSuburb, setSelectedSuburb] = useState<SuburbEntry | null>(null);
   const [suburbQuery, setSuburbQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [submitPhase, setSubmitPhase] = useState<'idle' | 'loading' | 'success'>('idle');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -141,7 +144,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
     let resolvedSuburb =
       selectedSuburb ?? (trimmedSuburbQuery ? resolveSuburbFromQuery(trimmedSuburbQuery) : null);
 
-    setSubmitting(true);
+    setSubmitPhase('loading');
     try {
       if (!resolvedSuburb && trimmedSuburbQuery) {
         setStatusMessage('Looking up suburb location…');
@@ -154,6 +157,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
             ? 'Could not find that suburb — try "Suburb, VIC" format, pick from suggestions, or leave blank.'
             : 'Choose a suburb from the suggestions (click or press Enter).',
         );
+        setSubmitPhase('idle');
         return;
       }
 
@@ -205,10 +209,11 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       setSuburbQuery('');
       setForm(defaultHomeForm(beans));
       setStatusMessage(null);
+      setSubmitPhase('success');
+      window.setTimeout(() => setSubmitPhase('idle'), 1400);
     } catch (err) {
       setError(formatUnknownError(err, 'Failed to save shot.'));
-    } finally {
-      setSubmitting(false);
+      setSubmitPhase('idle');
     }
   };
 
@@ -366,58 +371,46 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
             </div>
           </div>
 
-          <div className="form-row form-row--triple">
-            <div>
-              <label htmlFor="doseIn">Dose in (g)</label>
-              <input
-                id="doseIn"
-                type="number"
-                min="0.1"
-                step="0.1"
-                value={form.doseIn}
-                onChange={(e) => setForm((f) => ({ ...f, doseIn: e.target.value }))}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="yieldOut">Yield out (g)</label>
-              <input
-                id="yieldOut"
-                type="number"
-                min="0.1"
-                step="0.1"
-                value={form.yieldOut}
-                onChange={(e) => setForm((f) => ({ ...f, yieldOut: e.target.value }))}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="extractionTime">Time (s)</label>
-              <input
-                id="extractionTime"
-                type="number"
-                min="1"
-                step="1"
-                value={form.extractionTime}
-                onChange={(e) => setForm((f) => ({ ...f, extractionTime: e.target.value }))}
-                required
-              />
-            </div>
+          <div className="scrub-field-group">
+            <ScrubField
+              id="doseIn"
+              label="Dose in"
+              value={form.doseIn}
+              onChange={(doseIn) => setForm((f) => ({ ...f, doseIn }))}
+              min={10}
+              max={22}
+              step={0.1}
+              unit="g"
+            />
+            <ScrubField
+              id="yieldOut"
+              label="Yield out"
+              value={form.yieldOut}
+              onChange={(yieldOut) => setForm((f) => ({ ...f, yieldOut }))}
+              min={20}
+              max={60}
+              step={0.1}
+              unit="g"
+            />
+            <ScrubField
+              id="extractionTime"
+              label="Time"
+              value={form.extractionTime}
+              onChange={(extractionTime) => setForm((f) => ({ ...f, extractionTime }))}
+              min={15}
+              max={45}
+              step={1}
+              unit="s"
+            />
           </div>
         </fieldset>
 
         <fieldset className="form-section">
           <legend className="form-section__title">Taste</legend>
-          <div className="form-row">
-            <label htmlFor="tastingNotes">Tasting notes</label>
-            <textarea
-              id="tastingNotes"
-              rows={3}
-              value={form.tastingNotes}
-              onChange={(e) => setForm((f) => ({ ...f, tastingNotes: e.target.value }))}
-              placeholder="Optional — acidity, body, what to try next…"
-            />
-          </div>
+          <FlavorProfilePicker
+            value={form.tastingNotes}
+            onChange={(tastingNotes) => setForm((f) => ({ ...f, tastingNotes }))}
+          />
 
           <StarRating
             value={form.rating}
@@ -450,9 +443,12 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
           <p className="form-error" role="alert">{error}</p>
         ) : null}
 
-        <button type="submit" className="btn-primary" disabled={submitting}>
-          {submitting ? 'Saving…' : 'Add shot'}
-        </button>
+        <SubmitBurstButton
+          phase={submitPhase}
+          idleLabel="Add shot"
+          loadingLabel="Saving…"
+          successLabel="Saved"
+        />
       </form>
     </section>
   );
