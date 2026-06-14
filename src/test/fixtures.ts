@@ -1,4 +1,4 @@
-import type { Bean, Photo, Shot } from '../types';
+import type { Bean, Cafe, Photo, Shot } from '../types';
 
 export const mockPhoto: Photo = {
   id: 'photo-test-1',
@@ -79,3 +79,14 @@ export function createMockPhotoBlobInput(photo: Photo = mockPhoto) {
   const blob = new Blob(['image-bytes'], { type: photo.mimeType });
   return { photo, blob };
 }
+
+export const mockCafe: Cafe = {
+  id: 'cafe-1',
+  name: 'Allpress Coffee',
+  address: '266 Ponsonby Road, Auckland',
+  googlePlaceId: 'ChIJtest-place',
+  latitude: -36.85,
+  longitude: 174.75,
+  notes: 'Quiet courtyard',
+  photos: [],
+};

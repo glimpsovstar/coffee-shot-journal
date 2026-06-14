@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import type { Cafe, Shot } from '../types';
-import { buildCafeMapKml } from './cafeMapKml';
+import { buildCafeMapKml, downloadCafeMapKmlFile } from './cafeMapKml';
 
 const baseCafe: Cafe = {
   id: 'cafe-1',
@@ -88,5 +88,42 @@ describe('buildCafeMapKml', () => {
     const { kml } = buildCafeMapKml([cafe], []);
 
     expect(kml).toContain('<name>Café &lt;Special&gt;</name>');
+  });
+});
+
+describe('downloadCafeMapKmlFile', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('downloads a KML file blob', () => {
+    const createObjectURL = vi.fn(() => 'blob:mock-kml');
+    const revokeObjectURL = vi.fn();
+    const click = vi.fn();
+
+    vi.stubGlobal('URL', {
+      createObjectURL,
+      revokeObjectURL,
+    });
+
+    const anchor = {
+      href: '',
+      download: '',
+      click,
+    } as unknown as HTMLAnchorElement;
+    const createElement = vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+      if (tag === 'a') return anchor;
+      return document.createElement(tag);
+    });
+
+    const result = downloadCafeMapKmlFile([baseCafe], [baseShot]);
+
+    expect(result.exportedCount).toBe(1);
+    expect(createObjectURL).toHaveBeenCalled();
+    expect(click).toHaveBeenCalled();
+    expect(anchor.download).toMatch(/^coffee-snob-cafes-\d{4}-\d{2}-\d{2}\.kml$/);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock-kml');
+
+    createElement.mockRestore();
   });
 });

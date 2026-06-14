@@ -1,6 +1,6 @@
 # Platform demo flow — Coffee Shot Journal
 
-Operator runbook for the **active** Vercel + Supabase platform. See [`constitution.md`](../constitution.md) and the [Vercel + Supabase design spec](superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md).
+Operator runbook for the **active** Vercel + Supabase platform. See [`constitution.md`](../constitution.md), [`handoff.md`](handoff.md) (resume after a break), and the [Vercel + Supabase design spec](superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md).
 
 > **Parked:** The earlier AWS + Vault runbook (TFC, ECS, `dmtfc`, `coffee.dev.withdevo.net`) is preserved in git history and in [`public-hosting-plan.md`](public-hosting-plan.md). Do not follow it for new work.
 

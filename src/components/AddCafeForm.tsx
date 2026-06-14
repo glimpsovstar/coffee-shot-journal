@@ -102,7 +102,7 @@ export function AddCafeForm({
     setCoffeePhotos([]);
   };
 
-  const resetForm = () => {
+  const clearFormFields = () => {
     setName('');
     setAddress('');
     setCafeNotes('');
@@ -113,8 +113,6 @@ export function AddCafeForm({
     }
     setCafePhotos([]);
     resetCoffeeFields();
-    setStatusMessage(null);
-    setExpanded(false);
   };
 
   const resolveLocationFromPhoto = async (inputs: PhotoBlobInput[]) => {
@@ -280,7 +278,8 @@ export function AddCafeForm({
         },
       });
 
-      resetForm();
+      clearFormFields();
+      setExpanded(false);
       setSavedCafeActions(cafe);
       setStatusMessage(`Saved ${cafe.name} and your ${drink.replace('_', ' ')}.`);
     } catch (err) {
@@ -543,31 +542,6 @@ export function AddCafeForm({
             onUpdate={applyMetadataFromPhoto}
           />
 
-          {statusMessage ? (
-            <p className="photo-upload__hint" aria-live="polite">{statusMessage}</p>
-          ) : null}
-          {savedCafeActions ? (
-            <div className="add-cafe-form__map-actions">
-              <CafeMapOpenLink
-                className="btn-secondary add-cafe-form__maps-btn"
-                latitude={savedCafeActions.latitude}
-                longitude={savedCafeActions.longitude}
-                googlePlaceId={savedCafeActions.googlePlaceId}
-              />
-              <button
-                type="button"
-                className="btn-ghost add-cafe-form__maps-btn"
-                onClick={handleDownloadCafeMap}
-                disabled={journalCafes.length === 0}
-              >
-                Download café map (KML)
-              </button>
-              <p className="photo-upload__hint">
-                Save this place in Google Maps, or import the KML in Google My Maps to see all your
-                cafés on Google Maps.
-              </p>
-            </div>
-          ) : null}
           {error ? (
             <p className="form-error" role="alert">{error}</p>
           ) : null}
@@ -575,6 +549,34 @@ export function AddCafeForm({
             {submitting ? 'Saving…' : 'Save visit'}
           </button>
         </form>
+      ) : null}
+
+      {statusMessage ? (
+        <p className="photo-upload__hint add-cafe-form__success" aria-live="polite">
+          {statusMessage}
+        </p>
+      ) : null}
+      {savedCafeActions ? (
+        <div className="add-cafe-form__map-actions">
+          <CafeMapOpenLink
+            className="btn-secondary add-cafe-form__maps-btn"
+            latitude={savedCafeActions.latitude}
+            longitude={savedCafeActions.longitude}
+            googlePlaceId={savedCafeActions.googlePlaceId}
+          />
+          <button
+            type="button"
+            className="btn-ghost add-cafe-form__maps-btn"
+            onClick={handleDownloadCafeMap}
+            disabled={journalCafes.length === 0}
+          >
+            Download café map (KML)
+          </button>
+          <p className="photo-upload__hint">
+            Save this place in Google Maps, or import the KML in Google My Maps to see all your
+            cafés on Google Maps.
+          </p>
+        </div>
       ) : null}
     </section>
   );
