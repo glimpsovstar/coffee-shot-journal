@@ -14,9 +14,9 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 - **Dial-in suggestions** — home shots: heuristic hints plus optional photo analysis via `/api/shot-recommendations` (same server key as label scan)
 - **Shot history** — espresso pulls sorted newest first, with optional puck/cup photos
 - **Log tab** — home shot or **café coffee** (drink type, café picker), import past shot, bean catalogue, **café catalogue** with map
-- **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (Google/Apple/GitHub on the landing page; optional passkey under **Backup & restore**). Local-only mode remains when Supabase env is unset.
+- **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (Google/Apple/GitHub on the landing page; optional passkey under **Account**). Local-only mode remains when Supabase env is unset.
 - **Branded landing** — coffee snob. sign-in page with logo assets in `public/branding/`; invited beta testers can use **`/test-login`** (email/password, operator-provisioned accounts)
-- **Editorial journal** — centered hero header, floating extraction photo gallery, past history list, **Log** / **Analytics** / **Backup** nav
+- **Editorial journal** — centered hero header, floating extraction photo gallery, journal dashboard with stats, past history cards, **Log** / **Analytics** / **Account** nav (bottom tabs on mobile)
 
 ### Bean fields
 

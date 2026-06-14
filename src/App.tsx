@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { AnalyticsPage } from './components/AnalyticsPage';
+import { AppNav, type AppPage } from './components/AppNav';
 import { AuthScreen } from './components/AuthScreen';
 import { TestLoginScreen } from './components/TestLoginScreen';
 import { CloudImportPrompt } from './components/CloudImportPrompt';
 import { EditorialHeader } from './components/EditorialHeader';
 import { FloatingShotHero } from './components/FloatingShotHero';
 import { JournalBackupPanel } from './components/JournalBackupPanel';
-import { JournalStatusBar } from './components/JournalStatusBar';
+import { JournalDashboard } from './components/JournalDashboard';
 import { AccountSignInPanel } from './components/AccountSignInPanel';
 import { LogPage, type LogSection } from './components/LogPage';
 import { ShotList } from './components/ShotList';
@@ -15,9 +16,7 @@ import { useJournal } from './hooks/useJournal';
 import { isTestLoginPath } from './lib/testLoginPath';
 import { formatBeanChoiceLabel } from './utils/beans';
 import { getCafeById } from './utils/cafes';
-import { getBeanById, isCafeShot, sortShotsNewestFirst } from './utils/shots';
-
-type AppPage = 'journal' | 'log' | 'analytics' | 'backup';
+import { getBeanById, isCafeShot, isHomeShot, sortShotsNewestFirst } from './utils/shots';
 
 function JournalApp({
   cloudUserId,
@@ -47,6 +46,14 @@ function JournalApp({
     reloadJournal,
   } = useJournal(cloudUserId);
 
+  const homeShotCount = shots.filter((shot) => isHomeShot(shot)).length;
+  const cafeShotCount = shots.length - homeShotCount;
+
+  const openLog = (section: LogSection = 'shot') => {
+    setLogSection(section);
+    setPage('log');
+  };
+
   const newestShot = sortShotsNewestFirst(shots)[0];
   const currentBeanLabel = newestShot
     ? isCafeShot(newestShot)
@@ -74,46 +81,19 @@ function JournalApp({
   }
 
   return (
-    <div className="app">
+    <div className="app app-shell">
       <EditorialHeader onSignOut={onSignOut} />
 
-      <nav className="app-nav app-nav--primary" aria-label="Main">
-        <button
-          type="button"
-          className={page === 'journal' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
-          aria-current={page === 'journal' ? 'page' : undefined}
-          onClick={() => setPage('journal')}
-        >
-          Journal
-        </button>
-        <button
-          type="button"
-          className={page === 'log' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
-          aria-current={page === 'log' ? 'page' : undefined}
-          onClick={() => setPage('log')}
-        >
-          Log
-        </button>
-        <button
-          type="button"
-          className={page === 'analytics' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
-          aria-current={page === 'analytics' ? 'page' : undefined}
-          onClick={() => setPage('analytics')}
-        >
-          Analytics
-        </button>
-        <button
-          type="button"
-          className={page === 'backup' ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
-          aria-current={page === 'backup' ? 'page' : undefined}
-          onClick={() => setPage('backup')}
-        >
-          Backup &amp; restore
-        </button>
-      </nav>
+      <AppNav page={page} onPageChange={setPage} />
 
       {page === 'journal' ? (
-        <JournalStatusBar shotCount={shots.length} currentBeanLabel={currentBeanLabel} />
+        <JournalDashboard
+          shotCount={shots.length}
+          homeShotCount={homeShotCount}
+          cafeShotCount={cafeShotCount}
+          currentBeanLabel={currentBeanLabel}
+          onLogClick={() => openLog('shot')}
+        />
       ) : null}
 
       {cloudUserId ? (

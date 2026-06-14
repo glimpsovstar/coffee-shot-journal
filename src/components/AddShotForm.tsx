@@ -250,185 +250,197 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
         café coffees, use Log → Café.
       </p>
       <form className="shot-form" onSubmit={handleSubmit} noValidate>
-        <HomeDrinkPicker
-          beverageType={form.beverageType}
-          onBeverageTypeChange={(beverageType) => {
-            setForm((f) => {
-              const next = { ...f, beverageType };
-              if (
-                beverageType === 'long_black' &&
-                !f.longBlackEspressoMl.trim() &&
-                f.yieldOut.trim()
-              ) {
-                next.longBlackEspressoMl = f.yieldOut;
-              }
-              return next;
-            });
-          }}
-        />
+        <fieldset className="form-section">
+          <legend className="form-section__title">Drink</legend>
+          <HomeDrinkPicker
+            beverageType={form.beverageType}
+            onBeverageTypeChange={(beverageType) => {
+              setForm((f) => {
+                const next = { ...f, beverageType };
+                if (
+                  beverageType === 'long_black' &&
+                  !f.longBlackEspressoMl.trim() &&
+                  f.yieldOut.trim()
+                ) {
+                  next.longBlackEspressoMl = f.yieldOut;
+                }
+                return next;
+              });
+            }}
+          />
 
-        {form.beverageType === 'long_black' ? (
+          {form.beverageType === 'long_black' ? (
+            <div className="form-row form-row--pair">
+              <div>
+                <label htmlFor="longBlackWaterMl">Hot water (ml)</label>
+                <input
+                  id="longBlackWaterMl"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={form.longBlackWaterMl}
+                  onChange={(e) => setForm((f) => ({ ...f, longBlackWaterMl: e.target.value }))}
+                  placeholder="e.g. 150"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="longBlackEspressoMl">Espresso in cup (ml)</label>
+                <input
+                  id="longBlackEspressoMl"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={form.longBlackEspressoMl}
+                  onChange={(e) => setForm((f) => ({ ...f, longBlackEspressoMl: e.target.value }))}
+                  placeholder="Often matches yield"
+                  required
+                />
+              </div>
+            </div>
+          ) : null}
+
           <div className="form-row form-row--pair">
             <div>
-              <label htmlFor="longBlackWaterMl">Hot water (ml)</label>
+              <label htmlFor="brewedAt">When</label>
               <input
-                id="longBlackWaterMl"
-                type="number"
-                min="1"
-                step="1"
-                value={form.longBlackWaterMl}
-                onChange={(e) => setForm((f) => ({ ...f, longBlackWaterMl: e.target.value }))}
-                placeholder="e.g. 150"
+                id="brewedAt"
+                type="datetime-local"
+                value={form.brewedAt}
+                onChange={(e) => setForm((f) => ({ ...f, brewedAt: e.target.value }))}
                 required
               />
             </div>
             <div>
-              <label htmlFor="longBlackEspressoMl">Espresso in cup (ml)</label>
+              <SuburbAutocomplete
+                id="brewSuburb"
+                label="Suburb"
+                value={selectedSuburb}
+                inputValue={suburbQuery}
+                onInputChange={setSuburbQuery}
+                onSelect={setSelectedSuburb}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <label htmlFor="beanId">Bean</label>
+            <select
+              id="beanId"
+              value={form.beanId}
+              onChange={(e) => setForm((f) => ({ ...f, beanId: e.target.value }))}
+              required
+            >
+              {beans.map((bean) => (
+                <option key={bean.id} value={bean.id}>
+                  {formatBeanChoiceLabel(bean)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset className="form-section">
+          <legend className="form-section__title">Recipe</legend>
+          <div className="form-row form-row--pair">
+            <div>
+              <label htmlFor="grinder">Grinder</label>
               <input
-                id="longBlackEspressoMl"
-                type="number"
-                min="1"
-                step="1"
-                value={form.longBlackEspressoMl}
-                onChange={(e) => setForm((f) => ({ ...f, longBlackEspressoMl: e.target.value }))}
-                placeholder="Often matches yield"
+                id="grinder"
+                type="text"
+                value={form.grinder}
+                onChange={(e) => setForm((f) => ({ ...f, grinder: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="grindSetting">Grind setting</label>
+              <input
+                id="grindSetting"
+                type="text"
+                value={form.grindSetting}
+                onChange={(e) => setForm((f) => ({ ...f, grindSetting: e.target.value }))}
+                placeholder="e.g. 14.5"
                 required
               />
             </div>
           </div>
-        ) : null}
 
-        <div className="form-row form-row--pair">
-          <div>
-            <label htmlFor="brewedAt">When</label>
-            <input
-              id="brewedAt"
-              type="datetime-local"
-              value={form.brewedAt}
-              onChange={(e) => setForm((f) => ({ ...f, brewedAt: e.target.value }))}
-              required
-            />
+          <div className="form-row form-row--triple">
+            <div>
+              <label htmlFor="doseIn">Dose in (g)</label>
+              <input
+                id="doseIn"
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={form.doseIn}
+                onChange={(e) => setForm((f) => ({ ...f, doseIn: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="yieldOut">Yield out (g)</label>
+              <input
+                id="yieldOut"
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={form.yieldOut}
+                onChange={(e) => setForm((f) => ({ ...f, yieldOut: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="extractionTime">Time (s)</label>
+              <input
+                id="extractionTime"
+                type="number"
+                min="1"
+                step="1"
+                value={form.extractionTime}
+                onChange={(e) => setForm((f) => ({ ...f, extractionTime: e.target.value }))}
+                required
+              />
+            </div>
           </div>
-          <div>
-            <SuburbAutocomplete
-              id="brewSuburb"
-              label="Suburb"
-              value={selectedSuburb}
-              inputValue={suburbQuery}
-              onInputChange={setSuburbQuery}
-              onSelect={setSelectedSuburb}
-            />
-          </div>
-        </div>
+        </fieldset>
 
-        <div className="form-row">
-          <label htmlFor="beanId">Bean</label>
-          <select
-            id="beanId"
-            value={form.beanId}
-            onChange={(e) => setForm((f) => ({ ...f, beanId: e.target.value }))}
-            required
-          >
-            {beans.map((bean) => (
-              <option key={bean.id} value={bean.id}>
-                {formatBeanChoiceLabel(bean)}
-              </option>
-            ))}
-          </select>
-        </div>
+        <fieldset className="form-section">
+          <legend className="form-section__title">Taste</legend>
+          <div className="form-row">
+            <label htmlFor="tastingNotes">Tasting notes</label>
+            <textarea
+              id="tastingNotes"
+              rows={3}
+              value={form.tastingNotes}
+              onChange={(e) => setForm((f) => ({ ...f, tastingNotes: e.target.value }))}
+              placeholder="Optional — acidity, body, what to try next…"
+            />
+          </div>
 
-        <div className="form-row form-row--pair">
-          <div>
-            <label htmlFor="grinder">Grinder</label>
-            <input
-              id="grinder"
-              type="text"
-              value={form.grinder}
-              onChange={(e) => setForm((f) => ({ ...f, grinder: e.target.value }))}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="grindSetting">Grind setting</label>
-            <input
-              id="grindSetting"
-              type="text"
-              value={form.grindSetting}
-              onChange={(e) => setForm((f) => ({ ...f, grindSetting: e.target.value }))}
-              placeholder="e.g. 14.5"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="form-row form-row--triple">
-          <div>
-            <label htmlFor="doseIn">Dose in (g)</label>
-            <input
-              id="doseIn"
-              type="number"
-              min="0.1"
-              step="0.1"
-              value={form.doseIn}
-              onChange={(e) => setForm((f) => ({ ...f, doseIn: e.target.value }))}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="yieldOut">Yield out (g)</label>
-            <input
-              id="yieldOut"
-              type="number"
-              min="0.1"
-              step="0.1"
-              value={form.yieldOut}
-              onChange={(e) => setForm((f) => ({ ...f, yieldOut: e.target.value }))}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="extractionTime">Time (s)</label>
-            <input
-              id="extractionTime"
-              type="number"
-              min="1"
-              step="1"
-              value={form.extractionTime}
-              onChange={(e) => setForm((f) => ({ ...f, extractionTime: e.target.value }))}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <label htmlFor="tastingNotes">Tasting notes</label>
-          <textarea
-            id="tastingNotes"
-            rows={3}
-            value={form.tastingNotes}
-            onChange={(e) => setForm((f) => ({ ...f, tastingNotes: e.target.value }))}
-            placeholder="Optional — acidity, body, what to try next…"
+          <StarRating
+            value={form.rating}
+            onChange={(rating) => setForm((f) => ({ ...f, rating }))}
+            name="shot-rating"
+            label="Rating"
           />
-        </div>
+        </fieldset>
 
-        <PhotoUpload
-          existingCount={pendingPhotos.length}
-          onPhotosAdded={handlePhotosAdded}
-          label="Shot photos"
-        />
-        <PhotoGalleryEditable
-          items={pendingDisplay}
-          label="Photos to attach"
-          onRemove={handleRemovePending}
-        />
-        <UpdateFromPhotoButton imageBlob={firstPhotoBlob} onUpdate={applyMetadataFromPhoto} />
-
-        <StarRating
-          value={form.rating}
-          onChange={(rating) => setForm((f) => ({ ...f, rating }))}
-          name="shot-rating"
-          label="Rating"
-        />
+        <fieldset className="form-section">
+          <legend className="form-section__title">Photo</legend>
+          <PhotoUpload
+            existingCount={pendingPhotos.length}
+            onPhotosAdded={handlePhotosAdded}
+            label="Shot photos"
+          />
+          <PhotoGalleryEditable
+            items={pendingDisplay}
+            label="Photos to attach"
+            onRemove={handleRemovePending}
+          />
+          <UpdateFromPhotoButton imageBlob={firstPhotoBlob} onUpdate={applyMetadataFromPhoto} />
+        </fieldset>
 
         {statusMessage ? (
           <p className="photo-upload__hint" aria-live="polite">{statusMessage}</p>
