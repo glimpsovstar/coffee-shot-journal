@@ -1311,11 +1311,18 @@ dl {
 }
 
 .journal-hero__cta {
-  margin-top: 0.25rem;
+  margin-top: 0;
   min-width: min(100%, 280px);
   padding: 0.8rem 1.5rem;
   font-size: 1rem;
-  box-shadow: 0 10px 28px rgba(224, 90, 71, 0.28);
+  box-shadow:
+    0 10px 28px rgba(224, 90, 71, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+  backdrop-filter: blur(10px);
+}
+
+.journal-hero__empty .journal-hero__cta {
+  margin-top: 1.25rem;
 }
 
 .journal-hero__empty {
@@ -1512,6 +1519,7 @@ dl {
 }
 
 .floating-hero__scroller {
+  position: relative;
   overflow-x: auto;
   overflow-y: hidden;
   min-height: 220px;
@@ -1520,6 +1528,20 @@ dl {
   -webkit-overflow-scrolling: touch;
   display: flex;
   justify-content: center;
+}
+
+.floating-hero__scroller-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.floating-hero__scroller-overlay > * {
+  pointer-events: auto;
 }
 
 .floating-hero__gallery {

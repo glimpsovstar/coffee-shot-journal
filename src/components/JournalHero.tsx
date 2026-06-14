@@ -27,17 +27,30 @@ export function JournalHero({
 }: JournalHeroProps) {
   const hasPhotoWave = getRecentExtractionPhotos(shots).length > 0;
 
+  const logCta = (
+    <MagneticButton type="button" className="btn-primary journal-hero__cta" onClick={onLogClick}>
+      Log a shot
+    </MagneticButton>
+  );
+
   return (
     <section className="journal-hero" aria-label="Journal highlights">
       <div className="journal-hero__stage">
         {hasPhotoWave ? (
-          <FloatingShotHero shots={shots} beans={beans} resolvePhotos={resolvePhotos} immersive />
+          <FloatingShotHero
+            shots={shots}
+            beans={beans}
+            resolvePhotos={resolvePhotos}
+            immersive
+            scrollerOverlay={logCta}
+          />
         ) : (
           <div className="journal-hero__empty">
             <h2 className="journal-hero__empty-title">Your extraction wave</h2>
             <p className="journal-hero__empty-text">
               Add a cup or puck photo when you log — your shots will stack here in a floating gallery.
             </p>
+            {logCta}
           </div>
         )}
       </div>
@@ -62,10 +75,6 @@ export function JournalHero({
             Latest shot: <strong>{currentBeanLabel}</strong>
           </p>
         ) : null}
-
-      <MagneticButton type="button" className="btn-primary journal-hero__cta" onClick={onLogClick}>
-        Log a shot
-      </MagneticButton>
       </div>
     </section>
   );
