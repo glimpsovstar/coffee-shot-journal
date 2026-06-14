@@ -14,16 +14,24 @@ export interface ShotFormMetadataUpdate {
 interface UpdateFromPhotoButtonProps {
   imageBlob: Blob | null;
   onUpdate: (patch: ShotFormMetadataUpdate, messages: string[]) => void;
+  /** When `none`, only date/time is read (café visit forms). */
+  locationKind?: 'suburb' | 'none';
 }
 
-export function UpdateFromPhotoButton({ imageBlob, onUpdate }: UpdateFromPhotoButtonProps) {
+export function UpdateFromPhotoButton({
+  imageBlob,
+  onUpdate,
+  locationKind = 'suburb',
+}: UpdateFromPhotoButtonProps) {
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleUpdate = async () => {
     if (!imageBlob) {
-      setError('Attach a shot photo first.');
+      setError(
+        locationKind === 'suburb' ? 'Attach a shot photo first.' : 'Attach a photo first.',
+      );
       setFeedback([]);
       return;
     }
@@ -37,7 +45,7 @@ export function UpdateFromPhotoButton({ imageBlob, onUpdate }: UpdateFromPhotoBu
       if (brewedAt) {
         patch.brewedAt = toDatetimeLocalValue(brewedAt);
       }
-      if (gps) {
+      if (locationKind === 'suburb' && gps) {
         const nearest = findNearestSuburb(gps.latitude, gps.longitude);
         if (nearest) {
           patch.suburb = nearest;
@@ -78,7 +86,9 @@ export function UpdateFromPhotoButton({ imageBlob, onUpdate }: UpdateFromPhotoBu
       </button>
       {!imageBlob && (
         <p className="photo-upload__hint">
-          Attach a photo above, then update brewed time and location from its metadata.
+          {locationKind === 'suburb'
+            ? 'Attach a photo above, then update brewed time and location from its metadata.'
+            : 'Attach a photo above, then update visit date and time from its metadata.'}
         </p>
       )}
       {feedback.length > 0 && (

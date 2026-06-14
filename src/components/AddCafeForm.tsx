@@ -23,6 +23,7 @@ import { CafePlaceField } from './CafePlaceField';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
 import { StarRating } from './StarRating';
+import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFromPhotoButton';
 import { WeatherDisplay } from './WeatherDisplay';
 
 interface AddCafeFormProps {
@@ -284,6 +285,14 @@ export function AddCafeForm({
     photo,
     url: previewUrl,
   }));
+  const firstPhotoBlob = cafePhotos[0]?.blob ?? coffeePhotos[0]?.blob ?? null;
+
+  const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate, _messages: string[]) => {
+    if (patch.brewedAt) {
+      setBrewedAt(patch.brewedAt);
+      setWeatherPreview(null);
+    }
+  };
 
   return (
     <section
@@ -480,6 +489,11 @@ export function AddCafeForm({
                 return current.filter((p) => p.photo.id !== photoId);
               });
             }}
+          />
+          <UpdateFromPhotoButton
+            imageBlob={firstPhotoBlob}
+            locationKind="none"
+            onUpdate={applyMetadataFromPhoto}
           />
 
           {statusMessage ? (

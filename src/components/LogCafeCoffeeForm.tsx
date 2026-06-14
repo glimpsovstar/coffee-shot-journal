@@ -13,6 +13,7 @@ import { CafeDrinkPicker } from './CafeDrinkPicker';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
 import { StarRating } from './StarRating';
+import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFromPhotoButton';
 import { WeatherDisplay } from './WeatherDisplay';
 
 interface LogCafeCoffeeFormProps {
@@ -186,6 +187,14 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
     photo,
     url: previewUrl,
   }));
+  const firstPhotoBlob = pendingPhotos[0]?.blob ?? null;
+
+  const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate, _messages: string[]) => {
+    if (patch.brewedAt) {
+      setBrewedAt(patch.brewedAt);
+      setWeatherPreview(null);
+    }
+  };
 
   return (
     <section className="log-cafe-coffee" aria-labelledby={`log-coffee-${cafe.id}`}>
@@ -307,6 +316,11 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
           items={pendingDisplay}
           label="Photos to attach"
           onRemove={handleRemovePending}
+        />
+        <UpdateFromPhotoButton
+          imageBlob={firstPhotoBlob}
+          locationKind="none"
+          onUpdate={applyMetadataFromPhoto}
         />
 
         {statusMessage ? (
