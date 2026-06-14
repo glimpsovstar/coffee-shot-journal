@@ -9,19 +9,26 @@ In Supabase Dashboard → **SQL Editor**, paste and run **in order**:
 
 After both, Table Editor should list `beans`, `shots`, and `cafes`.
 
-Migrations use `drop policy if exists` before `create policy` so **Supabase Preview** branches can re-apply SQL without `42710` duplicate-policy errors.
+Migrations use `drop policy if exists` before `create policy` so SQL can be re-applied safely (SQL Editor, or Supabase **Pro** preview branches).
 
-## GitHub — Supabase Preview check
+## GitHub — Supabase Preview check (optional, Pro plan)
 
-The **Supabase Preview** status on pull requests only runs when preview branches are enabled:
+**Per-PR preview branches require Supabase Pro.** On the free plan the GitHub check shows **Skipped** — that is expected, not a failed migration.
 
-1. Supabase Dashboard → **Project Settings** → **Integrations** → **GitHub** ([direct link](https://supabase.com/dashboard/project/rqkzobpqmfdxeliyohec/settings/integrations)).
-2. Turn on **Create preview branch for each pull request** (wording may vary).
-3. Re-run checks on the PR (empty commit or close/reopen) if needed.
+| Plan | What you get on PRs |
+|------|---------------------|
+| **Free** | Check skipped; use manual migration workflow below |
+| **Pro** | Preview branch per PR; migrations run automatically |
 
-If the check shows **Skipped** with “preview branch per PR is disabled”, the integration is off — not a migration failure.
+You do **not** need Pro for production. One Supabase project + manual SQL when schema changes is enough for this app.
 
-**Manual idempotency check** (when Preview is skipped): in SQL Editor, run `001_journal.sql` twice, then `002_cafes.sql` twice — no errors.
+**When you change `supabase/migrations/`:**
+
+1. Open **SQL Editor** on your production project.
+2. Run changed migration file(s) once (or twice to confirm idempotency).
+3. Merge the PR — ignore **Skipped** on Supabase Preview if Vercel is green.
+
+To stop the skipped check from appearing on every PR, disconnect GitHub branching in **Project Settings → Integrations** (your app still uses Supabase; you just lose the PR status line).
 
 ## 2. Environment variables
 
