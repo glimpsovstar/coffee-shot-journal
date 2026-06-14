@@ -12,6 +12,7 @@ interface ShotRecommendationPanelProps {
   shot: Shot;
   beans: Bean[];
   photoItems: PhotoDisplay[];
+  photoMetadataCount?: number;
 }
 
 async function blobFromPhotoUrl(url: string): Promise<Blob | undefined> {
@@ -24,7 +25,12 @@ async function blobFromPhotoUrl(url: string): Promise<Blob | undefined> {
   }
 }
 
-export function ShotRecommendationPanel({ shot, beans, photoItems }: ShotRecommendationPanelProps) {
+export function ShotRecommendationPanel({
+  shot,
+  beans,
+  photoItems,
+  photoMetadataCount = 0,
+}: ShotRecommendationPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ShotRecommendationResult | null>(null);
@@ -67,9 +73,14 @@ export function ShotRecommendationPanel({ shot, beans, photoItems }: ShotRecomme
           Local demo: using <code>VITE_OPENAI_API_KEY</code> from <code>.env.local</code>.
         </p>
       )}
-      {photoItems.length === 0 && (
+      {photoItems.length === 0 && photoMetadataCount === 0 && (
         <p className="photo-upload__hint">
           Add a shot photo for crema and milk analysis; recipe hints work without a photo.
+        </p>
+      )}
+      {photoItems.length === 0 && photoMetadataCount > 0 && (
+        <p className="photo-upload__hint">
+          Photo could not be loaded — try signing out and back in, or re-attach from backup.
         </p>
       )}
       {error ? (

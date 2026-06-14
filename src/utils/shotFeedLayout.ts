@@ -1,10 +1,8 @@
 import type { Shot } from '../types';
 
-export type ShotFeedSize = 'featured' | 'wide' | 'standard';
+export type ShotFeedSize = 'standard';
 
-/** Bento-style card sizing: top-rated and recent pulls get more visual weight. */
-export function shotFeedSize(shot: Shot, index: number): ShotFeedSize {
-  if (shot.rating === 5) return 'featured';
-  if (shot.rating >= 4 && index < 4) return 'wide';
+/** Uniform feed cards — same width and layout for every pull. */
+export function shotFeedSize(_shot: Shot, _index: number): ShotFeedSize {
   return 'standard';
 }
