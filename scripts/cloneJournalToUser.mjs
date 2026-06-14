@@ -18,7 +18,7 @@ import {
   collectPhotoIds,
   documentsFromRows,
   remapJournalIds,
-} from './lib/journalCloneRemap.mjs';
+} from '../src/utils/journalCloneRemap.ts';
 
 const PHOTO_BUCKET = 'journal-photos';
 const JOURNAL_TABLES = ['shots', 'cafes', 'beans'];

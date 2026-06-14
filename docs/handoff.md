@@ -64,7 +64,7 @@ Run: `npm run test:run`
 | Café catalogue shell | `src/components/CafeCatalogue.test.tsx` |
 | Log café coffee | `src/components/LogCafeCoffeeForm.test.tsx` |
 | Google Places service | `src/services/googlePlaces.test.ts` |
-| Journal clone remap | `src/utils/journalCloneRemap.test.ts` |
+| Journal clone remap | `src/utils/journalCloneRemap.test.ts`, `src/utils/journalCloneRemap.ts` |
 | Journal / cloud / backup | `src/hooks/useJournal.test.ts`, `src/utils/journalBackup.test.ts` |
 | Shot feed / cards | `src/components/ShotCard.test.tsx`, `src/utils/shotFeedLayout.test.ts` |
 | Hero / journal shell | `src/components/JournalHero.test.tsx`, `src/App.test.tsx` |
