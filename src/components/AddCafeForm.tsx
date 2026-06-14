@@ -16,6 +16,7 @@ import { extractGpsFromPhotoBlob } from '../utils/photoExif';
 import { buildCafeCoffeeShot } from '../utils/cafeCoffee';
 import { formatUnknownError } from '../utils/errors';
 import { isCafeDrinkComplete } from '../utils/drinks';
+import { metadataBlobForPhoto } from '../utils/photos';
 import { toDatetimeLocalValue } from '../utils/datetime';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 import { CafeDrinkPicker } from './CafeDrinkPicker';
@@ -107,31 +108,34 @@ export function AddCafeForm({
     setExpanded(false);
   };
 
-  const resolveLocationFromPhoto = async (blob: Blob) => {
-    const gps = await extractGpsFromPhotoBlob(blob);
-    if (!gps) return;
+  const resolveLocationFromPhoto = async (inputs: PhotoBlobInput[]) => {
+    for (const input of inputs) {
+      const gps = await extractGpsFromPhotoBlob(metadataBlobForPhoto(input));
+      if (!gps) continue;
 
-    setStatusMessage('Photo GPS found — looking up nearby cafés…');
+      setStatusMessage('Photo GPS found — looking up nearby cafés…');
 
-    if (isGooglePlacesEnabled()) {
-      try {
-        const nearby = await searchCafesNearLocation(gps.latitude, gps.longitude);
-        setPhotoSuggestions(nearby);
-        if (nearby.length > 0) {
-          setStatusMessage('Photo GPS found — pick a nearby café below or keep typing a name.');
-          return;
+      if (isGooglePlacesEnabled()) {
+        try {
+          const nearby = await searchCafesNearLocation(gps.latitude, gps.longitude);
+          setPhotoSuggestions(nearby);
+          if (nearby.length > 0) {
+            setStatusMessage('Photo GPS found — pick a nearby café below or keep typing a name.');
+            return;
+          }
+        } catch {
+          // fall through
         }
-      } catch {
-        // fall through
       }
-    }
 
-    const label = await reverseGeocodePlaceLabel(gps.latitude, gps.longitude);
-    if (label) {
-      setAddress(label);
-      setStatusMessage('Photo GPS found — address filled. Add the café name or pick from suggestions.');
-    } else {
-      setStatusMessage('Photo GPS found but could not resolve an address — enter details manually.');
+      const label = await reverseGeocodePlaceLabel(gps.latitude, gps.longitude);
+      if (label) {
+        setAddress(label);
+        setStatusMessage('Photo GPS found — address filled. Add the café name or pick from suggestions.');
+      } else {
+        setStatusMessage('Photo GPS found but could not resolve an address — enter details manually.');
+      }
+      return;
     }
   };
 
@@ -143,8 +147,8 @@ export function AddCafeForm({
         previewUrl: createPhotoObjectUrl(input.blob),
       })),
     ]);
-    if (inputs[0]) {
-      void resolveLocationFromPhoto(inputs[0].blob);
+    if (inputs.length > 0) {
+      void resolveLocationFromPhoto(inputs);
     }
   };
 
@@ -285,7 +289,10 @@ export function AddCafeForm({
     photo,
     url: previewUrl,
   }));
-  const firstPhotoBlob = cafePhotos[0]?.blob ?? coffeePhotos[0]?.blob ?? null;
+  const visitMetadataBlobs = [
+    ...cafePhotos.map((p) => metadataBlobForPhoto(p)),
+    ...coffeePhotos.map((p) => metadataBlobForPhoto(p)),
+  ];
 
   const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate, _messages: string[]) => {
     if (patch.brewedAt) {
@@ -491,7 +498,7 @@ export function AddCafeForm({
             }}
           />
           <UpdateFromPhotoButton
-            imageBlob={firstPhotoBlob}
+            imageBlobs={visitMetadataBlobs}
             locationKind="none"
             onUpdate={applyMetadataFromPhoto}
           />

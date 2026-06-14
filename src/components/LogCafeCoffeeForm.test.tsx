@@ -13,7 +13,19 @@ vi.mock('../services/weather', () => ({
 
 vi.mock('../utils/photoExif', async (importOriginal) => {
   const actual = await importOriginal<typeof photoExif>();
-  return { ...actual, extractShotMetadataFromBlob: vi.fn() };
+  const extractShotMetadataFromBlob = vi.fn();
+  return {
+    ...actual,
+    extractShotMetadataFromBlob,
+    extractShotMetadataFromBlobs: vi.fn(async (blobs: Blob[]) => {
+      for (const blob of blobs) {
+        const result = await extractShotMetadataFromBlob(blob);
+        if (result.brewedAt || result.gps) return result;
+      }
+      if (blobs[0]) return extractShotMetadataFromBlob(blobs[0]);
+      return { messages: ['Attach a photo first.'] };
+    }),
+  };
 });
 
 const mockCafe: Cafe = {

@@ -59,6 +59,6 @@ describe('extractShotMetadataFromBlob', () => {
 
     expect(result.brewedAt).toBeUndefined();
     expect(result.gps).toBeUndefined();
-    expect(result.messages[0]).toMatch(/No metadata|WhatsApp/i);
+    expect(result.messages[0]).toMatch(/No date or location/i);
   });
 });

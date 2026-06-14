@@ -8,7 +8,7 @@ import {
   shotSizeFromExtraShot,
 } from '../utils/drinks';
 import { formatUnknownError } from '../utils/errors';
-import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
+import { createPhotoObjectUrl, metadataBlobForPhoto, revokePhotoObjectUrl } from '../utils/photos';
 import { CafeDrinkPicker } from './CafeDrinkPicker';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
@@ -187,7 +187,9 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
     photo,
     url: previewUrl,
   }));
-  const firstPhotoBlob = pendingPhotos[0]?.blob ?? null;
+  const firstPhotoBlob = pendingPhotos[0]
+    ? metadataBlobForPhoto(pendingPhotos[0])
+    : null;
 
   const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate, _messages: string[]) => {
     if (patch.brewedAt) {

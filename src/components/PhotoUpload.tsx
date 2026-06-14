@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import type { PhotoBlobInput } from '../types';
 import {
-  filesToPhotos,
+  filesToPhotoInputs,
   MAX_PHOTO_SIZE_LABEL,
   prepareImageFilesForUpload,
   validateImageFiles,
@@ -52,7 +52,7 @@ export function PhotoUpload({
     }
 
     try {
-      const inputs = await filesToPhotos(prepared.files);
+      const inputs = await filesToPhotoInputs(prepared.files, validation.files);
       onPhotosAdded(inputs);
     } catch {
       setError('Could not read one or more images.');

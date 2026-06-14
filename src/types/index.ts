@@ -121,6 +121,8 @@ export type NewShot = Omit<Shot, 'id'>;
 export interface PhotoBlobInput {
   photo: Photo;
   blob: Blob;
+  /** Original bytes before canvas compression — use for EXIF reads, not upload. */
+  exifBlob?: Blob;
 }
 
 export interface AddShotPayload {

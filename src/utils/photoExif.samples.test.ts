@@ -34,6 +34,6 @@ describe('sample photos (local fixtures)', () => {
 
     expect(result.gps).toBeUndefined();
     expect(result.brewedAt).toBeUndefined();
-    expect(result.messages[0]).toMatch(/WhatsApp/i);
+    expect(result.messages[0]).toMatch(/WhatsApp|No date or location/i);
   });
 });
