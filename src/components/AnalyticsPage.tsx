@@ -271,7 +271,7 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
         items={[
           {
             label: 'Your ratio',
-            hint: 'Solid line — dose:yield on each pull',
+            hint: 'Solid line — dose:yield on each shot',
             swatch: 'solid',
             color: 'var(--accent)',
           },
@@ -301,7 +301,7 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
           },
           {
             label: 'Shaded time zone',
-            hint: `Typical pull time window (${ESPRESSO_DURATION_MIN_SEC}–${ESPRESSO_DURATION_MAX_SEC}s) — dark tint overlays ratio zone`,
+            hint: `Typical shot time window (${ESPRESSO_DURATION_MIN_SEC}–${ESPRESSO_DURATION_MAX_SEC}s) — dark tint overlays ratio zone`,
             swatch: 'band',
             color: 'var(--accent-dark)',
           },
@@ -310,7 +310,7 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
 
       {latestExtraction ? (
         <p className="analytics-sweet-spot-readout">
-          <strong>Latest pull vs sweet spot</strong>
+          <strong>Latest shot vs sweet spot</strong>
           <span className="analytics-sweet-spot-readout__metrics">
             {latestExtraction.extractionRatio !== null ? (
               <span>
@@ -327,7 +327,7 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
           </span>
           <span className="analytics-sweet-spot-readout__hint">
             Dashed lines on the chart are the 1:2 and ~{ESPRESSO_DURATION_TARGET_SEC}s sweet spots—
-            vertical distance is how far each pull sits from target.
+            vertical distance is how far each shot sits from target.
           </span>
         </p>
       ) : null}
@@ -338,8 +338,8 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
             <>
               <h3 className="analytics-chart__heading">Bean age off roast</h3>
               <p className="panel__intro">
-                Days since roast for each pull — one line per bag (age rises as the bag rests).
-                Unknown-bean pulls are omitted. Shaded bands show degassing vs the ~{OPTIMAL_BREW_DAYS_TARGET}d
+                Days since roast for each shot — one line per bag (age rises as the bag rests).
+                Unknown-bean shots are omitted. Shaded bands show degassing vs the ~{OPTIMAL_BREW_DAYS_TARGET}d
                 optimal window after CO₂ escapes.
               </p>
               <div
@@ -477,7 +477,7 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
             <>
               <h3 className="analytics-chart__heading">Grind &amp; humidity</h3>
               <p className="panel__intro">
-                Grinder setting and humidity logged with home pulls — compare with shot time on the
+                Grinder setting and humidity logged with home shots — compare with shot time on the
                 extraction chart above.
               </p>
               <div

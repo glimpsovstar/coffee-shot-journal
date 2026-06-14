@@ -1,4 +1,5 @@
 import type { AddShotPayload, Bean, Cafe, PhotoDisplay, Shot } from '../types';
+import { resolveShotPhotoDisplay } from '../utils/shotPhotoDisplay';
 import { getShotsForCafe } from '../utils/shots';
 import { CafeMapEmbed } from './CafeMapEmbed';
 import { LogCafeCoffeeForm } from './LogCafeCoffeeForm';
@@ -51,7 +52,7 @@ export function CafeDetail({ cafe, shots, beans, resolvePhotos, onAddCoffee }: C
                   shot={shot}
                   beans={beans}
                   cafes={[cafe]}
-                  photoItems={resolvePhotos(shot.photos)}
+                  photoItems={resolveShotPhotoDisplay(shot, [cafe], resolvePhotos)}
                 />
               </li>
             ))}

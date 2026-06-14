@@ -78,7 +78,7 @@ export function AppNav({ page, onPageChange }: AppNavProps) {
         }}
       >
         <span className="app-nav__fab-icon" aria-hidden="true">+</span>
-        <span className="app-nav__fab-label">Log brew</span>
+        <span className="app-nav__fab-label">Log shot</span>
       </button>
     </div>
   );

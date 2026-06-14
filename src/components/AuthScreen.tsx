@@ -51,7 +51,7 @@ export function AuthScreen({
         <section className="landing__hero" aria-labelledby="landing-tagline">
           <BrandedLogo variant="stacked" className="landing__logo" />
           <p id="landing-tagline" className="landing__tagline">
-            Your daily beans &amp; brews journal — track what changed between pulls and learn what
+            Your daily beans &amp; brews journal — track what changed between shots and learn what
             affects consistency and taste.
           </p>
           <ul className="landing__features">

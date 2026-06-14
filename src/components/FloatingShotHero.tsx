@@ -33,7 +33,7 @@ export function FloatingShotHero({
       const display = resolvePhotos([photo])[0];
       if (!display) return null;
       const bean = getBeanById(beans, shot.beanId);
-      const beanLabel = bean ? formatBeanChoiceLabel(bean) : 'Latest pull';
+      const beanLabel = bean ? formatBeanChoiceLabel(bean) : 'Latest shot';
       const recipeLine = formatHeroRecipeLine(shot);
       return {
         id: heroCardId(shot.id, photo.id),

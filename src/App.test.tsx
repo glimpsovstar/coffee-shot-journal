@@ -43,10 +43,10 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Log brew/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Log shot/i })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: /Log brew/i }));
+    await user.click(screen.getByRole('button', { name: /Log shot/i }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Log a home shot' })).toBeInTheDocument();
@@ -86,10 +86,10 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Log brew/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Log shot/i })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: /Log brew/i }));
+    await user.click(screen.getByRole('button', { name: /Log shot/i }));
     await user.click(screen.getByRole('button', { name: 'Beans' }));
 
     await waitFor(() => {
