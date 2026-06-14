@@ -3,7 +3,7 @@ import {
   collectPhotoIds,
   documentsFromRows,
   remapJournalIds,
-} from '../../scripts/lib/journalCloneRemap.mjs';
+} from './journalCloneRemap';
 
 describe('journalCloneRemap', () => {
   it('normalizes document id to match row id', () => {

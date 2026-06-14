@@ -11,7 +11,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "clone-journal": "node scripts/cloneJournalToUser.mjs"
+    "clone-journal": "node --experimental-strip-types scripts/cloneJournalToUser.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.0",
