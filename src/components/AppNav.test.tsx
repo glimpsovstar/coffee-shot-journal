@@ -8,7 +8,7 @@ describe('AppNav', () => {
     render(<AppNav page="journal" onPageChange={vi.fn()} />);
 
     expect(screen.getByRole('button', { name: 'Journal' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Log brew/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Log shot/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Analytics' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Backup/i })).not.toBeInTheDocument();
@@ -19,7 +19,7 @@ describe('AppNav', () => {
     const user = userEvent.setup();
     render(<AppNav page="journal" onPageChange={onPageChange} />);
 
-    await user.click(screen.getByRole('button', { name: /Log brew/i }));
+    await user.click(screen.getByRole('button', { name: /Log shot/i }));
     expect(onPageChange).toHaveBeenCalledWith('log');
   });
 });

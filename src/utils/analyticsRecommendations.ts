@@ -36,7 +36,7 @@ export function buildGenericAnalyticsRecommendations(): ShotRecommendationResult
     {
       area: 'guide_extraction',
       title: 'Reading the extraction chart',
-      detail: `${ESPRESSO_TARGET_SUMMARY} Solid lines are your pulls; dashed lines are sweet spots (1:2 and ~${ESPRESSO_DURATION_TARGET_SEC}s); shaded bands are the typical windows. Vertical gap to a dashed line shows how far off that pull was.`,
+      detail: `${ESPRESSO_TARGET_SUMMARY} Solid lines are your shots; dashed lines are sweet spots (1:2 and ~${ESPRESSO_DURATION_TARGET_SEC}s); shaded bands are the typical windows. Vertical gap to a dashed line shows how far off that shot was.`,
       priority: 'low',
     },
     {
@@ -47,7 +47,7 @@ export function buildGenericAnalyticsRecommendations(): ShotRecommendationResult
     },
     {
       area: 'guide_grind_time',
-      title: 'Grind changes and pull time',
+      title: 'Grind changes and shot time',
       detail:
         'When shot time moves, check whether grind setting changed on the same chart. A finer grind with faster time can balance gassy young beans; as the bag rests toward ~2 weeks, the same grind often slows the shot—adjust grind in small steps and taste each change.',
       priority: 'low',
@@ -73,7 +73,7 @@ export function buildPointAnalyticsRecommendations(
   if (point.extractionRatio !== null) {
     suggestions.push({
       area: 'point_ratio',
-      title: 'Ratio on this pull',
+      title: 'Ratio on this shot',
       detail: `${formatExtractionRatioLabel(point.extractionRatio)} (${formatRatioSweetSpotDelta(point.extractionRatio)}) at ${point.label}.`,
       priority: 'low',
     });
@@ -82,7 +82,7 @@ export function buildPointAnalyticsRecommendations(
   if (point.durationSec > 0) {
     suggestions.push({
       area: 'point_time',
-      title: 'Pull time on this pull',
+      title: 'Shot time on this shot',
       detail: `${point.durationSec}s (${formatDurationSweetSpotDelta(point.durationSec)}) at ${point.label}.`,
       priority: 'low',
     });
@@ -106,7 +106,7 @@ export function buildPointAnalyticsRecommendations(
     }
     suggestions.push({
       area: 'point_bean_age',
-      title: 'Bean age on this pull',
+      title: 'Bean age on this shot',
       detail,
       priority: phase === 'degassing' ? 'medium' : 'low',
     });
@@ -115,7 +115,7 @@ export function buildPointAnalyticsRecommendations(
   if (point.grindSetting) {
     suggestions.push({
       area: 'point_grind',
-      title: 'Grind on this pull',
+      title: 'Grind on this shot',
       detail: `Grind setting ${point.grindSetting}. Compare with earlier/later points on the grind line—if time shifted when grind stayed the same, bean age or humidity likely moved flow.`,
       priority: 'low',
     });
@@ -124,7 +124,7 @@ export function buildPointAnalyticsRecommendations(
   if (point.humidityPercent !== null) {
     suggestions.push({
       area: 'point_humidity',
-      title: 'Humidity on this pull',
+      title: 'Humidity on this shot',
       detail: `${point.humidityPercent}% humidity when logged. High humidity can slow flow; very dry air increases static—factor that in before a large grind change.`,
       priority: 'low',
     });

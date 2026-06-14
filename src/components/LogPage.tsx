@@ -59,7 +59,7 @@ export function LogPage({
       <header className="log-page__header">
         <h2 className="log-page__title">Log</h2>
         <p className="log-page__intro">
-          Home espresso pulls, café visits and coffees, and your bean catalogue.
+          Home espresso shots, café visits and coffees, and your bean catalogue.
         </p>
       </header>
 

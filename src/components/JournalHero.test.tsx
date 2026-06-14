@@ -40,7 +40,7 @@ describe('JournalHero', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Log a pull' }));
+    await user.click(screen.getByRole('button', { name: 'Log a shot' }));
     expect(onLogClick).toHaveBeenCalledOnce();
   });
 });

@@ -66,11 +66,11 @@ function buildContextSuggestions(points: HomeAnalyticsPoint[]): ShotRecommendati
       curr.extractionRatio !== null &&
       Math.abs(curr.extractionRatio - prev.extractionRatio) > 0.1
     ) {
-      detail += ` Ratio moved from ${formatExtractionRatioLabel(prev.extractionRatio)} to ${formatExtractionRatioLabel(curr.extractionRatio)}—compare taste on those two pulls before chasing other variables.`;
+      detail += ` Ratio moved from ${formatExtractionRatioLabel(prev.extractionRatio)} to ${formatExtractionRatioLabel(curr.extractionRatio)}—compare taste on those two shots before chasing other variables.`;
     } else if (Math.abs(curr.durationSec - prev.durationSec) >= 3) {
       detail += ` Shot time shifted from ${prev.durationSec}s to ${curr.durationSec}s—note whether the grind change was intentional.`;
     } else {
-      detail += ' Track whether the next pulls settle after this grind change.';
+      detail += ' Track whether the next shots settle after this grind change.';
     }
 
     suggestions.push({
@@ -104,15 +104,15 @@ function buildContextSuggestions(points: HomeAnalyticsPoint[]): ShotRecommendati
       suggestions.push({
         area: 'bean_age_fresh',
         title: 'Very fresh beans with variable shots',
-        detail: `Latest pulls are only ${latestAge} day(s) off roast with inconsistent ratios on the chart. Fresh coffee can be gassy—expect dial-in swings until the bag rests a few more days.`,
+        detail: `Latest shots are only ${latestAge} day(s) off roast with inconsistent ratios on the chart. Fresh coffee can be gassy—expect dial-in swings until the bag rests a few more days.`,
         priority: 'low',
       });
     }
     if (latestAge > 40) {
       suggestions.push({
         area: 'bean_age_stale',
-        title: 'Older roast on latest pulls',
-        detail: `Your most recent charted pull used beans about ${latestAge} days off roast. If flavour is muted, a slightly finer grind or fresher bag may help more than chasing time alone.`,
+        title: 'Older roast on latest shots',
+        detail: `Your most recent charted shot used beans about ${latestAge} days off roast. If flavour is muted, a slightly finer grind or fresher bag may help more than chasing time alone.`,
         priority: 'medium',
       });
     }
@@ -156,7 +156,7 @@ function buildContextSuggestions(points: HomeAnalyticsPoint[]): ShotRecommendati
       suggestions.push({
         area: 'degassing_slowing',
         title: 'Slower shots entering optimal window',
-        detail: `Shot times lengthened as beans moved into the ${OPTIMAL_BREW_DAYS_MIN}–${OPTIMAL_BREW_DAYS_MAX} day window—normal as degassing finishes. Match grind to taste rather than chasing your very first pulls on this bag.`,
+        detail: `Shot times lengthened as beans moved into the ${OPTIMAL_BREW_DAYS_MIN}–${OPTIMAL_BREW_DAYS_MAX} day window—normal as degassing finishes. Match grind to taste rather than chasing your very first shots on this bag.`,
         priority: 'low',
       });
     }
@@ -205,7 +205,7 @@ function buildContextSuggestions(points: HomeAnalyticsPoint[]): ShotRecommendati
       suggestions.push({
         area: 'humidity_dry',
         title: 'Dry air with inconsistent times',
-        detail: 'Several pulls were logged below 30% humidity with varying shot times. Very dry air increases static and retention—consistent dosing helps more than large grind moves.',
+        detail: 'Several shots were logged below 30% humidity with varying shot times. Very dry air increases static and retention—consistent dosing helps more than large grind moves.',
         priority: 'low',
       });
     }
@@ -223,14 +223,14 @@ function buildTargetSuggestions(points: HomeAnalyticsPoint[]): ShotRecommendatio
     if (durationTarget === 'below') {
       suggestions.push({
         area: 'target_duration',
-        title: 'Pull time below typical window',
+        title: 'Shot time below typical window',
         detail: `${latest.durationSec}s is under the ${ESPRESSO_DURATION_MIN_SEC}–${ESPRESSO_DURATION_MAX_SEC}s guide on the chart (sweet spot ~${ESPRESSO_DURATION_TARGET_SEC}s). Fast shots often taste sour—try a finer grind or slightly higher dose.`,
         priority: 'medium',
       });
     } else if (durationTarget === 'above') {
       suggestions.push({
         area: 'target_duration',
-        title: 'Pull time above typical window',
+        title: 'Shot time above typical window',
         detail: `${latest.durationSec}s exceeds the ${ESPRESSO_DURATION_MIN_SEC}–${ESPRESSO_DURATION_MAX_SEC}s guide (sweet spot ~${ESPRESSO_DURATION_TARGET_SEC}s). Slow shots can taste bitter—consider a coarser grind or stopping earlier.`,
         priority: 'medium',
       });
@@ -268,7 +268,7 @@ export function buildAnalyticsTrendRecommendations(
 
   if (points.length === 0) {
     return {
-      summary: 'No home pulls with chart data yet.',
+      summary: 'No home shots with chart data yet.',
       suggestions: [],
       warnings,
       disclaimer: ANALYTICS_TREND_DISCLAIMER,
@@ -294,21 +294,21 @@ export function buildAnalyticsTrendRecommendations(
 
       suggestions.push({
         area: 'snapshot',
-        title: 'Latest pull snapshot',
-        detail: `Your pull charted at ${formatExtractionRatioLabel(point.extractionRatio)} over ${point.durationSec}s (${point.label}).${contextSuffix} Log more home pulls to see drift and consistency hints here.`,
+        title: 'Latest shot snapshot',
+        detail: `Your shot charted at ${formatExtractionRatioLabel(point.extractionRatio)} over ${point.durationSec}s (${point.label}).${contextSuffix} Log more home shots to see drift and consistency hints here.`,
         priority: 'low',
       });
     } else if (point.durationSec > 0) {
       suggestions.push({
         area: 'snapshot',
-        title: 'Latest pull snapshot',
-        detail: `Duration was ${point.durationSec}s on ${point.label}. Add dose and yield on future pulls to track extraction ratio on this chart.`,
+        title: 'Latest shot snapshot',
+        detail: `Duration was ${point.durationSec}s on ${point.label}. Add dose and yield on future shots to track extraction ratio on this chart.`,
         priority: 'low',
       });
     }
 
     return {
-      summary: 'One point on the chart so far—snapshot below. More pulls unlock trend analysis.',
+      summary: 'One point on the chart so far—snapshot below. More shots unlock trend analysis.',
       suggestions,
       warnings,
       disclaimer: ANALYTICS_TREND_DISCLAIMER,
@@ -324,14 +324,14 @@ export function buildAnalyticsTrendRecommendations(
       suggestions.push({
         area: 'trend_ratio',
         title: 'Extraction ratio is climbing',
-        detail: `Ratio rose from ${formatExtractionRatioLabel(firstRatio)} to ${formatExtractionRatioLabel(lastRatio)} across ${ratioValues.length} pulls. Higher yield over time often points to a coarser grind or longer shots—taste for bitterness or dryness before changing grind.`,
+        detail: `Ratio rose from ${formatExtractionRatioLabel(firstRatio)} to ${formatExtractionRatioLabel(lastRatio)} across ${ratioValues.length} shots. Higher yield over time often points to a coarser grind or longer shots—taste for bitterness or dryness before changing grind.`,
         priority: 'medium',
       });
     } else if (ratioDelta < -RATIO_DRIFT_THRESHOLD) {
       suggestions.push({
         area: 'trend_ratio',
         title: 'Extraction ratio is falling',
-        detail: `Ratio fell from ${formatExtractionRatioLabel(firstRatio)} to ${formatExtractionRatioLabel(lastRatio)} across ${ratioValues.length} pulls. Lower yield can taste sour or thin—consider a finer grind or slightly longer pull if flavour backs that up.`,
+        detail: `Ratio fell from ${formatExtractionRatioLabel(firstRatio)} to ${formatExtractionRatioLabel(lastRatio)} across ${ratioValues.length} shots. Lower yield can taste sour or thin—consider a finer grind or slightly longer shot if flavour backs that up.`,
         priority: 'medium',
       });
     }
@@ -340,7 +340,7 @@ export function buildAnalyticsTrendRecommendations(
     if (ratioValues.length >= 3 && ratioStd > RATIO_STD_THRESHOLD) {
       suggestions.push({
         area: 'consistency_ratio',
-        title: 'Ratios vary pull to pull',
+        title: 'Ratios vary shot to shot',
         detail: `Extraction ratios swing by about ${ratioStd.toFixed(1)} on this chart. Check dose consistency, puck prep, and whether bean, grind, or humidity changed between sessions.`,
         priority: 'medium',
       });
@@ -373,7 +373,7 @@ export function buildAnalyticsTrendRecommendations(
       suggestions.push({
         area: 'consistency_duration',
         title: 'Durations are inconsistent',
-        detail: `Shot times vary by about ${durationStd.toFixed(0)}s across pulls. Inconsistent timing often traces to distribution, tamping, grinder retention, or humid/dry weather rather than a single grind tweak.`,
+        detail: `Shot times vary by about ${durationStd.toFixed(0)}s across shots. Inconsistent timing often traces to distribution, tamping, grinder retention, or humid/dry weather rather than a single grind tweak.`,
         priority: 'medium',
       });
     }
@@ -386,14 +386,14 @@ export function buildAnalyticsTrendRecommendations(
     if (latest - recentAvg > RATIO_DRIFT_THRESHOLD) {
       suggestions.push({
         area: 'recent_ratio',
-        title: 'Latest pull is higher than recent average',
+        title: 'Latest shot is higher than recent average',
         detail: `Your most recent ratio (${formatExtractionRatioLabel(latest)}) sits above the last-three average (${formatExtractionRatioLabel(recentAvg)}). If the cup tasted heavy or bitter, try matching your earlier recipe.`,
         priority: 'low',
       });
     } else if (recentAvg - latest > RATIO_DRIFT_THRESHOLD) {
       suggestions.push({
         area: 'recent_ratio',
-        title: 'Latest pull is lower than recent average',
+        title: 'Latest shot is lower than recent average',
         detail: `Your most recent ratio (${formatExtractionRatioLabel(latest)}) is below the last-three average (${formatExtractionRatioLabel(recentAvg)}). If it tasted thin or sharp, a small grind adjustment may help.`,
         priority: 'low',
       });
@@ -406,7 +406,7 @@ export function buildAnalyticsTrendRecommendations(
   const summary =
     suggestions.length > 0
       ? `Found ${suggestions.length} pattern(s) in extraction, bean age, grind, and weather trends from the charts above.`
-      : 'Extraction, bean age, grind, and humidity look steady across your logged pulls—no strong drift or inconsistency in the chart data.';
+      : 'Extraction, bean age, grind, and humidity look steady across your logged shots—no strong drift or inconsistency in the chart data.';
 
   return {
     summary,

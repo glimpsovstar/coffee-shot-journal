@@ -35,8 +35,8 @@ export function AnalyticsRecommendationsSection({
 
   const specificHeading =
     selectedPullId === 'overview'
-      ? 'Trend insights (all home pulls on the chart)'
-      : `Insights for ${homeSeries.find((p) => p.id === selectedPullId)?.label ?? 'selected pull'}`;
+      ? 'Trend insights (all home shots on the chart)'
+      : `Insights for ${homeSeries.find((p) => p.id === selectedPullId)?.label ?? 'selected shot'}`;
 
   return (
     <section
@@ -45,7 +45,7 @@ export function AnalyticsRecommendationsSection({
     >
       <h3 id="analytics-recommendations-heading">Dial-in suggestions</h3>
       <p className="panel__intro">
-        General espresso guidance first, then trends or a specific pull you choose below.
+        General espresso guidance first, then trends or a specific shot you choose below.
       </p>
 
       <div className="form-row analytics-recommendations__picker">
@@ -55,7 +55,7 @@ export function AnalyticsRecommendationsSection({
           value={selectedPullId}
           onChange={(e) => setSelectedPullId(e.target.value)}
         >
-          <option value="overview">All pulls — trend patterns</option>
+          <option value="overview">All shots — trend patterns</option>
           {homeSeries.map((point) => (
             <option key={point.id} value={point.id}>
               {point.label}

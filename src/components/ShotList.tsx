@@ -22,7 +22,7 @@ export function ShotList({
   resolvePhotos,
   excludeShotId,
   heading = 'Espresso shots',
-  intro = 'Newest first — track what changed between pulls.',
+  intro = 'Newest first — track what changed between shots.',
   emptyMessage = 'No shots logged yet. Add your first shot below.',
 }: ShotListProps) {
   const sorted = sortShotsNewestFirst(shots).filter((shot) => shot.id !== excludeShotId);

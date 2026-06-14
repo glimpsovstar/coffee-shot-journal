@@ -117,7 +117,7 @@ function JournalApp({
               resolvePhotos={resolvePhotos}
               heading="Past history"
               intro="Newest first — your extraction log."
-              emptyMessage="No shots yet. Open Log to record your first pull."
+              emptyMessage="No shots yet. Open Log to record your first shot."
             />
           ) : page === 'log' ? (
             <LogPage
