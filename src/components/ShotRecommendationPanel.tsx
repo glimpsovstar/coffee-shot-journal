@@ -13,6 +13,8 @@ interface ShotRecommendationPanelProps {
   beans: Bean[];
   photoItems: PhotoDisplay[];
   photoMetadataCount?: number;
+  /** Feed tiles: button + results only, no helper paragraphs. */
+  compact?: boolean;
 }
 
 async function blobFromPhotoUrl(url: string): Promise<Blob | undefined> {
@@ -30,6 +32,7 @@ export function ShotRecommendationPanel({
   beans,
   photoItems,
   photoMetadataCount = 0,
+  compact = false,
 }: ShotRecommendationPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +57,7 @@ export function ShotRecommendationPanel({
   };
 
   return (
-    <div className="shot-recommendations">
+    <div className={`shot-recommendations${compact ? ' shot-recommendations--compact' : ''}`}>
       <button
         type="button"
         className="btn-secondary shot-recommendations__btn"
@@ -63,22 +66,22 @@ export function ShotRecommendationPanel({
       >
         {loading ? 'Analyzing…' : 'Get dial-in suggestions'}
       </button>
-      {!available && (
+      {!compact && !available && (
         <p className="photo-upload__hint">
           Server AI is not configured—heuristic hints only (recipe, bean age, weather, notes).
         </p>
       )}
-      {available && isLocalShotRecommendationDemo() && (
+      {!compact && available && isLocalShotRecommendationDemo() && (
         <p className="photo-upload__hint">
           Local demo: using <code>VITE_OPENAI_API_KEY</code> from <code>.env.local</code>.
         </p>
       )}
-      {photoItems.length === 0 && photoMetadataCount === 0 && (
+      {!compact && photoItems.length === 0 && photoMetadataCount === 0 && (
         <p className="photo-upload__hint">
           Add a shot photo for crema and milk analysis; recipe hints work without a photo.
         </p>
       )}
-      {photoItems.length === 0 && photoMetadataCount > 0 && (
+      {!compact && photoItems.length === 0 && photoMetadataCount > 0 && (
         <p className="photo-upload__hint">
           Photo could not be loaded — try signing out and back in, or re-attach from backup.
         </p>

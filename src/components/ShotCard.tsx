@@ -21,7 +21,7 @@ interface ShotCardProps {
   beans: Bean[];
   cafes?: Cafe[];
   photoItems: PhotoDisplay[];
-  /** Feed tiles: hide dial-in panel and inline photo strip. */
+  /** Feed tiles: compact layout; dial-in button stays, helper text hidden. */
   compact?: boolean;
 }
 
@@ -135,12 +135,13 @@ export function ShotCard({ shot, beans, cafes = [], photoItems, compact = false 
         </dl>
       ) : null}
 
-      {isHomeShot(shot) && !compact ? (
+      {isHomeShot(shot) ? (
         <ShotRecommendationPanel
           shot={shot}
           beans={beans}
           photoItems={photoItems}
           photoMetadataCount={shotPhotoMetadataCount(shot, cafes)}
+          compact={compact}
         />
       ) : null}
     </article>

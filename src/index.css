@@ -2140,10 +2140,6 @@ dl {
   min-width: 0;
 }
 
-.shot-feed__item--wide {
-  grid-column: span 2;
-}
-
 @media (max-width: 900px) {
   .shot-feed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2154,19 +2150,6 @@ dl {
   .shot-feed {
     grid-template-columns: 1fr;
   }
-
-  .shot-feed__item--wide {
-    grid-column: span 1;
-  }
-}
-
-.shot-feed__item--wide .shot-card__thumb {
-  width: 88px;
-  height: 88px;
-}
-
-.shot-feed__item--wide .card__title {
-  font-size: 1.05rem;
 }
 
 .shot-card--feed .shot-card__notes {
@@ -2183,6 +2166,17 @@ dl {
 
 .shot-card--feed .detail-list--inline {
   gap: 0.45rem;
+}
+
+.shot-card--feed .shot-recommendations {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+}
+
+.shot-recommendations--compact .shot-recommendations__btn {
+  width: 100%;
+  font-size: 0.78rem;
+  padding: 0.45rem 0.65rem;
 }
 
 .shot-card__layout {
