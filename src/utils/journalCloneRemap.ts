@@ -16,6 +16,12 @@ export function collectPhotoIds(
   return [...ids];
 }
 
+const sourceDocumentId: unique symbol = Symbol('sourceDocumentId');
+
+type CloneSourceDocument = {
+  [sourceDocumentId]?: string;
+};
+
 /** Row `id` is the Postgres PK; document.id must match after normalize. */
 export function documentsFromRows<T extends { id: string }>(
   rows: { id: string; document: T }[],
@@ -23,10 +29,27 @@ export function documentsFromRows<T extends { id: string }>(
   return rows.map((row) => {
     const document = structuredClone(row.document);
     if (document.id !== row.id) {
+      Object.defineProperty(document, sourceDocumentId, {
+        value: document.id,
+        enumerable: false,
+      });
       document.id = row.id;
     }
     return document;
   });
+}
+
+function addDocumentIdMapping<T extends { id: string }>(
+  idMap: Map<string, string>,
+  document: T,
+  newId: string,
+) {
+  idMap.set(document.id, newId);
+
+  const originalDocumentId = (document as T & CloneSourceDocument)[sourceDocumentId];
+  if (originalDocumentId) {
+    idMap.set(originalDocumentId, newId);
+  }
 }
 
 /**
@@ -43,13 +66,13 @@ export function remapJournalIds<
 
   const remappedBeans = beans.map((bean) => {
     const newId = crypto.randomUUID();
-    beanIdMap.set(bean.id, newId);
+    addDocumentIdMapping(beanIdMap, bean, newId);
     return { ...structuredClone(bean), id: newId };
   });
 
   const remappedCafes = cafes.map((cafe) => {
     const newId = crypto.randomUUID();
-    cafeIdMap.set(cafe.id, newId);
+    addDocumentIdMapping(cafeIdMap, cafe, newId);
     return { ...structuredClone(cafe), id: newId };
   });
 
