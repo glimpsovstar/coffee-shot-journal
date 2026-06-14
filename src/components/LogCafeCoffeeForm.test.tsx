@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as weather from '../services/weather';
+import * as photoExif from '../utils/photoExif';
 import { mockBeans } from '../test/fixtures';
 import type { Cafe } from '../types';
 import { LogCafeCoffeeForm } from './LogCafeCoffeeForm';
@@ -9,6 +10,11 @@ import { LogCafeCoffeeForm } from './LogCafeCoffeeForm';
 vi.mock('../services/weather', () => ({
   fetchWeatherAt: vi.fn(),
 }));
+
+vi.mock('../utils/photoExif', async (importOriginal) => {
+  const actual = await importOriginal<typeof photoExif>();
+  return { ...actual, extractShotMetadataFromBlob: vi.fn() };
+});
 
 const mockCafe: Cafe = {
   id: 'cafe-1',
@@ -21,6 +27,11 @@ const mockCafe: Cafe = {
 };
 
 describe('LogCafeCoffeeForm', () => {
+  afterEach(() => {
+    vi.mocked(photoExif.extractShotMetadataFromBlob).mockReset();
+    vi.mocked(weather.fetchWeatherAt).mockReset();
+  });
+
   it('logs a café coffee with menu selection, weather, and options', async () => {
     const user = userEvent.setup();
     const onAddCoffee = vi.fn().mockResolvedValue(undefined);
@@ -70,5 +81,30 @@ describe('LogCafeCoffeeForm', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/pick a coffee/i);
     expect(onAddCoffee).not.toHaveBeenCalled();
+  });
+
+  it('updates visit time from photo metadata', async () => {
+    const user = userEvent.setup();
+    vi.mocked(photoExif.extractShotMetadataFromBlob).mockResolvedValue({
+      brewedAt: new Date('2026-06-04T09:30:00'),
+      messages: ['Set brewed date and time from photo.'],
+    });
+
+    render(
+      <LogCafeCoffeeForm cafe={mockCafe} beans={mockBeans} onAddCoffee={vi.fn()} />,
+    );
+    const form = screen.getByRole('heading', { name: 'Log a coffee' }).closest('section')!;
+
+    const file = new File([new Uint8Array(64)], 'coffee.jpg', { type: 'image/jpeg' });
+    const input = within(form).getByLabelText('Coffee photos').parentElement!.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    await user.upload(input, file);
+
+    await user.click(within(form).getByRole('button', { name: 'Update from photo' }));
+
+    await waitFor(() => {
+      expect(within(form).getByLabelText('When')).toHaveValue('2026-06-04T09:30');
+    });
   });
 });
