@@ -47,6 +47,7 @@ import {
   formatRatioSweetSpotDelta,
 } from '../utils/espressoTargets';
 import { AnalyticsChartLegend } from './AnalyticsChartLegend';
+import { AnalyticsInsightSummary } from './AnalyticsInsightSummary';
 import { AnalyticsRecommendationsSection } from './AnalyticsRecommendationsSection';
 
 interface AnalyticsPageProps {
@@ -110,6 +111,9 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
         Extraction ratio and shot duration over time — spot drift before taste changes. Shaded bands
         show typical espresso targets.
       </p>
+
+      <AnalyticsInsightSummary homeSeries={homeSeries} />
+
       <p className="analytics-targets">{ESPRESSO_TARGET_SUMMARY}</p>
 
       <div

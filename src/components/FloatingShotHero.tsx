@@ -12,13 +12,19 @@ interface FloatingShotHeroProps {
   shots: Shot[];
   beans: Bean[];
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
+  immersive?: boolean;
 }
 
 function heroCardId(shotId: string, photoId: string): string {
   return `${shotId}:${photoId}`;
 }
 
-export function FloatingShotHero({ shots, beans, resolvePhotos }: FloatingShotHeroProps) {
+export function FloatingShotHero({
+  shots,
+  beans,
+  resolvePhotos,
+  immersive = false,
+}: FloatingShotHeroProps) {
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const recent = getRecentExtractionPhotos(shots);
 
@@ -42,9 +48,12 @@ export function FloatingShotHero({ shots, beans, resolvePhotos }: FloatingShotHe
   if (cards.length === 0) return null;
 
   return (
-    <section className="floating-hero" aria-labelledby="floating-hero-heading">
+    <section
+      className={`floating-hero${immersive ? ' floating-hero--immersive' : ''}`}
+      aria-labelledby="floating-hero-heading"
+    >
       <h2 id="floating-hero-heading" className="floating-hero__eyebrow">
-        Recent extractions
+        {immersive ? 'Your extraction wave' : 'Recent extractions'}
       </h2>
       <div className="floating-hero__scroller">
         <div className="floating-hero__gallery">

@@ -48,6 +48,8 @@ describe('AnalyticsPage', () => {
   it('renders chart when shots have metrics', () => {
     render(<AnalyticsPage shots={[chartableShot]} beans={mockBeans} />);
     expect(screen.getByRole('heading', { name: 'Analytics & insights' })).toBeInTheDocument();
+    expect(screen.getByLabelText('At-a-glance insights')).toBeInTheDocument();
+    expect(screen.getByText('Latest ratio')).toBeInTheDocument();
     expect(screen.getByText(/Latest pull vs sweet spot/i)).toBeInTheDocument();
     expect(screen.getAllByText(/on sweet spot/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByTestId('chart-container').length).toBeGreaterThanOrEqual(1);

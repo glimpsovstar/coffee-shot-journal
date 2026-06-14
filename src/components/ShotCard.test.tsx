@@ -10,8 +10,9 @@ describe('ShotCard', () => {
     expect(
       screen.getByRole('heading', { name: 'Test Roasters — Test Ethiopia' }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/18g in → 36g out \(1:2\.0\)/)).toBeInTheDocument();
-    expect(screen.getByText(/28s/)).toBeInTheDocument();
+    expect(screen.getByText('18g → 36g')).toBeInTheDocument();
+    expect(screen.getByText('1:2.0')).toBeInTheDocument();
+    expect(screen.getByText('28s')).toBeInTheDocument();
     expect(screen.getByText('Balanced and sweet.')).toBeInTheDocument();
     expect(screen.getByLabelText('4 out of 5 stars')).toBeInTheDocument();
   });
