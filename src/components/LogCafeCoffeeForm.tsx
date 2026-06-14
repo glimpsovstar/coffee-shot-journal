@@ -7,6 +7,7 @@ import {
   milkCategoryForBeverage,
   shotSizeFromExtraShot,
 } from '../utils/drinks';
+import { formatUnknownError } from '../utils/errors';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 import { CafeDrinkPicker } from './CafeDrinkPicker';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
@@ -17,7 +18,7 @@ import { WeatherDisplay } from './WeatherDisplay';
 interface LogCafeCoffeeFormProps {
   cafe: Cafe;
   beans: Bean[];
-  onAddCoffee: (payload: AddShotPayload) => void;
+  onAddCoffee: (payload: AddShotPayload) => Promise<void>;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -148,7 +149,7 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
         }
       }
 
-      onAddCoffee({
+      await onAddCoffee({
         shot: {
           context: 'cafe_purchased',
           cafeId: cafe.id,
@@ -175,7 +176,7 @@ export function LogCafeCoffeeForm({ cafe, beans, onAddCoffee }: LogCafeCoffeeFor
       });
       resetForm();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to log coffee.');
+      setError(formatUnknownError(err, 'Failed to log coffee.'));
     } finally {
       setSubmitting(false);
     }

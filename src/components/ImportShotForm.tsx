@@ -4,6 +4,7 @@ import type { AddShotPayload, Bean, PhotoBlobInput } from '../types';
 import { fetchWeatherAt } from '../services/weather';
 import { formatBeanChoiceLabel } from '../utils/beans';
 import { toDatetimeLocalValue } from '../utils/datetime';
+import { formatUnknownError } from '../utils/errors';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 import { resolveSuburbWithGeocoding } from '../services/geocoding';
 import { resolveSuburbFromQuery, searchSuburbs, toStoredSuburb } from '../utils/suburbs';
@@ -15,7 +16,7 @@ import { UpdateFromPhotoButton, type ShotFormMetadataUpdate } from './UpdateFrom
 
 interface ImportShotFormProps {
   beans: Bean[];
-  onImportShot: (payload: AddShotPayload) => void;
+  onImportShot: (payload: AddShotPayload) => Promise<void>;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -156,7 +157,7 @@ export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
         }
       }
 
-      onImportShot({
+      await onImportShot({
         shot: {
           beanId: form.beanId,
           brewedAt: brewedAt.toISOString(),
@@ -181,6 +182,8 @@ export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
       setForm(defaultFormState(beans));
       setStatusMessage('Shot imported.');
       setTimeout(() => setStatusMessage(null), 3000);
+    } catch (err) {
+      setError(formatUnknownError(err, 'Failed to import shot.'));
     } finally {
       setSubmitting(false);
     }

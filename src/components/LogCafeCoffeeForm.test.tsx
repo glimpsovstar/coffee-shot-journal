@@ -23,7 +23,7 @@ const mockCafe: Cafe = {
 describe('LogCafeCoffeeForm', () => {
   it('logs a café coffee with menu selection, weather, and options', async () => {
     const user = userEvent.setup();
-    const onAddCoffee = vi.fn();
+    const onAddCoffee = vi.fn().mockResolvedValue(undefined);
     vi.mocked(weather.fetchWeatherAt).mockResolvedValue({
       temperatureC: 18,
       humidityPercent: 62,

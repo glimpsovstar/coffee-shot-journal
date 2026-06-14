@@ -32,6 +32,7 @@ import type {
 } from '../types';
 import { formatUnknownError } from '../utils/errors';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
+import { createJournalMutationQueue } from './enqueueJournalMutation';
 
 export type { PhotoDisplay };
 
@@ -54,6 +55,14 @@ export function useJournal(cloudUserId: string | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const photoUrlsRef = useRef<Map<string, string>>(new Map());
+  const beansRef = useRef(beans);
+  const shotsRef = useRef(shots);
+  const cafesRef = useRef(cafes);
+  beansRef.current = beans;
+  shotsRef.current = shots;
+  cafesRef.current = cafes;
+  const enqueueMutationRef = useRef(createJournalMutationQueue());
+  const enqueueMutation = enqueueMutationRef.current;
 
   const syncPhotoUrlsRef = useCallback((urls: Map<string, string>) => {
     photoUrlsRef.current = urls;
@@ -211,160 +220,185 @@ export function useJournal(cloudUserId: string | null) {
   );
 
   const addBean = useCallback(
-    async (payload: AddBeanPayload) => {
-      for (const { photo, blob } of payload.photoBlobs) {
-        await storePhotoBlob(photo.id, blob);
-      }
+    (payload: AddBeanPayload) =>
+      enqueueMutation(async () => {
+        for (const { photo, blob } of payload.photoBlobs) {
+          await storePhotoBlob(photo.id, blob);
+        }
 
-      const bean: Bean = {
-        ...payload.bean,
-        id: crypto.randomUUID(),
-      };
-      const nextBeans = [bean, ...beans];
-      await persistBeans(nextBeans);
-      registerPhotoUrls(payload.photoBlobs);
-      setBeans(nextBeans);
-    },
-    [beans, persistBeans, registerPhotoUrls, storePhotoBlob],
+        const bean: Bean = {
+          ...payload.bean,
+          id: crypto.randomUUID(),
+        };
+        const nextBeans = [bean, ...beansRef.current];
+        beansRef.current = nextBeans;
+        await persistBeans(nextBeans);
+        registerPhotoUrls(payload.photoBlobs);
+        setBeans(nextBeans);
+      }),
+    [enqueueMutation, persistBeans, registerPhotoUrls, storePhotoBlob],
   );
 
   const addCafe = useCallback(
-    async (payload: AddCafePayload): Promise<Cafe> => {
-      for (const { photo, blob } of payload.photoBlobs) {
-        await storePhotoBlob(photo.id, blob);
-      }
+    (payload: AddCafePayload): Promise<Cafe> =>
+      enqueueMutation(async () => {
+        for (const { photo, blob } of payload.photoBlobs) {
+          await storePhotoBlob(photo.id, blob);
+        }
 
-      const cafe: Cafe = {
-        ...payload.cafe,
-        id: crypto.randomUUID(),
-      };
-      const nextCafes = [cafe, ...cafes];
-      await persistCafes(nextCafes);
-      registerPhotoUrls(payload.photoBlobs);
-      setCafes(nextCafes);
-      return cafe;
-    },
-    [cafes, persistCafes, registerPhotoUrls, storePhotoBlob],
+        const cafe: Cafe = {
+          ...payload.cafe,
+          id: crypto.randomUUID(),
+        };
+        const nextCafes = [cafe, ...cafesRef.current];
+        cafesRef.current = nextCafes;
+        await persistCafes(nextCafes);
+        registerPhotoUrls(payload.photoBlobs);
+        setCafes(nextCafes);
+        return cafe;
+      }),
+    [enqueueMutation, persistCafes, registerPhotoUrls, storePhotoBlob],
   );
 
   const addShot = useCallback(
-    async (payload: AddShotPayload) => {
-      for (const { photo, blob } of payload.photoBlobs) {
-        await storePhotoBlob(photo.id, blob);
-      }
+    (payload: AddShotPayload) =>
+      enqueueMutation(async () => {
+        for (const { photo, blob } of payload.photoBlobs) {
+          await storePhotoBlob(photo.id, blob);
+        }
 
-      const shot: Shot = {
-        ...payload.shot,
-        id: crypto.randomUUID(),
-      };
-      const nextShots = [shot, ...shots];
-      await persistShots(nextShots);
-      registerPhotoUrls(payload.photoBlobs);
-      setShots(nextShots);
-    },
-    [shots, persistShots, registerPhotoUrls, storePhotoBlob],
+        const shot: Shot = {
+          ...payload.shot,
+          id: crypto.randomUUID(),
+        };
+        const nextShots = [shot, ...shotsRef.current];
+        shotsRef.current = nextShots;
+        await persistShots(nextShots);
+        registerPhotoUrls(payload.photoBlobs);
+        setShots(nextShots);
+      }),
+    [enqueueMutation, persistShots, registerPhotoUrls, storePhotoBlob],
   );
 
   const addCafeVisit = useCallback(
-    async (payload: AddCafeVisitPayload): Promise<Cafe> => {
-      for (const { photo, blob } of payload.cafe.photoBlobs) {
-        await storePhotoBlob(photo.id, blob);
-      }
+    (payload: AddCafeVisitPayload): Promise<Cafe> =>
+      enqueueMutation(async () => {
+        for (const { photo, blob } of payload.cafe.photoBlobs) {
+          await storePhotoBlob(photo.id, blob);
+        }
+        for (const { photo, blob } of payload.coffee.photoBlobs) {
+          await storePhotoBlob(photo.id, blob);
+        }
 
-      const cafe: Cafe = {
-        ...payload.cafe.cafe,
-        id: crypto.randomUUID(),
-      };
-      const nextCafes = [cafe, ...cafes];
-      await persistCafes(nextCafes);
-      registerPhotoUrls(payload.cafe.photoBlobs);
+        const cafe: Cafe = {
+          ...payload.cafe.cafe,
+          id: crypto.randomUUID(),
+        };
+        const shot: Shot = {
+          ...payload.coffee.shot,
+          id: crypto.randomUUID(),
+          cafeId: cafe.id,
+        };
+        const prevCafes = cafesRef.current;
+        const prevShots = shotsRef.current;
+        const nextCafes = [cafe, ...prevCafes];
+        const nextShots = [shot, ...prevShots];
+        const photoInputs = [...payload.cafe.photoBlobs, ...payload.coffee.photoBlobs];
 
-      for (const { photo, blob } of payload.coffee.photoBlobs) {
-        await storePhotoBlob(photo.id, blob);
-      }
+        cafesRef.current = nextCafes;
+        shotsRef.current = nextShots;
+        await persistCafes(nextCafes);
+        try {
+          await persistShots(nextShots);
+        } catch (err) {
+          cafesRef.current = prevCafes;
+          shotsRef.current = prevShots;
+          await persistCafes(prevCafes);
+          throw err;
+        }
 
-      const shot: Shot = {
-        ...payload.coffee.shot,
-        id: crypto.randomUUID(),
-        cafeId: cafe.id,
-      };
-      const nextShots = [shot, ...shots];
-      await persistShots(nextShots);
-      registerPhotoUrls(payload.coffee.photoBlobs);
-
-      setCafes(nextCafes);
-      setShots(nextShots);
-      return cafe;
-    },
-    [cafes, shots, persistCafes, persistShots, registerPhotoUrls, storePhotoBlob],
+        registerPhotoUrls(photoInputs);
+        setCafes(nextCafes);
+        setShots(nextShots);
+        return cafe;
+      }),
+    [enqueueMutation, persistCafes, persistShots, registerPhotoUrls, storePhotoBlob],
   );
 
   const addBeanPhotos = useCallback(
-    async (beanId: string, inputs: PhotoBlobInput[]) => {
-      for (const { photo, blob } of inputs) {
-        await storePhotoBlob(photo.id, blob);
-      }
+    (beanId: string, inputs: PhotoBlobInput[]) =>
+      enqueueMutation(async () => {
+        for (const { photo, blob } of inputs) {
+          await storePhotoBlob(photo.id, blob);
+        }
 
-      const nextBeans = beans.map((bean) =>
-        bean.id === beanId
-          ? { ...bean, photos: [...bean.photos, ...inputs.map((i) => i.photo)] }
-          : bean,
-      );
-      await persistBeans(nextBeans);
-      registerPhotoUrls(inputs);
-      setBeans(nextBeans);
-    },
-    [beans, persistBeans, registerPhotoUrls, storePhotoBlob],
+        const nextBeans = beansRef.current.map((bean) =>
+          bean.id === beanId
+            ? { ...bean, photos: [...bean.photos, ...inputs.map((i) => i.photo)] }
+            : bean,
+        );
+        beansRef.current = nextBeans;
+        await persistBeans(nextBeans);
+        registerPhotoUrls(inputs);
+        setBeans(nextBeans);
+      }),
+    [enqueueMutation, persistBeans, registerPhotoUrls, storePhotoBlob],
   );
 
   const removeBeanPhoto = useCallback(
-    async (beanId: string, photoId: string) => {
-      await removePhotoBlob(photoId);
-      unregisterPhotoUrl(photoId);
+    (beanId: string, photoId: string) =>
+      enqueueMutation(async () => {
+        await removePhotoBlob(photoId);
+        unregisterPhotoUrl(photoId);
 
-      const nextBeans = beans.map((bean) =>
-        bean.id === beanId
-          ? { ...bean, photos: bean.photos.filter((p) => p.id !== photoId) }
-          : bean,
-      );
-      await persistBeans(nextBeans);
-      setBeans(nextBeans);
-    },
-    [beans, persistBeans, removePhotoBlob, unregisterPhotoUrl],
+        const nextBeans = beansRef.current.map((bean) =>
+          bean.id === beanId
+            ? { ...bean, photos: bean.photos.filter((p) => p.id !== photoId) }
+            : bean,
+        );
+        beansRef.current = nextBeans;
+        await persistBeans(nextBeans);
+        setBeans(nextBeans);
+      }),
+    [enqueueMutation, persistBeans, removePhotoBlob, unregisterPhotoUrl],
   );
 
   const addCafePhotos = useCallback(
-    async (cafeId: string, inputs: PhotoBlobInput[]) => {
-      for (const { photo, blob } of inputs) {
-        await storePhotoBlob(photo.id, blob);
-      }
+    (cafeId: string, inputs: PhotoBlobInput[]) =>
+      enqueueMutation(async () => {
+        for (const { photo, blob } of inputs) {
+          await storePhotoBlob(photo.id, blob);
+        }
 
-      const nextCafes = cafes.map((cafe) =>
-        cafe.id === cafeId
-          ? { ...cafe, photos: [...cafe.photos, ...inputs.map((i) => i.photo)] }
-          : cafe,
-      );
-      await persistCafes(nextCafes);
-      registerPhotoUrls(inputs);
-      setCafes(nextCafes);
-    },
-    [cafes, persistCafes, registerPhotoUrls, storePhotoBlob],
+        const nextCafes = cafesRef.current.map((cafe) =>
+          cafe.id === cafeId
+            ? { ...cafe, photos: [...cafe.photos, ...inputs.map((i) => i.photo)] }
+            : cafe,
+        );
+        cafesRef.current = nextCafes;
+        await persistCafes(nextCafes);
+        registerPhotoUrls(inputs);
+        setCafes(nextCafes);
+      }),
+    [enqueueMutation, persistCafes, registerPhotoUrls, storePhotoBlob],
   );
 
   const removeCafePhoto = useCallback(
-    async (cafeId: string, photoId: string) => {
-      await removePhotoBlob(photoId);
-      unregisterPhotoUrl(photoId);
+    (cafeId: string, photoId: string) =>
+      enqueueMutation(async () => {
+        await removePhotoBlob(photoId);
+        unregisterPhotoUrl(photoId);
 
-      const nextCafes = cafes.map((cafe) =>
-        cafe.id === cafeId
-          ? { ...cafe, photos: cafe.photos.filter((p) => p.id !== photoId) }
-          : cafe,
-      );
-      await persistCafes(nextCafes);
-      setCafes(nextCafes);
-    },
-    [cafes, persistCafes, removePhotoBlob, unregisterPhotoUrl],
+        const nextCafes = cafesRef.current.map((cafe) =>
+          cafe.id === cafeId
+            ? { ...cafe, photos: cafe.photos.filter((p) => p.id !== photoId) }
+            : cafe,
+        );
+        cafesRef.current = nextCafes;
+        await persistCafes(nextCafes);
+        setCafes(nextCafes);
+      }),
+    [enqueueMutation, persistCafes, removePhotoBlob, unregisterPhotoUrl],
   );
 
   return {

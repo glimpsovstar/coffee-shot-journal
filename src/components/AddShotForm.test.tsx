@@ -203,7 +203,7 @@ describe('AddShotForm', () => {
 
   it('submits milk-based home drink with milk category', async () => {
     const user = userEvent.setup();
-    const onAddShot = vi.fn();
+    const onAddShot = vi.fn().mockResolvedValue(undefined);
 
     render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
     const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
@@ -216,5 +216,21 @@ describe('AddShotForm', () => {
     const payload = onAddShot.mock.calls[0]![0];
     expect(payload.shot.beverageType).toBe('affogato');
     expect(payload.shot.milkCategory).toBe('milk');
+  });
+
+  it('keeps form data when save fails', async () => {
+    const user = userEvent.setup();
+    const onAddShot = vi.fn().mockRejectedValue(new Error('Storage failed'));
+
+    render(<AddShotForm beans={mockBeans} onAddShot={onAddShot} />);
+    const form = screen.getByRole('heading', { name: 'Log a home shot' }).closest('section')!;
+
+    await user.type(within(form).getByLabelText('Grind setting'), '14.5');
+    await user.type(within(form).getByLabelText('Tasting notes'), 'Keep this note');
+    await user.click(within(form).getByRole('button', { name: 'Add shot' }));
+
+    expect(within(form).getByRole('alert')).toHaveTextContent('Storage failed');
+    expect(within(form).getByLabelText('Grind setting')).toHaveValue('14.5');
+    expect(within(form).getByLabelText('Tasting notes')).toHaveValue('Keep this note');
   });
 });
