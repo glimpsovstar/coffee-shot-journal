@@ -45,6 +45,7 @@ export function ShotList({
                   beans={beans}
                   cafes={cafes}
                   photoItems={resolveShotPhotoDisplay(shot, cafes, resolvePhotos)}
+                  compact
                 />
               </li>
             );

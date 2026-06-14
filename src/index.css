@@ -2169,6 +2169,22 @@ dl {
   font-size: 1.05rem;
 }
 
+.shot-card--feed .shot-card__notes {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.shot-card--feed .shot-card__details {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+}
+
+.shot-card--feed .detail-list--inline {
+  gap: 0.45rem;
+}
+
 .shot-card__layout {
   display: flex;
   gap: 1rem;
