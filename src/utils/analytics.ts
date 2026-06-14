@@ -1,4 +1,5 @@
 import type { Bean, Photo, Shot } from '../types';
+import { OPTIMAL_BREW_DAYS_TARGET } from './beanBrewWindow';
 import { formatBrewedAt, getBeanById, hasShotRecipe, isHomeShot, sortShotsNewestFirst } from './shots';
 
 /** Max extraction photos in the floating hero gallery (newest first). */
@@ -19,11 +20,16 @@ export interface ShotChartPoint {
 
 /** Home pull chart point with bean age, grind, and weather context. */
 export interface HomeAnalyticsPoint extends ShotChartPoint {
+  beanId: string | null;
+  /** Days off roast when bean is known; null for unknown / missing bean. */
   beanAgeDays: number | null;
+  optimalBrewAgeDays: number;
   grindSetting: string | null;
   grindSettingNumeric: number | null;
   humidityPercent: number | null;
 }
+
+export type HomeAnalyticsChartPoint = HomeAnalyticsPoint & Record<string, number | null | string | undefined>;
 
 function daysSinceRoast(roastDate: string, brewedAt: string): number | null {
   const roast = new Date(roastDate + 'T12:00:00');
@@ -122,7 +128,10 @@ export function buildHomeAnalyticsSeries(shots: Shot[], beans: Bean[]): HomeAnal
 
     return {
       ...point,
-      beanAgeDays: bean ? daysSinceRoast(bean.roastDate, point.brewedAt) : null,
+      beanId: shot?.beanId ?? null,
+      beanAgeDays:
+        shot?.beanId && bean ? daysSinceRoast(bean.roastDate, point.brewedAt) : null,
+      optimalBrewAgeDays: OPTIMAL_BREW_DAYS_TARGET,
       grindSetting,
       grindSettingNumeric: grindSetting ? parseGrindSettingNumeric(grindSetting) : null,
       humidityPercent: shot?.weather?.humidityPercent ?? null,
@@ -136,5 +145,42 @@ export function hasContextChartData(points: HomeAnalyticsPoint[]): boolean {
       point.beanAgeDays !== null ||
       point.humidityPercent !== null ||
       point.grindSettingNumeric !== null,
+  );
+}
+
+export function hasBeanAgeChartData(points: HomeAnalyticsPoint[]): boolean {
+  return points.some((point) => point.beanAgeDays !== null);
+}
+
+/** Bean ids that appear on the age chart (known bean with roast date). */
+export function getBeanIdsWithAgeInSeries(points: HomeAnalyticsPoint[]): string[] {
+  const ids = new Set<string>();
+  for (const point of points) {
+    if (point.beanId && point.beanAgeDays !== null) ids.add(point.beanId);
+  }
+  return [...ids].sort();
+}
+
+/**
+ * One line series per bean so age rises within each bag without zigzagging when you switch beans.
+ * Unknown-bean pulls stay off the line (no dot).
+ */
+export function enrichHomeSeriesForBeanAgeChart(
+  points: HomeAnalyticsPoint[],
+): HomeAnalyticsChartPoint[] {
+  const beanIds = getBeanIdsWithAgeInSeries(points);
+  return points.map((point) => {
+    const extra: Record<string, number | null> = {};
+    for (const beanId of beanIds) {
+      extra[`beanAgeLine_${beanId}`] =
+        point.beanId === beanId && point.beanAgeDays !== null ? point.beanAgeDays : null;
+    }
+    return { ...point, ...extra };
+  });
+}
+
+export function hasGrindOrHumidityChartData(points: HomeAnalyticsPoint[]): boolean {
+  return points.some(
+    (point) => point.humidityPercent !== null || point.grindSettingNumeric !== null,
   );
 }

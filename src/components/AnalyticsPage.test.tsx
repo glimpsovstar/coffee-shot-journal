@@ -22,7 +22,7 @@ vi.mock('recharts', () => ({
 
 const chartableShot: Shot = {
   id: 's1',
-  beanId: 'b1',
+  beanId: 'bean-a',
   brewedAt: '2026-06-01T08:00:00',
   grinder: 'Niche',
   grindSetting: '14',
@@ -48,7 +48,6 @@ describe('AnalyticsPage', () => {
   it('renders chart when shots have metrics', () => {
     render(<AnalyticsPage shots={[chartableShot]} beans={mockBeans} />);
     expect(screen.getByRole('heading', { name: 'Analytics & insights' })).toBeInTheDocument();
-    expect(screen.getByText(/Typical espresso window/i)).toBeInTheDocument();
     expect(screen.getByText(/Latest pull vs sweet spot/i)).toBeInTheDocument();
     expect(screen.getAllByText(/on sweet spot/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByTestId('chart-container').length).toBeGreaterThanOrEqual(1);
@@ -68,8 +67,11 @@ describe('AnalyticsPage', () => {
     };
     render(<AnalyticsPage shots={[shotWithContext]} beans={mockBeans} />);
     expect(screen.getByRole('heading', { name: 'Dial-in suggestions' })).toBeInTheDocument();
-    expect(screen.getByText(/bean age, grind, and humidity trends/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Bean age, grind & humidity' })).toBeInTheDocument();
+    expect(screen.getByText(/General espresso guidance first/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Recommendations for/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'General guidance' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bean age off roast' })).toBeInTheDocument();
+    expect(screen.getByText(/Extraction chart legend/i)).toBeInTheDocument();
     expect(screen.getByText(/One point on the chart/i)).toBeInTheDocument();
     expect(screen.queryByText(/photo analysis/i)).not.toBeInTheDocument();
   });

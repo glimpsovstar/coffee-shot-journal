@@ -3,6 +3,11 @@ import type {
   ShotRecommendationResult,
   ShotRecommendationSuggestion,
 } from '../services/shotRecommendationTypes';
+import {
+  OPTIMAL_BREW_DAYS_MAX,
+  OPTIMAL_BREW_DAYS_MIN,
+  OPTIMAL_BREW_DAYS_TARGET,
+} from './beanBrewWindow.js';
 import type { HomeAnalyticsPoint } from './analytics';
 import { formatExtractionRatioLabel } from './analytics';
 import {
@@ -119,6 +124,58 @@ function buildContextSuggestions(points: HomeAnalyticsPoint[]): ShotRecommendati
   const durationValues = points
     .filter((point) => point.durationSec > 0)
     .map((point) => point.durationSec);
+
+  const agedPoints = points.filter((point) => point.beanAgeDays !== null);
+  if (agedPoints.length >= 2) {
+    const first = agedPoints[0]!;
+    const last = agedPoints[agedPoints.length - 1]!;
+    const ageDelta = last.beanAgeDays! - first.beanAgeDays!;
+    const firstDuration = first.durationSec;
+    const lastDuration = last.durationSec;
+    const durationDelta = lastDuration - firstDuration;
+
+    if (
+      ageDelta >= 5 &&
+      durationDelta < -4 &&
+      first.beanAgeDays! < OPTIMAL_BREW_DAYS_MIN
+    ) {
+      suggestions.push({
+        area: 'degassing_time',
+        title: 'Faster shots as beans aged in the bag',
+        detail: `From ${first.label} to ${last.label}, bean age rose ${ageDelta} days while shot time dropped about ${Math.abs(durationDelta)}s. CO₂ release often speeds up flow on young coffee—you may have ground finer to compensate; near ~${OPTIMAL_BREW_DAYS_TARGET} days off roast, try small coarser steps as gas leaves.`,
+        priority: 'medium',
+      });
+    }
+
+    if (
+      ageDelta >= 5 &&
+      durationDelta > 4 &&
+      last.beanAgeDays! >= OPTIMAL_BREW_DAYS_MIN &&
+      last.beanAgeDays! <= OPTIMAL_BREW_DAYS_MAX
+    ) {
+      suggestions.push({
+        area: 'degassing_slowing',
+        title: 'Slower shots entering optimal window',
+        detail: `Shot times lengthened as beans moved into the ${OPTIMAL_BREW_DAYS_MIN}–${OPTIMAL_BREW_DAYS_MAX} day window—normal as degassing finishes. Match grind to taste rather than chasing your very first pulls on this bag.`,
+        priority: 'low',
+      });
+    }
+
+    const grindPoints = agedPoints.filter((point) => point.grindSettingNumeric !== null);
+    if (grindPoints.length >= 2) {
+      const grindDelta =
+        grindPoints[grindPoints.length - 1]!.grindSettingNumeric! -
+        grindPoints[0]!.grindSettingNumeric!;
+      if (Math.abs(grindDelta) >= GRIND_CHANGE_THRESHOLD && Math.abs(durationDelta) >= 3) {
+        suggestions.push({
+          area: 'grind_time_linked',
+          title: 'Grind moves tracked with shot time',
+          detail: `Grind shifted about ${grindDelta > 0 ? '+' : ''}${grindDelta.toFixed(1)} while shot time changed ${durationDelta}s over the same period. When dialing for degassing, change grind in small steps and log taste—time alone does not tell you if extraction improved.`,
+          priority: 'medium',
+        });
+      }
+    }
+  }
 
   if (humidityValues.length >= 2 && durationValues.length >= 2) {
     const humidityDelta = humidityValues[humidityValues.length - 1]! - humidityValues[0]!;

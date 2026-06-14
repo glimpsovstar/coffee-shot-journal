@@ -11,14 +11,28 @@ import {
   YAxis,
 } from 'recharts';
 import type { Bean, Shot } from '../types';
+import type { HomeAnalyticsPoint } from '../utils/analytics';
 import {
   buildHomeAnalyticsSeries,
   buildShotChartSeries,
+  enrichHomeSeriesForBeanAgeChart,
   formatExtractionRatioLabel,
+  getBeanIdsWithAgeInSeries,
+  hasBeanAgeChartData,
   hasContextChartData,
+  hasGrindOrHumidityChartData,
 } from '../utils/analytics';
 import { enrichExtractionChartSeries } from '../utils/analyticsChart';
-import { buildAnalyticsTrendRecommendations } from '../utils/analyticsTrendRecommendations';
+import { BEAN_AGE_LINE_COLORS } from '../utils/beanAgeChartColors';
+import { formatBeanChoiceLabel } from '../utils/beans';
+import {
+  chartBeanAgeDomain,
+  DEGASSING_PHASE_END_DAYS,
+  OPTIMAL_BREW_DAYS_MAX,
+  OPTIMAL_BREW_DAYS_MIN,
+  OPTIMAL_BREW_DAYS_TARGET,
+} from '../utils/beanBrewWindow';
+import { getBeanById } from '../utils/shots';
 import {
   chartDurationDomain,
   chartRatioDomain,
@@ -32,7 +46,8 @@ import {
   formatDurationSweetSpotDelta,
   formatRatioSweetSpotDelta,
 } from '../utils/espressoTargets';
-import { AnalyticsDialInPanel } from './AnalyticsDialInPanel';
+import { AnalyticsChartLegend } from './AnalyticsChartLegend';
+import { AnalyticsRecommendationsSection } from './AnalyticsRecommendationsSection';
 
 interface AnalyticsPageProps {
   shots: Shot[];
@@ -56,12 +71,25 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
   );
   const latestExtraction = extractionSeries[extractionSeries.length - 1];
   const homeSeries = buildHomeAnalyticsSeries(shots, beans);
-  const trendRecommendations =
-    homeSeries.length > 0 ? buildAnalyticsTrendRecommendations(homeSeries) : null;
-  const showContextChart = hasContextChartData(homeSeries);
-  const showBeanAgeLine = homeSeries.some((point) => point.beanAgeDays !== null);
+  const beanAgeChartData = enrichHomeSeriesForBeanAgeChart(homeSeries);
+  const beanIdsForAgeChart = getBeanIdsWithAgeInSeries(homeSeries);
+  const showBeanAgeChart = hasBeanAgeChartData(homeSeries);
+  const showGrindHumidityChart = hasGrindOrHumidityChartData(homeSeries);
+  const showContextSection = hasContextChartData(homeSeries);
   const showHumidityLine = homeSeries.some((point) => point.humidityPercent !== null);
   const showGrindLine = homeSeries.some((point) => point.grindSettingNumeric !== null);
+  const beanAgeValues = homeSeries
+    .map((point) => point.beanAgeDays)
+    .filter((value): value is number => value !== null);
+  const beanAgeDomain: [number, number] =
+    beanAgeValues.length > 0 ? chartBeanAgeDomain(beanAgeValues) : [0, OPTIMAL_BREW_DAYS_MAX + 3];
+  const grindValues = homeSeries
+    .map((point) => point.grindSettingNumeric)
+    .filter((value): value is number => value !== null);
+  const grindDomain: [number, number] | ['auto', 'auto'] =
+    grindValues.length > 0
+      ? [Math.min(...grindValues) - 1, Math.max(...grindValues) + 1]
+      : ['auto', 'auto'];
 
   if (series.length === 0) {
     return (
@@ -153,7 +181,7 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
               }}
               labelFormatter={(label) => label}
             />
-            <Legend />
+            <Legend wrapperStyle={{ display: 'none' }} />
             <ReferenceArea
               yAxisId="ratio"
               y1={ESPRESSO_RATIO_MIN}
@@ -234,6 +262,48 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
         </ResponsiveContainer>
       </div>
 
+      <AnalyticsChartLegend
+        title="Extraction chart legend"
+        items={[
+          {
+            label: 'Your ratio',
+            hint: 'Solid line — dose:yield on each pull',
+            swatch: 'solid',
+            color: 'var(--accent)',
+          },
+          {
+            label: 'Your time',
+            hint: 'Solid line — shot duration (seconds)',
+            swatch: 'solid',
+            color: 'var(--accent-dark)',
+          },
+          {
+            label: 'Sweet spot ratio (1:2)',
+            hint: 'Dashed reference',
+            swatch: 'dashed',
+            color: 'var(--accent)',
+          },
+          {
+            label: `Sweet spot time (~${ESPRESSO_DURATION_TARGET_SEC}s)`,
+            hint: 'Dashed reference',
+            swatch: 'dashed',
+            color: 'var(--accent-dark)',
+          },
+          {
+            label: 'Shaded ratio zone',
+            hint: `Typical ratio window (1:${ESPRESSO_RATIO_MIN.toFixed(1)}–1:${ESPRESSO_RATIO_MAX.toFixed(1)}) — red tint on chart`,
+            swatch: 'band',
+            color: 'var(--accent)',
+          },
+          {
+            label: 'Shaded time zone',
+            hint: `Typical pull time window (${ESPRESSO_DURATION_MIN_SEC}–${ESPRESSO_DURATION_MAX_SEC}s) — dark tint overlays ratio zone`,
+            swatch: 'band',
+            color: 'var(--accent-dark)',
+          },
+        ]}
+      />
+
       {latestExtraction ? (
         <p className="analytics-sweet-spot-readout">
           <strong>Latest pull vs sweet spot</strong>
@@ -258,122 +328,272 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
         </p>
       ) : null}
 
-      {showContextChart ? (
+      {showContextSection ? (
         <div className="analytics-chart analytics-chart--context">
-          <h3 className="analytics-chart__heading">Bean age, grind &amp; humidity</h3>
-          <p className="panel__intro">
-            Context logged with home pulls — see how ageing, grind moves, and humidity line up with
-            extraction trends.
-          </p>
-          <div
-            role="img"
-            aria-label="Line chart of bean age, grind setting, and humidity"
-          >
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={homeSeries} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  yAxisId="context"
-                  orientation="left"
-                  tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
-                  domain={['auto', 'auto']}
-                  label={{
-                    value: 'Days / grind',
-                    angle: -90,
-                    position: 'insideLeft',
-                    fill: 'var(--text-muted)',
-                    fontSize: 11,
-                  }}
-                />
-                <YAxis
-                  yAxisId="humidity"
-                  orientation="right"
-                  tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
-                  unit="%"
-                  domain={[0, 100]}
-                  label={{
-                    value: 'Humidity',
-                    angle: 90,
-                    position: 'insideRight',
-                    fill: 'var(--text-muted)',
-                    fontSize: 11,
-                  }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius)',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.8rem',
-                  }}
-                  formatter={(value, name) => {
-                    if (name === 'Bean age (days)') return [`${value}d`, name];
-                    if (name === 'Humidity') return [`${value}%`, name];
-                    if (name === 'Grind setting') return [String(value), name];
-                    return [String(value), name];
-                  }}
-                />
-                <Legend />
-                {showBeanAgeLine ? (
-                  <Line
-                    yAxisId="context"
-                    type="monotone"
-                    dataKey="beanAgeDays"
-                    name="Bean age (days)"
-                    stroke="var(--accent)"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    connectNulls
-                  />
-                ) : null}
-                {showGrindLine ? (
-                  <Line
-                    yAxisId="context"
-                    type="monotone"
-                    dataKey="grindSettingNumeric"
-                    name="Grind setting"
-                    stroke="var(--accent-dark)"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    connectNulls
-                  />
-                ) : null}
-                {showHumidityLine ? (
-                  <Line
-                    yAxisId="humidity"
-                    type="monotone"
-                    dataKey="humidityPercent"
-                    name="Humidity"
-                    stroke="#6b8f71"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    connectNulls
-                  />
-                ) : null}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {showBeanAgeChart ? (
+            <>
+              <h3 className="analytics-chart__heading">Bean age off roast</h3>
+              <p className="panel__intro">
+                Days since roast for each pull — one line per bag (age rises as the bag rests).
+                Unknown-bean pulls are omitted. Shaded bands show degassing vs the ~{OPTIMAL_BREW_DAYS_TARGET}d
+                optimal window after CO₂ escapes.
+              </p>
+              <div
+                role="img"
+                aria-label="Line chart of bean age off roast with brew window bands"
+              >
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart
+                    data={beanAgeChartData}
+                    margin={{ top: 12, right: 12, left: 4, bottom: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      yAxisId="age"
+                      orientation="left"
+                      tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                      domain={beanAgeDomain}
+                      unit="d"
+                      label={{
+                        value: 'Days off roast',
+                        angle: -90,
+                        position: 'insideLeft',
+                        fill: 'var(--text-muted)',
+                        fontSize: 11,
+                      }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.8rem',
+                      }}
+                      formatter={(value) => [`${value}d off roast`, 'Bean age']}
+                      labelFormatter={(label, payload) => {
+                        const point = payload?.[0]?.payload as HomeAnalyticsPoint | undefined;
+                        if (!point?.beanId) return label;
+                        const bean = getBeanById(beans, point.beanId);
+                        return bean
+                          ? `${label} — ${formatBeanChoiceLabel(bean)}`
+                          : label;
+                      }}
+                    />
+                    <Legend wrapperStyle={{ display: 'none' }} />
+                    <ReferenceArea
+                      yAxisId="age"
+                      y1={0}
+                      y2={DEGASSING_PHASE_END_DAYS}
+                      fill="var(--accent-dark)"
+                      fillOpacity={0.1}
+                      strokeOpacity={0}
+                      ifOverflow="extendDomain"
+                    />
+                    <ReferenceArea
+                      yAxisId="age"
+                      y1={OPTIMAL_BREW_DAYS_MIN}
+                      y2={OPTIMAL_BREW_DAYS_MAX}
+                      fill="var(--accent)"
+                      fillOpacity={0.14}
+                      strokeOpacity={0}
+                      ifOverflow="extendDomain"
+                    />
+                    <ReferenceLine
+                      yAxisId="age"
+                      y={OPTIMAL_BREW_DAYS_TARGET}
+                      stroke="var(--accent)"
+                      strokeDasharray="2 6"
+                      strokeOpacity={0.45}
+                    />
+                    {beanIdsForAgeChart.map((beanId, index) => {
+                      const bean = getBeanById(beans, beanId);
+                      const color = BEAN_AGE_LINE_COLORS[index % BEAN_AGE_LINE_COLORS.length]!;
+                      return (
+                        <Line
+                          key={beanId}
+                          yAxisId="age"
+                          type="monotone"
+                          dataKey={`beanAgeLine_${beanId}`}
+                          name={bean ? formatBeanChoiceLabel(bean) : beanId}
+                          stroke={color}
+                          strokeWidth={2}
+                          dot={{ r: 4, strokeWidth: 2, fill: 'var(--surface)' }}
+                          connectNulls
+                          isAnimationActive={false}
+                        />
+                      );
+                    })}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <AnalyticsChartLegend
+                title="Bean age chart legend"
+                items={[
+                  ...beanIdsForAgeChart.map((beanId, index) => {
+                    const bean = getBeanById(beans, beanId);
+                    const color = BEAN_AGE_LINE_COLORS[index % BEAN_AGE_LINE_COLORS.length]!;
+                    return {
+                      label: bean ? formatBeanChoiceLabel(bean) : beanId,
+                      hint: 'Solid line — rises day by day for this bag only',
+                      swatch: 'solid' as const,
+                      color,
+                    };
+                  }),
+                  {
+                    label: 'Degassing phase',
+                    hint: `0–${DEGASSING_PHASE_END_DAYS} days — very gassy, shots often run fast`,
+                    swatch: 'band' as const,
+                    color: 'var(--accent-dark)',
+                  },
+                  {
+                    label: 'Optimal brew window',
+                    hint: `${OPTIMAL_BREW_DAYS_MIN}–${OPTIMAL_BREW_DAYS_MAX} days off roast (post-degas)`,
+                    swatch: 'band' as const,
+                    color: 'var(--accent)',
+                  },
+                  {
+                    label: `~${OPTIMAL_BREW_DAYS_TARGET}d sweet spot`,
+                    hint: 'Dashed line — typical target after nitrogen/CO₂ has left the bag',
+                    swatch: 'dashed' as const,
+                    color: 'var(--accent)',
+                  },
+                ]}
+              />
+            </>
+          ) : null}
+
+          {showGrindHumidityChart ? (
+            <>
+              <h3 className="analytics-chart__heading">Grind &amp; humidity</h3>
+              <p className="panel__intro">
+                Grinder setting and humidity logged with home pulls — compare with shot time on the
+                extraction chart above.
+              </p>
+              <div
+                role="img"
+                aria-label="Line chart of grind setting and humidity"
+              >
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={homeSeries} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                      interval="preserveStartEnd"
+                    />
+                    {showGrindLine ? (
+                      <YAxis
+                        yAxisId="grind"
+                        orientation="left"
+                        tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                        domain={grindDomain}
+                        label={{
+                          value: 'Grind',
+                          angle: -90,
+                          position: 'insideLeft',
+                          fill: 'var(--text-muted)',
+                          fontSize: 11,
+                        }}
+                      />
+                    ) : null}
+                    {showHumidityLine ? (
+                      <YAxis
+                        yAxisId="humidity"
+                        orientation="right"
+                        tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                        unit="%"
+                        domain={[0, 100]}
+                        label={{
+                          value: 'Humidity',
+                          angle: 90,
+                          position: 'insideRight',
+                          fill: 'var(--text-muted)',
+                          fontSize: 11,
+                        }}
+                      />
+                    ) : null}
+                    <Tooltip
+                      contentStyle={{
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.8rem',
+                      }}
+                      formatter={(value, name) => {
+                        if (name === 'Humidity') return [`${value}%`, name];
+                        if (name === 'Grind setting') return [String(value), name];
+                        return [String(value), name];
+                      }}
+                    />
+                    <Legend wrapperStyle={{ display: 'none' }} />
+                    {showGrindLine ? (
+                      <Line
+                        yAxisId="grind"
+                        type="monotone"
+                        dataKey="grindSettingNumeric"
+                        name="Grind setting"
+                        stroke="var(--accent-dark)"
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                        connectNulls
+                      />
+                    ) : null}
+                    {showHumidityLine ? (
+                      <Line
+                        yAxisId="humidity"
+                        type="monotone"
+                        dataKey="humidityPercent"
+                        name="Humidity"
+                        stroke="#6b8f71"
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                        connectNulls
+                      />
+                    ) : null}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <AnalyticsChartLegend
+                title="Grind & humidity legend"
+                items={[
+                  ...(showGrindLine
+                    ? [
+                        {
+                          label: 'Grind setting',
+                          hint: 'Solid line — logged grinder setting',
+                          swatch: 'solid' as const,
+                          color: 'var(--accent-dark)',
+                        },
+                      ]
+                    : []),
+                  ...(showHumidityLine
+                    ? [
+                        {
+                          label: 'Humidity',
+                          hint: 'Solid line — % when weather was logged',
+                          swatch: 'solid' as const,
+                          color: '#6b8f71',
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            </>
+          ) : null}
         </div>
       ) : null}
 
-      {trendRecommendations ? (
-        <section
-          className="analytics-recommendations"
-          aria-labelledby="analytics-recommendations-heading"
-        >
-          <h3 id="analytics-recommendations-heading">Dial-in suggestions</h3>
-          <p className="panel__intro">
-            Based on extraction, bean age, grind, and humidity trends in the charts above (home
-            pulls).
-          </p>
-          <AnalyticsDialInPanel result={trendRecommendations} />
-        </section>
+      {homeSeries.length > 0 ? (
+        <AnalyticsRecommendationsSection homeSeries={homeSeries} beans={beans} />
       ) : null}
     </section>
   );
