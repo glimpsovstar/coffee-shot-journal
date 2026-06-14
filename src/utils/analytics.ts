@@ -1,5 +1,5 @@
 import type { Photo, Shot } from '../types';
-import { formatBrewedAt, hasShotRecipe, isHomeShot, sortShotsNewestFirst } from './shots';
+import { formatBrewedAt, hasShotRecipe, sortShotsNewestFirst } from './shots';
 
 /** Max extraction photos in the floating hero gallery (newest first). */
 export const FLOATING_HERO_PHOTO_LIMIT = 10;
@@ -86,11 +86,4 @@ export function buildShotChartSeries(shots: Shot[]): ShotChartPoint[] {
       durationSec: shot.extractionTime,
     }))
     .filter((point) => point.extractionRatio !== null || point.durationSec > 0);
-}
-
-/** Newest home shot that appears on the analytics chart (for dial-in suggestions). */
-export function getLatestChartableHomeShot(shots: Shot[]): Shot | null {
-  const chartIds = new Set(buildShotChartSeries(shots).map((point) => point.id));
-  const sorted = sortShotsNewestFirst(shots);
-  return sorted.find((shot) => chartIds.has(shot.id) && isHomeShot(shot)) ?? null;
 }

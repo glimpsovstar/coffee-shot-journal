@@ -150,7 +150,7 @@ function JournalApp({
               onRemoveCafePhoto={removeCafePhoto}
             />
           ) : page === 'analytics' ? (
-            <AnalyticsPage shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
+            <AnalyticsPage shots={shots} />
           ) : (
             <>
               {onRegisterPasskey ? (
