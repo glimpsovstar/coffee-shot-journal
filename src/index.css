@@ -2140,6 +2140,18 @@ dl {
   min-width: 0;
 }
 
+@media (max-width: 900px) {
+  .shot-feed {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .shot-feed {
+    grid-template-columns: 1fr;
+  }
+}
+
 .shot-card--feed .shot-card__notes {
   display: -webkit-box;
   -webkit-box-orient: vertical;
