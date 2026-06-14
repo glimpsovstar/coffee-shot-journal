@@ -10,6 +10,8 @@ type ExifPick = {
   DateTimeOriginal?: Date | string;
   CreateDate?: Date | string;
   ModifyDate?: Date | string;
+  DateTimeDigitized?: Date | string;
+  DateCreated?: Date | string;
   latitude?: number;
   longitude?: number;
 };
@@ -27,6 +29,8 @@ function pickBrewedDate(exif: ExifPick): Date | undefined {
   return (
     parseExifDate(exif.DateTimeOriginal) ??
     parseExifDate(exif.CreateDate) ??
+    parseExifDate(exif.DateTimeDigitized) ??
+    parseExifDate(exif.DateCreated) ??
     parseExifDate(exif.ModifyDate)
   );
 }
@@ -88,7 +92,16 @@ async function extractDatesFromBuffer(buffer: ArrayBuffer): Promise<ExifPick | n
   try {
     return (await exifr.parse(buffer, {
       ...EXIF_READ_OPTIONS,
-      pick: ['DateTimeOriginal', 'CreateDate', 'ModifyDate'],
+      tiff: true,
+      xmp: true,
+      icc: false,
+      pick: [
+        'DateTimeOriginal',
+        'CreateDate',
+        'ModifyDate',
+        'DateTimeDigitized',
+        'DateCreated',
+      ],
     })) as ExifPick | null;
   } catch {
     return null;
@@ -113,7 +126,7 @@ export async function extractShotMetadataFromBlob(blob: Blob): Promise<ShotPhoto
 
   if (!exif && !hasGps) {
     messages.push(
-      'No metadata in this photo. WhatsApp, Messages, and many editors strip location — use the original from your Photos app.',
+      'No date or location in this photo. Large uploads are compressed for storage — we still read the original file when possible. If this was exported or edited, try the camera original with Location enabled.',
     );
     return { messages };
   }
@@ -139,4 +152,32 @@ export async function extractShotMetadataFromBlob(blob: Blob): Promise<ShotPhoto
     gps,
     messages,
   };
+}
+
+/** Try each blob (e.g. café + coffee photos) and merge the best metadata found. */
+export async function extractShotMetadataFromBlobs(blobs: Blob[]): Promise<ShotPhotoMetadata> {
+  if (blobs.length === 0) {
+    return { messages: ['Attach a photo first.'] };
+  }
+
+  let merged: ShotPhotoMetadata | undefined;
+
+  for (const blob of blobs) {
+    const result = await extractShotMetadataFromBlob(blob);
+    if (!result.brewedAt && !result.gps) continue;
+
+    if (!merged) {
+      merged = result;
+      continue;
+    }
+
+    merged = {
+      brewedAt: merged.brewedAt ?? result.brewedAt,
+      gps: merged.gps ?? result.gps,
+      messages: [...new Set([...merged.messages, ...result.messages])],
+    };
+  }
+
+  if (merged) return merged;
+  return extractShotMetadataFromBlob(blobs[0]!);
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ACCEPTED_IMAGE_TYPES,
+  filesToPhotoInputs,
   formatFileSize,
   MAX_PHOTO_BYTES,
   MAX_PHOTO_SIZE_LABEL,
@@ -65,6 +66,26 @@ describe('validateImageFiles', () => {
 describe('formatFileSize', () => {
   it('formats megabytes for large files', () => {
     expect(formatFileSize(MAX_PHOTO_BYTES)).toBe('5.0 MB');
+  });
+});
+
+describe('filesToPhotoInputs', () => {
+  it('keeps original bytes for EXIF when upload file was replaced', async () => {
+    const original = makeFile('big.jpg', 'image/jpeg', 1024);
+    const compressed = makeFile('big.jpg', 'image/jpeg', 512);
+    const inputs = await filesToPhotoInputs([compressed], [original]);
+
+    expect(inputs.length).toBe(1);
+    expect(inputs[0]?.exifBlob).toBeDefined();
+    expect(inputs[0]?.exifBlob?.size).toBe(1024);
+    expect(inputs[0]?.blob.size).toBe(512);
+  });
+
+  it('omits exifBlob when original and prepared are the same file', async () => {
+    const file = makeFile('small.jpg', 'image/jpeg', 1024);
+    const inputs = await filesToPhotoInputs([file], [file]);
+
+    expect(inputs[0]?.exifBlob).toBeUndefined();
   });
 });
 

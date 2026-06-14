@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { SuburbEntry } from '../data/auNzSuburbs';
 import { toDatetimeLocalValue } from '../utils/datetime';
 import { reverseGeocodeSuburb } from '../services/geocoding';
-import { extractShotMetadataFromBlob, formatGpsLocation } from '../utils/photoExif';
+import { extractShotMetadataFromBlobs, formatGpsLocation } from '../utils/photoExif';
 import { findNearestSuburb, formatSuburbLabel } from '../utils/suburbs';
 
 export interface ShotFormMetadataUpdate {
@@ -12,14 +12,17 @@ export interface ShotFormMetadataUpdate {
 }
 
 interface UpdateFromPhotoButtonProps {
-  imageBlob: Blob | null;
+  imageBlob?: Blob | null;
+  /** When set, tries each blob until metadata is found (e.g. multiple café photos). */
+  imageBlobs?: Blob[];
   onUpdate: (patch: ShotFormMetadataUpdate, messages: string[]) => void;
   /** When `none`, only date/time is read (café visit forms). */
   locationKind?: 'suburb' | 'none';
 }
 
 export function UpdateFromPhotoButton({
-  imageBlob,
+  imageBlob = null,
+  imageBlobs,
   onUpdate,
   locationKind = 'suburb',
 }: UpdateFromPhotoButtonProps) {
@@ -28,7 +31,13 @@ export function UpdateFromPhotoButton({
   const [error, setError] = useState<string | null>(null);
 
   const handleUpdate = async () => {
-    if (!imageBlob) {
+    const blobs = imageBlobs?.length
+      ? imageBlobs
+      : imageBlob
+        ? [imageBlob]
+        : [];
+
+    if (blobs.length === 0) {
       setError(
         locationKind === 'suburb' ? 'Attach a shot photo first.' : 'Attach a photo first.',
       );
@@ -39,7 +48,7 @@ export function UpdateFromPhotoButton({
     setError(null);
     setLoading(true);
     try {
-      const { brewedAt, gps, messages } = await extractShotMetadataFromBlob(imageBlob);
+      const { brewedAt, gps, messages } = await extractShotMetadataFromBlobs(blobs);
       const patch: ShotFormMetadataUpdate = {};
 
       if (brewedAt) {
@@ -80,11 +89,11 @@ export function UpdateFromPhotoButton({
         type="button"
         className="btn-secondary"
         onClick={handleUpdate}
-        disabled={loading || !imageBlob}
+        disabled={loading || (imageBlobs?.length ?? 0) === 0 && !imageBlob}
       >
         {loading ? 'Reading photo…' : 'Update from photo'}
       </button>
-      {!imageBlob && (
+      {!imageBlob && (imageBlobs?.length ?? 0) === 0 && (
         <p className="photo-upload__hint">
           {locationKind === 'suburb'
             ? 'Attach a photo above, then update brewed time and location from its metadata.'

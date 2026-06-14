@@ -5,7 +5,7 @@ import { fetchWeatherAt } from '../services/weather';
 import { formatBeanChoiceLabel } from '../utils/beans';
 import { toDatetimeLocalValue } from '../utils/datetime';
 import { formatUnknownError } from '../utils/errors';
-import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
+import { createPhotoObjectUrl, metadataBlobForPhoto, revokePhotoObjectUrl } from '../utils/photos';
 import { resolveSuburbWithGeocoding } from '../services/geocoding';
 import { resolveSuburbFromQuery, searchSuburbs, toStoredSuburb } from '../utils/suburbs';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
@@ -202,7 +202,9 @@ export function ImportShotForm({ beans, onImportShot }: ImportShotFormProps) {
     url: previewUrl,
   }));
 
-  const firstPhotoBlob = pendingPhotos[0]?.blob ?? null;
+  const firstPhotoBlob = pendingPhotos[0]
+    ? metadataBlobForPhoto(pendingPhotos[0])
+    : null;
 
   const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate, _messages: string[]) => {
     setForm((f) => ({

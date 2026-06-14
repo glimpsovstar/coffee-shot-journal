@@ -1,4 +1,4 @@
-import type { Photo } from '../types';
+import type { Photo, PhotoBlobInput } from '../types';
 
 export const MAX_PHOTOS_PER_ENTITY = 5;
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -133,10 +133,37 @@ export async function fileToPhoto(file: File): Promise<{ photo: Photo; blob: Blo
   };
 }
 
+/** Build upload inputs; keep original file bytes for EXIF when compression replaced the file. */
+export async function filesToPhotoInputs(
+  preparedFiles: File[],
+  originalFiles: File[],
+): Promise<PhotoBlobInput[]> {
+  const inputs: PhotoBlobInput[] = [];
+
+  for (let i = 0; i < preparedFiles.length; i++) {
+    const file = preparedFiles[i]!;
+    const original = originalFiles[i]!;
+    const { photo, blob } = await fileToPhoto(file);
+    let exifBlob: Blob | undefined;
+
+    if (file !== original) {
+      exifBlob = new Blob([await original.arrayBuffer()], { type: original.type });
+    }
+
+    inputs.push({ photo, blob, exifBlob });
+  }
+
+  return inputs;
+}
+
+export function metadataBlobForPhoto(input: PhotoBlobInput): Blob {
+  return input.exifBlob ?? input.blob;
+}
+
 export async function filesToPhotos(
   files: File[],
-): Promise<{ photo: Photo; blob: Blob }[]> {
-  return Promise.all(files.map((file) => fileToPhoto(file)));
+): Promise<PhotoBlobInput[]> {
+  return filesToPhotoInputs(files, files);
 }
 
 export function createPhotoObjectUrl(blob: Blob): string {
