@@ -9,20 +9,38 @@ function nestedMessage(error: unknown): string | null {
   return null;
 }
 
+function decodeOAuthErrorText(text: string): string {
+  try {
+    return decodeURIComponent(text.replace(/\+/g, ' ')).trim();
+  } catch {
+    return text.trim();
+  }
+}
+
 /**
  * User-facing auth errors — especially opaque Supabase passkey / WebAuthn messages.
  */
 export function formatAuthErrorMessage(error: unknown): string {
   if (!(error instanceof Error)) return 'Sign-in failed. Try again or use Continue with Google.';
 
-  const message = error.message.trim();
+  const message = decodeOAuthErrorText(error.message);
   const causeMessage = nestedMessage(error);
+  const causeText = causeMessage ? decodeOAuthErrorText(causeMessage) : null;
+
+  if (/unable to exchange external code/i.test(message)) {
+    return (
+      'Google sign-in failed while exchanging the authorization code. In Supabase → Authentication → ' +
+      'Providers → Google, re-paste the Client ID and Client Secret from the **same** Google OAuth client ' +
+      '(no spaces). In Google Cloud, the only redirect URI should be ' +
+      'https://rqkzobpqmfdxeliyohec.supabase.co/auth/v1/callback — then Save and try again in incognito.'
+    );
+  }
 
   if (/non-webauthn related error/i.test(message)) {
-    if (causeMessage?.match(/invalid domain|invalid rp id/i)) {
+    if (causeText?.match(/invalid domain|invalid rp id/i)) {
       return `Passkeys only work on ${PASSKEY_APP_ORIGIN} (not this URL). Open that site, or sign in with Google.`;
     }
-    if (causeMessage?.match(/not allowed|cancel|abort/i)) {
+    if (causeText?.match(/not allowed|cancel|abort/i)) {
       return 'Passkey sign-in was cancelled. Try again, or use Continue with Google.';
     }
     return (
@@ -41,7 +59,58 @@ export function formatAuthErrorMessage(error: unknown): string {
     return 'Passkeys are disabled on this project. Sign in with Google or GitHub.';
   }
 
-  if (causeMessage) return causeMessage;
+  if (/missing oauth secret/i.test(message)) {
+    return (
+      'Google Client Secret is missing in Supabase. Open Authentication → Providers → Google, paste the secret ' +
+      'from Google Cloud (same OAuth client as the Client ID), and click Save.'
+    );
+  }
+
+  if (
+    /redirect.*not allowed|redirect_uri|oauth.*redirect|invalid.*redirect/i.test(message) ||
+    (causeText && /redirect.*not allowed|redirect_uri/i.test(causeText))
+  ) {
+    return (
+      'This sign-in URL is not allowed in Supabase. On Vercel previews, add this preview URL under ' +
+      'Authentication → URL Configuration → Redirect URLs, or sign in on ' +
+      PASSKEY_APP_ORIGIN +
+      '.'
+    );
+  }
+
+  if (causeText) return causeText;
 
   return message || 'Sign-in failed. Try again or use Continue with Google.';
+}
+
+/** Read OAuth error params Supabase appends to the URL after a failed redirect. */
+export function readOAuthCallbackError(): string | null {
+  const fromSearch = new URLSearchParams(window.location.search);
+  const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const raw =
+    fromSearch.get('error_description') ??
+    fromHash.get('error_description') ??
+    fromSearch.get('error') ??
+    fromHash.get('error');
+  if (!raw) return null;
+  return formatAuthErrorMessage(new Error(decodeOAuthErrorText(raw)));
+}
+
+export function clearOAuthCallbackParams(): void {
+  const url = new URL(window.location.href);
+  const oauthKeys = ['error', 'error_code', 'error_description'];
+  for (const key of oauthKeys) {
+    url.searchParams.delete(key);
+  }
+  if (url.hash) {
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+    for (const key of oauthKeys) {
+      hashParams.delete(key);
+    }
+    const remainder = hashParams.toString();
+    url.hash = remainder ? `#${remainder}` : '';
+  }
+  if (url.href !== window.location.href) {
+    window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+  }
 }

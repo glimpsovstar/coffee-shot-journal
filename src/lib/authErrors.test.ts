@@ -20,4 +20,10 @@ describe('formatAuthErrorMessage', () => {
       /No passkey found/,
     );
   });
+
+  it('explains unable to exchange external code', () => {
+    expect(
+      formatAuthErrorMessage(new Error('Unable to exchange external code: 4/0A')),
+    ).toMatch(/same.*Google OAuth client/i);
+  });
 });

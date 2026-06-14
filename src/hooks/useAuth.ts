@@ -1,6 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState } from 'react';
-import { formatAuthErrorMessage } from '../lib/authErrors';
+import { formatAuthErrorMessage, readOAuthCallbackError, clearOAuthCallbackParams } from '../lib/authErrors';
 import { isCloudEnabled } from '../lib/cloudConfig';
 import { type OAuthProviderId, toSupabaseProvider } from '../lib/oauthProviders';
 import { getSupabaseClient } from '../lib/supabaseClient';
@@ -14,6 +14,12 @@ export function useAuth() {
     if (!isCloudEnabled()) {
       setLoading(false);
       return;
+    }
+
+    const callbackError = readOAuthCallbackError();
+    if (callbackError) {
+      setError(callbackError);
+      clearOAuthCallbackParams();
     }
 
     const supabase = getSupabaseClient();
