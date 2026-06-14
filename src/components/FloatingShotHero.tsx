@@ -13,7 +13,7 @@ interface FloatingShotHeroProps {
   beans: Bean[];
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
   immersive?: boolean;
-  /** Centered overlay on the photo scroller (e.g. log CTA). */
+  /** Log CTA below the photo scroller (bottom centre of the wave). */
   scrollerOverlay?: ReactNode;
 }
 
@@ -59,9 +59,6 @@ export function FloatingShotHero({
         {immersive ? 'Your extraction wave' : 'Recent extractions'}
       </h2>
       <div className="floating-hero__scroller">
-        {scrollerOverlay ? (
-          <div className="floating-hero__scroller-overlay">{scrollerOverlay}</div>
-        ) : null}
         <div className="floating-hero__gallery">
         {cards.map((card, index) => {
           const isRevealed = revealedId === card.id;
@@ -103,6 +100,9 @@ export function FloatingShotHero({
         })}
         </div>
       </div>
+      {scrollerOverlay ? (
+        <div className="floating-hero__stage-cta">{scrollerOverlay}</div>
+      ) : null}
       <p className="floating-hero__hint">
         Showing the last {cards.length} extraction photo{cards.length === 1 ? '' : 's'}. Hover or
         tap to reveal the recipe.
