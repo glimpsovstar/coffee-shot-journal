@@ -14,6 +14,8 @@ dist-ssr
 *.local
 .env
 .env.local
+.env.vercel.clone
+.env.clone.local
 .env.*.local
 
 # Local photo fixtures for manual EXIF testing (not committed)

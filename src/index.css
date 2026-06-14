@@ -767,6 +767,19 @@ dl {
   align-items: start;
 }
 
+.landing__layout--compact {
+  max-width: 420px;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: center;
+}
+
+.test-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
 @media (min-width: 840px) {
   .landing__layout {
     grid-template-columns: 1fr minmax(300px, 380px);

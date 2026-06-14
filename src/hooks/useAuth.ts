@@ -41,6 +41,18 @@ export function useAuth() {
     }
   }, []);
 
+  const signInWithPassword = useCallback(async (email: string, password: string) => {
+    setError(null);
+    const { error: signInError } = await getSupabaseClient().auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (signInError) {
+      setError(formatAuthErrorMessage(signInError));
+      throw signInError;
+    }
+  }, []);
+
   const signInWithOAuth = useCallback(async (provider: OAuthProviderId) => {
     setError(null);
     const { error: oauthError } = await getSupabaseClient().auth.signInWithOAuth({
@@ -78,6 +90,7 @@ export function useAuth() {
     loading,
     error,
     signInWithPasskey,
+    signInWithPassword,
     signInWithOAuth,
     registerPasskey,
     signOut,

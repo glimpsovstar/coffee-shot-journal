@@ -41,6 +41,13 @@ export function formatAuthErrorMessage(error: unknown): string {
     return 'Passkeys are disabled on this project. Sign in with Google or GitHub.';
   }
 
+  if (/invalid login credentials/i.test(message)) {
+    return (
+      'Email or password is incorrect. Use the credentials shared with you, or ask the operator ' +
+      'to reset your password in Supabase.'
+    );
+  }
+
   if (causeMessage) return causeMessage;
 
   return message || 'Sign-in failed. Try again or use Continue with Google.';
