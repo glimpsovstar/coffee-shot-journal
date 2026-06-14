@@ -147,7 +147,9 @@ npm run clone-journal -- --target test@withdevo.net
 # inspect:  npm run clone-journal -- --dry-run --from-env .env.vercel.clone
 ```
 
-The script picks the user with the most journal rows as source (excluding the target), replaces the target’s cloud data with a copy, and duplicates `journal-photos` storage files. Bean, shot, and café **row ids are regenerated** (Postgres primary key is global per `id`, not per user).
+The script picks the user with the most journal rows as source (excluding the target), **clears** the target’s cloud data, assigns **new** bean/cafe/shot ids (Postgres `id` is global), then copies rows and duplicates `journal-photos` storage files.
+
+If you see `duplicate key value violates unique constraint "beans_pkey"`, pull latest `main` — older script versions reused source ids. Re-run after `git pull`; the script clears the target user before insert.
 
 ---
 

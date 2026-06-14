@@ -13,10 +13,15 @@
  *   --from-env .env.vercel.clone  (not --env-file: Node 25 treats that as a Node flag)
  */
 import { createClient } from '@supabase/supabase-js';
-import { randomUUID } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
+import {
+  collectPhotoIds,
+  documentsFromRows,
+  remapJournalIds,
+} from './lib/journalCloneRemap.mjs';
 
 const PHOTO_BUCKET = 'journal-photos';
+const JOURNAL_TABLES = ['shots', 'cafes', 'beans'];
 
 function firstEnv(...keys) {
   for (const key of keys) {
@@ -75,48 +80,6 @@ function parseArgs(argv) {
   return args;
 }
 
-function collectPhotoIds(beans, shots, cafes) {
-  const ids = new Set();
-  for (const bean of beans) {
-    for (const photo of bean.photos ?? []) ids.add(photo.id);
-  }
-  for (const shot of shots) {
-    for (const photo of shot.photos ?? []) ids.add(photo.id);
-  }
-  for (const cafe of cafes) {
-    for (const photo of cafe.photos ?? []) ids.add(photo.id);
-  }
-  return [...ids];
-}
-
-/** Postgres PK is global `id` — clone must assign new bean/cafe/shot ids (photos keep ids; storage is per-user). */
-function remapJournalIds(beans, shots, cafes) {
-  const beanIdMap = new Map();
-  const cafeIdMap = new Map();
-
-  const remappedBeans = beans.map((bean) => {
-    const newId = randomUUID();
-    beanIdMap.set(bean.id, newId);
-    return { ...structuredClone(bean), id: newId };
-  });
-
-  const remappedCafes = cafes.map((cafe) => {
-    const newId = randomUUID();
-    cafeIdMap.set(cafe.id, newId);
-    return { ...structuredClone(cafe), id: newId };
-  });
-
-  const remappedShots = shots.map((shot) => {
-    const newId = randomUUID();
-    const next = { ...structuredClone(shot), id: newId };
-    if (beanIdMap.has(shot.beanId)) next.beanId = beanIdMap.get(shot.beanId);
-    if (shot.cafeId && cafeIdMap.has(shot.cafeId)) next.cafeId = cafeIdMap.get(shot.cafeId);
-    return next;
-  });
-
-  return { beans: remappedBeans, shots: remappedShots, cafes: remappedCafes };
-}
-
 async function listAllUsers(admin) {
   const users = [];
   let page = 1;
@@ -152,9 +115,18 @@ async function loadDocuments(supabase, table, userId) {
 }
 
 async function deleteUserJournal(supabase, userId) {
-  for (const table of ['beans', 'shots', 'cafes']) {
+  for (const table of JOURNAL_TABLES) {
     const { error } = await supabase.from(table).delete().eq('user_id', userId);
-    if (error && !error.message.includes('cafes')) throw error;
+    if (error) throw error;
+  }
+
+  for (const table of JOURNAL_TABLES) {
+    const remaining = await countRows(supabase, table, userId);
+    if (remaining > 0) {
+      throw new Error(
+        `Target user still has ${remaining} ${table} row(s) after delete — aborting clone.`,
+      );
+    }
   }
 
   const folder = userId;
@@ -312,9 +284,9 @@ async function main() {
     sourceCafes = [];
   }
 
-  const beans = sourceBeans.map((r) => r.document);
-  const shots = sourceShots.map((r) => r.document);
-  const cafes = sourceCafes.map((r) => r.document);
+  const beans = documentsFromRows(sourceBeans);
+  const shots = documentsFromRows(sourceShots);
+  const cafes = documentsFromRows(sourceCafes);
 
   const remapped = remapJournalIds(beans, shots, cafes);
   const photoIds = collectPhotoIds(remapped.beans, remapped.shots, remapped.cafes);
@@ -323,6 +295,7 @@ async function main() {
     `Cloning ${remapped.beans.length} beans, ${remapped.shots.length} shots, ${remapped.cafes.length} cafes, ${photoIds.length} photo refs (new entity ids for target user)…`,
   );
 
+  console.log('Clearing target user journal…');
   await deleteUserJournal(supabase, targetUser.id);
 
   const now = new Date().toISOString();
