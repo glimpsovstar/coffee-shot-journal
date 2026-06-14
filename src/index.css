@@ -1887,6 +1887,10 @@ dl {
   height: 200px;
 }
 
+.add-cafe-form__success {
+  margin-top: 0.75rem;
+}
+
 .add-cafe-form__map-actions {
   display: flex;
   flex-wrap: wrap;

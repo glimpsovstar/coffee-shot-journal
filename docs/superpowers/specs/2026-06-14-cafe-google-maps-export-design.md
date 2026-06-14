@@ -174,7 +174,9 @@ No new env vars in `.env.example` (comment already mentions Maps key).
 2. Branch: `feature/<issue#>-cafe-google-maps-export`.
 3. Implement per plan → tests → PR.
 
-## Phase 2 (future spec, not this build)
+## Phase 2 (next when resuming — not implemented)
+
+**Status:** Backlog — see [`docs/handoff.md`](../../handoff.md) § Next work.
 
 - **Café map page** in Coffee Snob: Google Maps JavaScript API or MapLibre + journal pins, popup with stars/reviews, filter by rating.
 - Optional: remember “last KML export date” and nudge when journal changed.

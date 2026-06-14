@@ -1,6 +1,6 @@
 # Platform demo flow — Coffee Shot Journal
 
-Operator runbook for the **active** Vercel + Supabase platform. See [`constitution.md`](../constitution.md) and the [Vercel + Supabase design spec](superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md).
+Operator runbook for the **active** Vercel + Supabase platform. See [`constitution.md`](../constitution.md), [`handoff.md`](handoff.md) (resume after a break), and the [Vercel + Supabase design spec](superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md).
 
 > **Parked:** The earlier AWS + Vault runbook (TFC, ECS, `dmtfc`, `coffee.dev.withdevo.net`) is preserved in git history and in [`public-hosting-plan.md`](public-hosting-plan.md). Do not follow it for new work.
 
@@ -147,7 +147,9 @@ npm run clone-journal -- --target test@withdevo.net
 # inspect:  npm run clone-journal -- --dry-run --from-env .env.vercel.clone
 ```
 
-The script picks the user with the most journal rows as source (excluding the target), replaces the target’s cloud data with a copy, and duplicates `journal-photos` storage files. Bean, shot, and café **row ids are regenerated** (Postgres primary key is global per `id`, not per user).
+The script picks the user with the most journal rows as source (excluding the target), **clears** the target’s cloud data, assigns **new** bean/cafe/shot ids (Postgres `id` is global), then copies rows and duplicates `journal-photos` storage files.
+
+If you see `duplicate key value violates unique constraint "beans_pkey"`, pull latest `main` — older script versions reused source ids. Re-run after `git pull`; the script clears the target user before insert.
 
 ---
 

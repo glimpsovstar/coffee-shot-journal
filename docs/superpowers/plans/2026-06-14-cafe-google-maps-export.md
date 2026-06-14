@@ -11,4 +11,6 @@
 
 ---
 
-Implemented on branch `feature/75-cafe-google-maps-export`.
+Implemented on branch `feature/75-cafe-google-maps-export` (merged #76).
+
+**Paused:** June 2026 — resume via [`docs/handoff.md`](../../handoff.md).

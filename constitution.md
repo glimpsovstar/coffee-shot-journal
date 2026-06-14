@@ -42,6 +42,8 @@ Read this before platform work, Supabase schema/auth, or mobile clients.
 
 **Phases:** P1 Vercel deploy ✓ · P2 `/api/label-scan` ✓ · P3 Supabase + cloud CRUD + auth ✓ · P4 iOS · P5 product backlog.
 
+**Development paused (June 2026):** active feature work parked; production remains live. Resume guide: [`docs/handoff.md`](docs/handoff.md).
+
 **Branding:** `public/branding/` — coffee snob. logo assets; favicon at `public/favicon.svg`.
 
 **Operator runbook:** [`docs/demo-flow.md`](docs/demo-flow.md).
@@ -126,6 +128,7 @@ See [`docs/public-hosting-plan.md`](docs/public-hosting-plan.md) — **supersede
 | Doc | Status |
 |-----|--------|
 | [`docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md`](docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md) | **Active** |
+| [`docs/handoff.md`](docs/handoff.md) | **Active** — resume checklist, test map, next work |
 | [`docs/demo-flow.md`](docs/demo-flow.md) | **Active** — Vercel + Supabase operator flow |
 | [`docs/public-hosting-plan.md`](docs/public-hosting-plan.md) | **Superseded** — AWS plan (parked) |
 | [`docs/superpowers/specs/2026-06-05-p1-platform-foundation-design.md`](docs/superpowers/specs/2026-06-05-p1-platform-foundation-design.md) | **Parked** — AWS P1 spec |

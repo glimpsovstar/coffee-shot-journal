@@ -52,6 +52,7 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 
 ## What I want to add later
 
+- **In-app café map** — browse logged cafés on a map inside Coffee Snob (Phase 2; Google Maps Phase 1 KML export is done)
 - **Edit / retire beans** — update or archive catalogue entries (add is done)
 - **Label scan hardening** — optional auth on `/api/label-scan`, rate limits (see design spec)
 - **Filters & search** — by bean, rating, or date range
@@ -60,6 +61,8 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 - **Image compression** — smaller IndexedDB footprint for large photo libraries
 
 **Platform roadmap** (Vercel + Supabase + future iOS): **`https://coffeesnob.withdevo.net`**, Supabase Postgres + Storage, passkey auth, `/api/label-scan` on Vercel. See [`constitution.md`](constitution.md) and [`docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md`](docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md). The earlier AWS/ECS/Vault plan is **parked** — [`docs/public-hosting-plan.md`](docs/public-hosting-plan.md).
+
+**Paused / resume:** Development paused June 2026. To pick up again: [`docs/handoff.md`](docs/handoff.md) (checklist, test map, next priorities).
 
 ## AI-assisted development workflow
 
@@ -114,11 +117,13 @@ npm run test:coverage
 
 | Layer | What is covered |
 |-------|-----------------|
-| Unit | `src/utils/**`, `src/services/**` (label scan, cloud import) |
+| Unit | `src/utils/**`, `src/services/**` (label scan, cloud import, **café KML**, maps URLs) |
 | Storage | `src/storage/journalRepository.ts` (IndexedDB via `fake-indexeddb` in tests) |
 | Data | `src/data/seed.ts` — referential integrity and valid fields |
-| Component | Forms, photo upload/gallery, cards, catalogue, auth landing |
+| Component | Forms (**AddCafeForm**, **JournalBackupPanel**), photo upload/gallery, cards, catalogue, auth landing |
 | Integration | `App.tsx` — load journal, add shots, IndexedDB round-trip |
+
+Full feature → test file map: [`docs/handoff.md`](docs/handoff.md#test-map).
 
 New features: **issue → feature branch → PR** (`.cursor/rules/sdlc-for-features.mdc`). Behavior changes need **tests** (`.cursor/rules/require-tests.mdc`) and **docs** when user- or operator-visible (`.cursor/rules/require-docs.mdc`).
 
