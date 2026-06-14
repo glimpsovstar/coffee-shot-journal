@@ -124,6 +124,7 @@ Validate **V-1** through **V-4** in the design spec (phone add → laptop sees d
 |-------|--------|
 | Domain not resolving | DNS propagation; Vercel domain config |
 | Google login `missing OAuth secret` | Supabase → Auth → Providers → Google → paste **Client secret** from Google Cloud (not just Client ID) |
+| Google login `signup_disabled` / signups not allowed | Supabase → Auth → enable **Sign ups** (or create user in Authentication → Users first) |
 | Passkey / QR fails | Relying Party ID = `withdevo.net`; origins include prod URL; hybrid transport not stripped |
 | Label scan 401/500 | Vercel function logs; `OPENAI_API_KEY` set in Production |
 | Data not syncing | Supabase RLS policies; signed-in `auth.uid()` matches row `user_id` |

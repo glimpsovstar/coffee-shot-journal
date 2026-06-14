@@ -67,6 +67,18 @@ export function formatAuthErrorMessage(error: unknown): string {
   }
 
   if (
+    /signup_disabled/i.test(message) ||
+    /signups not allowed/i.test(message) ||
+    causeText === 'signup_disabled'
+  ) {
+    return (
+      'New sign-ups are disabled in Supabase. For Google login on a new account, open Authentication → ' +
+      'Providers (or Sign In / Users settings) and turn on **Enable sign-ups**. ' +
+      'Or create the user first in Authentication → Users, then sign in with Google again.'
+    );
+  }
+
+  if (
     /redirect.*not allowed|redirect_uri|oauth.*redirect|invalid.*redirect/i.test(message) ||
     (causeText && /redirect.*not allowed|redirect_uri/i.test(causeText))
   ) {
@@ -87,13 +99,18 @@ export function formatAuthErrorMessage(error: unknown): string {
 export function readOAuthCallbackError(): string | null {
   const fromSearch = new URLSearchParams(window.location.search);
   const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const errorCode = fromSearch.get('error_code') ?? fromHash.get('error_code');
   const raw =
     fromSearch.get('error_description') ??
     fromHash.get('error_description') ??
     fromSearch.get('error') ??
     fromHash.get('error');
-  if (!raw) return null;
-  return formatAuthErrorMessage(new Error(decodeOAuthErrorText(raw)));
+  if (!raw && !errorCode) return null;
+  const err = new Error(raw ? decodeOAuthErrorText(raw) : errorCode ?? 'oauth_error');
+  if (errorCode) {
+    (err as Error & { cause?: Error }).cause = new Error(errorCode);
+  }
+  return formatAuthErrorMessage(err);
 }
 
 export function clearOAuthCallbackParams(): void {
