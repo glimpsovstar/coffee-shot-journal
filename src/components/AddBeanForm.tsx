@@ -22,6 +22,7 @@ import { BlendCompositionEditor } from './BlendCompositionEditor';
 import { LabelScanButton } from './LabelScanButton';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
+import { SegmentedControl } from './SegmentedControl';
 
 interface AddBeanFormProps {
   onAddBean: (payload: AddBeanPayload) => void;
@@ -210,44 +211,27 @@ export function AddBeanForm({ onAddBean }: AddBeanFormProps) {
           </div>
         </div>
 
-        <fieldset className="kind-fieldset">
-          <legend>Kind</legend>
-          <label>
-            <input
-              type="radio"
-              name="bean-kind"
-              checked={form.kind === 'single_origin'}
-              onChange={() => handleKindChange('single_origin')}
-            />
-            Single origin
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="bean-kind"
-              checked={form.kind === 'blend'}
-              onChange={() => handleKindChange('blend')}
-            />
-            Blend
-          </label>
-        </fieldset>
+        <SegmentedControl
+          label="Kind"
+          options={[
+            { value: 'single_origin', label: 'Single origin' },
+            { value: 'blend', label: 'Blend' },
+          ]}
+          value={form.kind}
+          onChange={(kind) => handleKindChange(kind as BeanKind)}
+        />
 
-        <div className="form-row">
-          <label htmlFor="beanRoastStyle">Roast style</label>
-          <select
-            id="beanRoastStyle"
-            value={form.roastStyle}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, roastStyle: e.target.value as RoastStyle }))
-            }
-          >
-            {ROAST_STYLES.map((style) => (
-              <option key={style} value={style}>
-                {formatRoastStyle(style)}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SegmentedControl
+          label="Roast style"
+          options={ROAST_STYLES.map((style) => ({
+            value: style,
+            label: formatRoastStyle(style),
+          }))}
+          value={form.roastStyle}
+          onChange={(roastStyle) =>
+            setForm((f) => ({ ...f, roastStyle: roastStyle as RoastStyle }))
+          }
+        />
 
         <div className="form-row">
           <label htmlFor="beanOrigin">{originFieldLabel(form.kind)}</label>

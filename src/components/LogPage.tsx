@@ -1,4 +1,5 @@
 import { AddShotForm } from './AddShotForm';
+import { SegmentedControl } from './SegmentedControl';
 import { BeanCatalogue } from './BeanCatalogue';
 import { CafeCatalogue } from './CafeCatalogue';
 import { ImportShotForm } from './ImportShotForm';
@@ -62,21 +63,14 @@ export function LogPage({
         </p>
       </header>
 
-      <nav className="app-nav app-nav--secondary" aria-label="Log options">
-        {LOG_SECTIONS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            className={
-              section === id ? 'app-nav__link app-nav__link--active' : 'app-nav__link'
-            }
-            aria-current={section === id ? 'true' : undefined}
-            onClick={() => onSectionChange(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <SegmentedControl
+        label="Log options"
+        scrollable
+        options={LOG_SECTIONS.map((section) => ({ value: section.id, label: section.label }))}
+        value={section}
+        onChange={onSectionChange}
+        className="log-page__sections"
+      />
 
       {section === 'shot' ? (
         <AddShotForm beans={beans} onAddShot={onAddShot} />
