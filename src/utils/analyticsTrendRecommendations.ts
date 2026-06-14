@@ -5,6 +5,15 @@ import type {
 } from '../services/shotRecommendationTypes';
 import type { HomeAnalyticsPoint } from './analytics';
 import { formatExtractionRatioLabel } from './analytics';
+import {
+  ESPRESSO_DURATION_MAX_SEC,
+  ESPRESSO_DURATION_MIN_SEC,
+  ESPRESSO_DURATION_TARGET_SEC,
+  ESPRESSO_RATIO_MAX,
+  ESPRESSO_RATIO_MIN,
+  durationVsTarget,
+  ratioVsTarget,
+} from './espressoTargets';
 
 const RATIO_DRIFT_THRESHOLD = 0.15;
 const DURATION_DRIFT_THRESHOLD = 4;
@@ -141,6 +150,51 @@ function buildContextSuggestions(points: HomeAnalyticsPoint[]): ShotRecommendati
         title: 'Dry air with inconsistent times',
         detail: 'Several pulls were logged below 30% humidity with varying shot times. Very dry air increases static and retention—consistent dosing helps more than large grind moves.',
         priority: 'low',
+      });
+    }
+  }
+
+  return suggestions;
+}
+
+function buildTargetSuggestions(points: HomeAnalyticsPoint[]): ShotRecommendationSuggestion[] {
+  const latest = points[points.length - 1]!;
+  const suggestions: ShotRecommendationSuggestion[] = [];
+
+  if (latest.durationSec > 0) {
+    const durationTarget = durationVsTarget(latest.durationSec);
+    if (durationTarget === 'below') {
+      suggestions.push({
+        area: 'target_duration',
+        title: 'Pull time below typical window',
+        detail: `${latest.durationSec}s is under the ${ESPRESSO_DURATION_MIN_SEC}–${ESPRESSO_DURATION_MAX_SEC}s guide on the chart (sweet spot ~${ESPRESSO_DURATION_TARGET_SEC}s). Fast shots often taste sour—try a finer grind or slightly higher dose.`,
+        priority: 'medium',
+      });
+    } else if (durationTarget === 'above') {
+      suggestions.push({
+        area: 'target_duration',
+        title: 'Pull time above typical window',
+        detail: `${latest.durationSec}s exceeds the ${ESPRESSO_DURATION_MIN_SEC}–${ESPRESSO_DURATION_MAX_SEC}s guide (sweet spot ~${ESPRESSO_DURATION_TARGET_SEC}s). Slow shots can taste bitter—consider a coarser grind or stopping earlier.`,
+        priority: 'medium',
+      });
+    }
+  }
+
+  if (latest.extractionRatio !== null) {
+    const ratioTarget = ratioVsTarget(latest.extractionRatio);
+    if (ratioTarget === 'below') {
+      suggestions.push({
+        area: 'target_ratio',
+        title: 'Ratio below typical window',
+        detail: `${formatExtractionRatioLabel(latest.extractionRatio)} is under the 1:${ESPRESSO_RATIO_MIN.toFixed(1)}–1:${ESPRESSO_RATIO_MAX.toFixed(1)} guide (sweet spot 1:2). Low yield often tastes thin or sour.`,
+        priority: 'medium',
+      });
+    } else if (ratioTarget === 'above') {
+      suggestions.push({
+        area: 'target_ratio',
+        title: 'Ratio above typical window',
+        detail: `${formatExtractionRatioLabel(latest.extractionRatio)} is above the 1:${ESPRESSO_RATIO_MIN.toFixed(1)}–1:${ESPRESSO_RATIO_MAX.toFixed(1)} guide (sweet spot 1:2). High yield can taste bitter or hollow.`,
+        priority: 'medium',
       });
     }
   }
@@ -289,6 +343,7 @@ export function buildAnalyticsTrendRecommendations(
     }
   }
 
+  suggestions.push(...buildTargetSuggestions(points));
   suggestions.push(...buildContextSuggestions(points));
 
   const summary =

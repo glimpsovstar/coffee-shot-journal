@@ -3,6 +3,8 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceArea,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -16,6 +18,15 @@ import {
   hasContextChartData,
 } from '../utils/analytics';
 import { buildAnalyticsTrendRecommendations } from '../utils/analyticsTrendRecommendations';
+import {
+  ESPRESSO_DURATION_MAX_SEC,
+  ESPRESSO_DURATION_MIN_SEC,
+  ESPRESSO_DURATION_TARGET_SEC,
+  ESPRESSO_RATIO_MAX,
+  ESPRESSO_RATIO_MIN,
+  ESPRESSO_TARGET_RATIO,
+  ESPRESSO_TARGET_SUMMARY,
+} from '../utils/espressoTargets';
 import { AnalyticsDialInPanel } from './AnalyticsDialInPanel';
 
 interface AnalyticsPageProps {
@@ -49,8 +60,10 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
     <section className="panel analytics-page" aria-labelledby="analytics-heading">
       <h2 id="analytics-heading">Analytics &amp; insights</h2>
       <p className="panel__intro">
-        Extraction ratio and shot duration over time — spot drift before taste changes.
+        Extraction ratio and shot duration over time — spot drift before taste changes. Shaded bands
+        show typical espresso targets.
       </p>
+      <p className="analytics-targets">{ESPRESSO_TARGET_SUMMARY}</p>
 
       <div
         className="analytics-chart"
@@ -112,6 +125,50 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
               }}
             />
             <Legend />
+            <ReferenceArea
+              yAxisId="ratio"
+              y1={ESPRESSO_RATIO_MIN}
+              y2={ESPRESSO_RATIO_MAX}
+              fill="var(--accent)"
+              fillOpacity={0.08}
+              strokeOpacity={0}
+              ifOverflow="extendDomain"
+            />
+            <ReferenceLine
+              yAxisId="ratio"
+              y={ESPRESSO_TARGET_RATIO}
+              stroke="var(--accent)"
+              strokeDasharray="4 4"
+              strokeOpacity={0.55}
+              label={{
+                value: '1:2 target',
+                position: 'insideTopLeft',
+                fill: 'var(--text-muted)',
+                fontSize: 10,
+              }}
+            />
+            <ReferenceArea
+              yAxisId="duration"
+              y1={ESPRESSO_DURATION_MIN_SEC}
+              y2={ESPRESSO_DURATION_MAX_SEC}
+              fill="var(--accent-dark)"
+              fillOpacity={0.08}
+              strokeOpacity={0}
+              ifOverflow="extendDomain"
+            />
+            <ReferenceLine
+              yAxisId="duration"
+              y={ESPRESSO_DURATION_TARGET_SEC}
+              stroke="var(--accent-dark)"
+              strokeDasharray="4 4"
+              strokeOpacity={0.55}
+              label={{
+                value: `~${ESPRESSO_DURATION_TARGET_SEC}s`,
+                position: 'insideTopRight',
+                fill: 'var(--text-muted)',
+                fontSize: 10,
+              }}
+            />
             <Line
               yAxisId="ratio"
               type="monotone"

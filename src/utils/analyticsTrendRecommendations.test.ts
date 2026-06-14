@@ -66,6 +66,14 @@ describe('buildAnalyticsTrendRecommendations', () => {
     expect(result.suggestions.some((s) => s.area === 'humidity_duration')).toBe(true);
   });
 
+  it('flags pull time outside typical espresso window', () => {
+    const result = buildAnalyticsTrendRecommendations([
+      point({ id: 'a', durationSec: 20 }),
+      point({ id: 'b', durationSec: 19 }),
+    ]);
+    expect(result.suggestions.some((s) => s.area === 'target_duration')).toBe(true);
+  });
+
   it('reports steady trends when metrics hold', () => {
     const result = buildAnalyticsTrendRecommendations([
       point({ id: 'a' }),

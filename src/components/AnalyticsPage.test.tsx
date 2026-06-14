@@ -16,6 +16,8 @@ vi.mock('recharts', () => ({
   CartesianGrid: () => null,
   Tooltip: () => null,
   Legend: () => null,
+  ReferenceArea: () => null,
+  ReferenceLine: () => null,
 }));
 
 const chartableShot: Shot = {
@@ -46,6 +48,7 @@ describe('AnalyticsPage', () => {
   it('renders chart when shots have metrics', () => {
     render(<AnalyticsPage shots={[chartableShot]} beans={mockBeans} />);
     expect(screen.getByRole('heading', { name: 'Analytics & insights' })).toBeInTheDocument();
+    expect(screen.getByText(/Typical espresso window/i)).toBeInTheDocument();
     expect(screen.getAllByTestId('chart-container').length).toBeGreaterThanOrEqual(1);
   });
 
