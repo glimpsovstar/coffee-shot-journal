@@ -2128,9 +2128,9 @@ dl {
 }
 
 .shot-feed {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
   margin-top: 0.75rem;
   list-style: none;
   padding: 0;
@@ -2138,6 +2138,33 @@ dl {
 
 .shot-feed__item {
   min-width: 0;
+}
+
+.shot-card--feed .shot-card__notes {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.shot-card--feed .shot-card__details {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+}
+
+.shot-card--feed .detail-list--inline {
+  gap: 0.45rem;
+}
+
+.shot-card--feed .shot-recommendations {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+}
+
+.shot-recommendations--compact .shot-recommendations__btn {
+  width: 100%;
+  font-size: 0.78rem;
+  padding: 0.45rem 0.65rem;
 }
 
 .shot-card__layout {

@@ -51,6 +51,14 @@ describe('ShotCard', () => {
     expect(screen.getByRole('button', { name: 'Get dial-in suggestions' })).toBeInTheDocument();
   });
 
+  it('keeps dial-in button in compact feed mode without helper hints', () => {
+    render(<ShotCard shot={mockShot} beans={mockBeans} photoItems={[]} compact />);
+    expect(screen.getByRole('button', { name: 'Get dial-in suggestions' })).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Add a shot photo for crema and milk analysis/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('hides dial-in suggestions for café shots', () => {
     render(
       <ShotCard

@@ -21,9 +21,11 @@ interface ShotCardProps {
   beans: Bean[];
   cafes?: Cafe[];
   photoItems: PhotoDisplay[];
+  /** Feed tiles: hide dial-in panel and inline photo strip. */
+  compact?: boolean;
 }
 
-export function ShotCard({ shot, beans, cafes = [], photoItems }: ShotCardProps) {
+export function ShotCard({ shot, beans, cafes = [], photoItems, compact = false }: ShotCardProps) {
   const title = getShotCardTitle(shot, beans, cafes);
   const drinkSummary = formatDrinkSummary(shot);
   const cafeShot = isCafeShot(shot);
@@ -49,7 +51,7 @@ export function ShotCard({ shot, beans, cafes = [], photoItems }: ShotCardProps)
     shot.wouldOrderAgain !== undefined;
 
   return (
-    <article className="card shot-card tactile-surface">
+    <article className={`card shot-card tactile-surface${compact ? ' shot-card--feed' : ''}`}>
       <div className="shot-card__layout">
         {heroPhoto ? (
           <div className="shot-card__thumb-wrap">
@@ -90,7 +92,7 @@ export function ShotCard({ shot, beans, cafes = [], photoItems }: ShotCardProps)
         </div>
       </div>
 
-      {extraPhotos.length > 0 ? (
+      {extraPhotos.length > 0 && !compact ? (
         <PhotoGallery items={extraPhotos} label="More shot photos" />
       ) : null}
 
@@ -139,6 +141,7 @@ export function ShotCard({ shot, beans, cafes = [], photoItems }: ShotCardProps)
           beans={beans}
           photoItems={photoItems}
           photoMetadataCount={shotPhotoMetadataCount(shot, cafes)}
+          compact={compact}
         />
       ) : null}
     </article>
