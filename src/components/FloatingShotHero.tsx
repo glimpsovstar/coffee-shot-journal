@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import type { Bean, PhotoDisplay, Shot } from '../types';
 import { formatBeanChoiceLabel } from '../utils/beans';
 import {
@@ -13,6 +13,8 @@ interface FloatingShotHeroProps {
   beans: Bean[];
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
   immersive?: boolean;
+  /** Centered overlay on the photo scroller (e.g. log CTA). */
+  scrollerOverlay?: ReactNode;
 }
 
 function heroCardId(shotId: string, photoId: string): string {
@@ -24,6 +26,7 @@ export function FloatingShotHero({
   beans,
   resolvePhotos,
   immersive = false,
+  scrollerOverlay,
 }: FloatingShotHeroProps) {
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const recent = getRecentExtractionPhotos(shots);
@@ -56,6 +59,9 @@ export function FloatingShotHero({
         {immersive ? 'Your extraction wave' : 'Recent extractions'}
       </h2>
       <div className="floating-hero__scroller">
+        {scrollerOverlay ? (
+          <div className="floating-hero__scroller-overlay">{scrollerOverlay}</div>
+        ) : null}
         <div className="floating-hero__gallery">
         {cards.map((card, index) => {
           const isRevealed = revealedId === card.id;
