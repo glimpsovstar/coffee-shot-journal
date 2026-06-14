@@ -1883,6 +1883,27 @@ dl {
   background: var(--surface);
 }
 
+.cafe-map--preview .cafe-map__iframe {
+  height: 200px;
+}
+
+.add-cafe-form__map-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.add-cafe-form__maps-btn {
+  text-decoration: none;
+}
+
+.add-cafe-form__map-actions .photo-upload__hint {
+  margin: 0;
+  flex: 1 1 220px;
+}
+
 .cafe-map__link {
   display: inline-block;
   margin-top: 0.5rem;

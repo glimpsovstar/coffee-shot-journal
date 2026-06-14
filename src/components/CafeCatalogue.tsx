@@ -115,6 +115,8 @@ export function CafeCatalogue({
         <AddCafeForm
           id="new-cafe-visit-form"
           beans={beans}
+          cafes={cafes}
+          shots={shots}
           onAddVisit={handleAddVisit}
           expanded
           onExpandedChange={setNewVisitOpen}
@@ -138,7 +140,7 @@ export function CafeCatalogue({
       ) : null}
 
       {cafes.length === 0 ? (
-        <AddCafeForm beans={beans} onAddVisit={handleAddVisit} />
+        <AddCafeForm beans={beans} cafes={cafes} shots={shots} onAddVisit={handleAddVisit} />
       ) : null}
     </div>
   );

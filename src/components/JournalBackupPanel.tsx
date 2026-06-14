@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { markCloudImportDone } from '../lib/cloudConfig';
 import { importJournalDataToCloud } from '../services/cloudImport';
 import { loadJournalFromCloud } from '../storage/supabaseJournalRepository';
+import type { Cafe, Shot } from '../types';
 import {
   buildJournalBackupFromIndexedDb,
   downloadJournalBackupFile,
@@ -10,18 +11,43 @@ import {
   photoBlobsFromBackup,
   restoreJournalBackupToIndexedDb,
 } from '../utils/journalBackup';
+import { downloadCafeMapKmlFile } from '../utils/cafeMapKml';
 
 interface JournalBackupPanelProps {
   cloudUserId: string | null;
+  cafes: Cafe[];
+  shots: Shot[];
   onRestored: () => void;
 }
 
-export function JournalBackupPanel({ cloudUserId, onRestored }: JournalBackupPanelProps) {
+export function JournalBackupPanel({
+  cloudUserId,
+  cafes,
+  shots,
+  onRestored,
+}: JournalBackupPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [exportingMap, setExportingMap] = useState(false);
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleExportCafeMap = () => {
+    setError(null);
+    setMessage(null);
+    setExportingMap(true);
+    try {
+      const result = downloadCafeMapKmlFile(cafes, shots);
+      const skipped =
+        result.skippedCount > 0 ? ` (${result.skippedCount} without coordinates skipped)` : '';
+      setMessage(`Exported ${result.exportedCount} cafés with visit summaries${skipped}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Café map export failed.');
+    } finally {
+      setExportingMap(false);
+    }
+  };
 
   const handleExport = async () => {
     setError(null);
@@ -87,6 +113,14 @@ export function JournalBackupPanel({ cloudUserId, onRestored }: JournalBackupPan
       <div className="journal-backup__actions">
         <button type="button" className="btn-secondary" disabled={exporting} onClick={handleExport}>
           {exporting ? 'Exporting…' : 'Download backup file'}
+        </button>
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={exportingMap || cafes.length === 0}
+          onClick={handleExportCafeMap}
+        >
+          {exportingMap ? 'Exporting…' : 'Download café map (KML)'}
         </button>
         <button
           type="button"
