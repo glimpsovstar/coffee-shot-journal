@@ -28,6 +28,7 @@ export function CafeDetail({ cafe, shots, beans, resolvePhotos, onAddCoffee }: C
         name={cafe.name}
         latitude={cafe.latitude}
         longitude={cafe.longitude}
+        googlePlaceId={cafe.googlePlaceId}
       />
 
       <LogCafeCoffeeForm cafe={cafe} beans={beans} onAddCoffee={onAddCoffee} />

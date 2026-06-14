@@ -174,6 +174,22 @@ The script picks the user with the most journal rows as source (excluding the ta
 | Stranger sees journal | Should not — unauthenticated users see landing / sign-in only |
 | `/test-login` or deep links 404 on Vercel | SPA rewrite — `vercel.json` must serve `index.html` for non-`/api` paths |
 
+## Café map on Google Maps (KML)
+
+**Goal:** See logged cafés with your stars and notes inside the Google Maps app via **Google My Maps**.
+
+**Prerequisites:** `VITE_GOOGLE_MAPS_API_KEY` on Vercel (Places + Maps Embed API enabled; referrer includes your domain).
+
+**Export:**
+
+1. **Backup & restore** → **Download café map (KML)**, or after **Save visit** → **Download café map (KML)**.
+2. Open [Google My Maps](https://www.google.com/maps/d/) → **Create new map** → **Import** → upload the `.kml` file.
+3. On phone: Google Maps → **Layers** → enable your My Map layer.
+
+**Refresh after new visits:** Export a new KML and replace the layer (delete the old imported layer in My Maps first to avoid duplicate pins).
+
+**Per visit:** After saving, use **Open in Google Maps** to save the place or get directions (uses `googlePlaceId` when available).
+
 ## Five-minute demo script (Vercel + Supabase audience)
 
 1. Open **`https://coffeesnob.withdevo.net`** on phone — journal loads.

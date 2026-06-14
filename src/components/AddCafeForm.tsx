@@ -5,6 +5,7 @@ import type {
   BeverageType,
   Cafe,
   PhotoBlobInput,
+  Shot,
   ShotWeather,
 } from '../types';
 import { reverseGeocodePlaceLabel } from '../services/geocoding';
@@ -17,9 +18,12 @@ import { buildCafeCoffeeShot } from '../utils/cafeCoffee';
 import { formatUnknownError } from '../utils/errors';
 import { isCafeDrinkComplete } from '../utils/drinks';
 import { metadataBlobForPhoto } from '../utils/photos';
+import { downloadCafeMapKmlFile } from '../utils/cafeMapKml';
 import { toDatetimeLocalValue } from '../utils/datetime';
 import { createPhotoObjectUrl, revokePhotoObjectUrl } from '../utils/photos';
 import { CafeDrinkPicker } from './CafeDrinkPicker';
+import { CafeMapEmbed } from './CafeMapEmbed';
+import { CafeMapOpenLink } from './CafeMapOpenLink';
 import { CafePlaceField } from './CafePlaceField';
 import { PhotoGalleryEditable } from './PhotoGalleryEditable';
 import { PhotoUpload } from './PhotoUpload';
@@ -29,6 +33,8 @@ import { WeatherDisplay } from './WeatherDisplay';
 
 interface AddCafeFormProps {
   beans: Bean[];
+  cafes: Cafe[];
+  shots: Shot[];
   onAddVisit: (payload: AddCafeVisitPayload) => Promise<Cafe>;
   id?: string;
   /** Controlled expand/collapse (used when opening from café picker header). */
@@ -42,6 +48,8 @@ interface PendingPhoto extends PhotoBlobInput {
 
 export function AddCafeForm({
   beans,
+  cafes,
+  shots,
   onAddVisit,
   id,
   expanded: expandedProp,
@@ -75,6 +83,7 @@ export function AddCafeForm({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [savedCafeActions, setSavedCafeActions] = useState<Cafe | null>(null);
 
   const resetCoffeeFields = () => {
     setBrewedAt(toDatetimeLocalValue(new Date()));
@@ -272,6 +281,7 @@ export function AddCafeForm({
       });
 
       resetForm();
+      setSavedCafeActions(cafe);
       setStatusMessage(`Saved ${cafe.name} and your ${drink.replace('_', ' ')}.`);
     } catch (err) {
       console.error('Failed to save café visit', err);
@@ -293,6 +303,24 @@ export function AddCafeForm({
     ...cafePhotos.map((p) => metadataBlobForPhoto(p)),
     ...coffeePhotos.map((p) => metadataBlobForPhoto(p)),
   ];
+
+  const previewLatitude = selectedPlace?.latitude;
+  const previewLongitude = selectedPlace?.longitude;
+  const hasMapPreview =
+    previewLatitude !== undefined &&
+    previewLongitude !== undefined &&
+    Number.isFinite(previewLatitude) &&
+    Number.isFinite(previewLongitude);
+
+  const journalCafes = cafes;
+
+  const handleDownloadCafeMap = () => {
+    const result = downloadCafeMapKmlFile(journalCafes, shots);
+    const skipped =
+      result.skippedCount > 0 ? ` (${result.skippedCount} without coordinates skipped)` : '';
+    setStatusMessage(`Exported ${result.exportedCount} cafés to KML${skipped}.`);
+    setError(null);
+  };
 
   const applyMetadataFromPhoto = (patch: ShotFormMetadataUpdate, _messages: string[]) => {
     if (patch.brewedAt) {
@@ -334,13 +362,25 @@ export function AddCafeForm({
             onNameChange={(value) => {
               setName(value);
               setWeatherPreview(null);
+              setSavedCafeActions(null);
             }}
             onAddressChange={(value) => {
               setAddress(value);
               setWeatherPreview(null);
+              setSavedCafeActions(null);
             }}
             onSelectPlace={setSelectedPlace}
           />
+
+          {hasMapPreview ? (
+            <CafeMapEmbed
+              name={name.trim() || 'Selected café'}
+              latitude={previewLatitude!}
+              longitude={previewLongitude!}
+              googlePlaceId={selectedPlace?.placeId}
+              preview
+            />
+          ) : null}
 
           <div className="form-row form-row--pair">
             <div>
@@ -505,6 +545,28 @@ export function AddCafeForm({
 
           {statusMessage ? (
             <p className="photo-upload__hint" aria-live="polite">{statusMessage}</p>
+          ) : null}
+          {savedCafeActions ? (
+            <div className="add-cafe-form__map-actions">
+              <CafeMapOpenLink
+                className="btn-secondary add-cafe-form__maps-btn"
+                latitude={savedCafeActions.latitude}
+                longitude={savedCafeActions.longitude}
+                googlePlaceId={savedCafeActions.googlePlaceId}
+              />
+              <button
+                type="button"
+                className="btn-ghost add-cafe-form__maps-btn"
+                onClick={handleDownloadCafeMap}
+                disabled={journalCafes.length === 0}
+              >
+                Download café map (KML)
+              </button>
+              <p className="photo-upload__hint">
+                Save this place in Google Maps, or import the KML in Google My Maps to see all your
+                cafés on Google Maps.
+              </p>
+            </div>
           ) : null}
           {error ? (
             <p className="form-error" role="alert">{error}</p>

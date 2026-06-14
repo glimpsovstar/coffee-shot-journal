@@ -142,7 +142,12 @@ function JournalApp({
               {onRegisterPasskey ? (
                 <AccountSignInPanel onRegisterPasskey={onRegisterPasskey} />
               ) : null}
-              <JournalBackupPanel cloudUserId={cloudUserId} onRestored={() => reloadJournal()} />
+              <JournalBackupPanel
+                cloudUserId={cloudUserId}
+                cafes={cafes}
+                shots={shots}
+                onRestored={() => reloadJournal()}
+              />
             </>
           )}
         </main>
