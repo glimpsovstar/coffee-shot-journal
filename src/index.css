@@ -1233,6 +1233,31 @@ dl {
   color: var(--text-muted);
 }
 
+.analytics-sweet-spot-readout {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.analytics-sweet-spot-readout__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+
+.analytics-sweet-spot-readout__hint {
+  font-size: 0.8125rem;
+}
+
 .analytics-chart {
   margin-top: 1.25rem;
   min-height: 360px;

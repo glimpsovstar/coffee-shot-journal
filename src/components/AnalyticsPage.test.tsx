@@ -49,6 +49,8 @@ describe('AnalyticsPage', () => {
     render(<AnalyticsPage shots={[chartableShot]} beans={mockBeans} />);
     expect(screen.getByRole('heading', { name: 'Analytics & insights' })).toBeInTheDocument();
     expect(screen.getByText(/Typical espresso window/i)).toBeInTheDocument();
+    expect(screen.getByText(/Latest pull vs sweet spot/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/on sweet spot/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByTestId('chart-container').length).toBeGreaterThanOrEqual(1);
   });
 

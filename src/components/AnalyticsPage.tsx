@@ -17,8 +17,11 @@ import {
   formatExtractionRatioLabel,
   hasContextChartData,
 } from '../utils/analytics';
+import { enrichExtractionChartSeries } from '../utils/analyticsChart';
 import { buildAnalyticsTrendRecommendations } from '../utils/analyticsTrendRecommendations';
 import {
+  chartDurationDomain,
+  chartRatioDomain,
   ESPRESSO_DURATION_MAX_SEC,
   ESPRESSO_DURATION_MIN_SEC,
   ESPRESSO_DURATION_TARGET_SEC,
@@ -26,6 +29,8 @@ import {
   ESPRESSO_RATIO_MIN,
   ESPRESSO_TARGET_RATIO,
   ESPRESSO_TARGET_SUMMARY,
+  formatDurationSweetSpotDelta,
+  formatRatioSweetSpotDelta,
 } from '../utils/espressoTargets';
 import { AnalyticsDialInPanel } from './AnalyticsDialInPanel';
 
@@ -36,6 +41,20 @@ interface AnalyticsPageProps {
 
 export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
   const series = buildShotChartSeries(shots);
+  const extractionSeries = enrichExtractionChartSeries(series);
+  const ratioValues = extractionSeries
+    .map((point) => point.extractionRatio)
+    .filter((value): value is number => value !== null);
+  const durationValues = extractionSeries
+    .filter((point) => point.durationSec > 0)
+    .map((point) => point.durationSec);
+  const ratioDomain = chartRatioDomain(
+    ratioValues.length > 0 ? ratioValues : [ESPRESSO_TARGET_RATIO],
+  );
+  const durationDomain = chartDurationDomain(
+    durationValues.length > 0 ? durationValues : [ESPRESSO_DURATION_TARGET_SEC],
+  );
+  const latestExtraction = extractionSeries[extractionSeries.length - 1];
   const homeSeries = buildHomeAnalyticsSeries(shots, beans);
   const trendRecommendations =
     homeSeries.length > 0 ? buildAnalyticsTrendRecommendations(homeSeries) : null;
@@ -71,7 +90,7 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
         aria-label="Line chart of extraction ratio and duration"
       >
         <ResponsiveContainer width="100%" height={360}>
-          <LineChart data={series} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
+          <LineChart data={extractionSeries} margin={{ top: 20, right: 12, left: 4, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="label"
@@ -83,7 +102,7 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
               orientation="left"
               tick={{ fill: 'var(--accent)', fontSize: 11 }}
               tickFormatter={(value) => formatExtractionRatioLabel(Number(value))}
-              domain={['auto', 'auto']}
+              domain={ratioDomain}
               label={{
                 value: 'Ratio',
                 angle: -90,
@@ -97,7 +116,7 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
               orientation="right"
               tick={{ fill: 'var(--accent-dark)', fontSize: 11 }}
               unit="s"
-              domain={['auto', 'auto']}
+              domain={durationDomain}
               label={{
                 value: 'Duration',
                 angle: 90,
@@ -115,14 +134,24 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
                 fontSize: '0.8rem',
               }}
               formatter={(value, name) => {
-                if (name === 'extractionRatio' && typeof value === 'number') {
-                  return [formatExtractionRatioLabel(value), 'Ratio'];
+                if (name === 'Your ratio' && typeof value === 'number') {
+                  return [
+                    `${formatExtractionRatioLabel(value)} (${formatRatioSweetSpotDelta(value)})`,
+                    'Your ratio',
+                  ];
                 }
-                if (name === 'durationSec') {
-                  return [`${value}s`, 'Duration'];
+                if (name === 'Your time' && typeof value === 'number') {
+                  return [`${value}s (${formatDurationSweetSpotDelta(value)})`, 'Your time'];
+                }
+                if (
+                  name === 'Sweet spot ratio (1:2)' ||
+                  String(name).startsWith('Sweet spot time')
+                ) {
+                  return null;
                 }
                 return [String(value), name];
               }}
+              labelFormatter={(label) => label}
             />
             <Legend />
             <ReferenceArea
@@ -138,14 +167,8 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
               yAxisId="ratio"
               y={ESPRESSO_TARGET_RATIO}
               stroke="var(--accent)"
-              strokeDasharray="4 4"
-              strokeOpacity={0.55}
-              label={{
-                value: '1:2 target',
-                position: 'insideTopLeft',
-                fill: 'var(--text-muted)',
-                fontSize: 10,
-              }}
+              strokeDasharray="2 6"
+              strokeOpacity={0.35}
             />
             <ReferenceArea
               yAxisId="duration"
@@ -160,38 +183,80 @@ export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
               yAxisId="duration"
               y={ESPRESSO_DURATION_TARGET_SEC}
               stroke="var(--accent-dark)"
-              strokeDasharray="4 4"
-              strokeOpacity={0.55}
-              label={{
-                value: `~${ESPRESSO_DURATION_TARGET_SEC}s`,
-                position: 'insideTopRight',
-                fill: 'var(--text-muted)',
-                fontSize: 10,
-              }}
+              strokeDasharray="2 6"
+              strokeOpacity={0.35}
             />
             <Line
               yAxisId="ratio"
               type="monotone"
               dataKey="extractionRatio"
-              name="Extraction ratio"
+              name="Your ratio"
               stroke="var(--accent)"
               strokeWidth={2}
-              dot={{ r: 3 }}
+              dot={{ r: 4 }}
               connectNulls
             />
             <Line
               yAxisId="duration"
               type="monotone"
               dataKey="durationSec"
-              name="Duration (s)"
+              name="Your time"
               stroke="var(--accent-dark)"
               strokeWidth={2}
-              dot={{ r: 3 }}
+              dot={{ r: 4 }}
               connectNulls
+            />
+            <Line
+              yAxisId="ratio"
+              type="monotone"
+              dataKey="sweetSpotRatio"
+              name="Sweet spot ratio (1:2)"
+              stroke="var(--accent)"
+              strokeWidth={2}
+              strokeDasharray="8 5"
+              dot={false}
+              isAnimationActive={false}
+              legendType="line"
+            />
+            <Line
+              yAxisId="duration"
+              type="monotone"
+              dataKey="sweetSpotDurationSec"
+              name={`Sweet spot time (~${ESPRESSO_DURATION_TARGET_SEC}s)`}
+              stroke="var(--accent-dark)"
+              strokeWidth={2}
+              strokeDasharray="8 5"
+              dot={false}
+              isAnimationActive={false}
+              legendType="line"
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {latestExtraction ? (
+        <p className="analytics-sweet-spot-readout">
+          <strong>Latest pull vs sweet spot</strong>
+          <span className="analytics-sweet-spot-readout__metrics">
+            {latestExtraction.extractionRatio !== null ? (
+              <span>
+                Ratio {formatExtractionRatioLabel(latestExtraction.extractionRatio)} (
+                {formatRatioSweetSpotDelta(latestExtraction.extractionRatio)})
+              </span>
+            ) : null}
+            {latestExtraction.durationSec > 0 ? (
+              <span>
+                Time {latestExtraction.durationSec}s (
+                {formatDurationSweetSpotDelta(latestExtraction.durationSec)})
+              </span>
+            ) : null}
+          </span>
+          <span className="analytics-sweet-spot-readout__hint">
+            Dashed lines on the chart are the 1:2 and ~{ESPRESSO_DURATION_TARGET_SEC}s sweet spots—
+            vertical distance is how far each pull sits from target.
+          </span>
+        </p>
+      ) : null}
 
       {showContextChart ? (
         <div className="analytics-chart analytics-chart--context">
