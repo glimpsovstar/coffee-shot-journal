@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState } from 'react';
+import { formatAuthErrorMessage } from '../lib/authErrors';
 import { isCloudEnabled } from '../lib/cloudConfig';
 import { type OAuthProviderId, toSupabaseProvider } from '../lib/oauthProviders';
 import { getSupabaseClient } from '../lib/supabaseClient';
@@ -18,7 +19,7 @@ export function useAuth() {
     const supabase = getSupabaseClient();
 
     supabase.auth.getSession().then(({ data, error: sessionError }) => {
-      if (sessionError) setError(sessionError.message);
+      if (sessionError) setError(formatAuthErrorMessage(sessionError));
       setSession(data.session);
       setLoading(false);
     });
@@ -35,7 +36,7 @@ export function useAuth() {
     setError(null);
     const { error: signInError } = await getSupabaseClient().auth.signInWithPasskey();
     if (signInError) {
-      setError(signInError.message);
+      setError(formatAuthErrorMessage(signInError));
       throw signInError;
     }
   }, []);
@@ -49,7 +50,7 @@ export function useAuth() {
       },
     });
     if (oauthError) {
-      setError(oauthError.message);
+      setError(formatAuthErrorMessage(oauthError));
       throw oauthError;
     }
   }, []);
@@ -58,7 +59,7 @@ export function useAuth() {
     setError(null);
     const { error: registerError } = await getSupabaseClient().auth.registerPasskey();
     if (registerError) {
-      setError(registerError.message);
+      setError(formatAuthErrorMessage(registerError));
       throw registerError;
     }
   }, []);
@@ -67,7 +68,7 @@ export function useAuth() {
     setError(null);
     const { error: signOutError } = await getSupabaseClient().auth.signOut();
     if (signOutError) {
-      setError(signOutError.message);
+      setError(formatAuthErrorMessage(signOutError));
       throw signOutError;
     }
   }, []);
