@@ -9,6 +9,8 @@ In Supabase Dashboard → **SQL Editor**, paste and run **in order**:
 
 After both, Table Editor should list `beans`, `shots`, and `cafes`.
 
+Migrations use `drop policy if exists` before `create policy` so **Supabase Preview** branches can re-apply SQL without `42710` duplicate-policy errors.
+
 ## 2. Environment variables
 
 | Variable | Where |
