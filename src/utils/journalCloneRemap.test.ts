@@ -27,6 +27,33 @@ describe('journalCloneRemap', () => {
     expect(remapped.shots[0].cafeId).toBe(remapped.cafes[0].id);
   });
 
+  it('remaps shot foreign keys that reference pre-normalized document ids', () => {
+    const beans = documentsFromRows([
+      { id: 'bean-row-id', document: { id: 'bean-doc-id', photos: [] } },
+    ]);
+    const cafes = documentsFromRows([
+      { id: 'cafe-row-id', document: { id: 'cafe-doc-id', photos: [] } },
+    ]);
+    const shots = documentsFromRows([
+      {
+        id: 'shot-row-id',
+        document: {
+          id: 'shot-doc-id',
+          beanId: 'bean-doc-id',
+          cafeId: 'cafe-doc-id',
+          photos: [],
+        },
+      },
+    ]);
+
+    const remapped = remapJournalIds(beans, shots, cafes);
+
+    expect(remapped.shots[0].beanId).toBe(remapped.beans[0].id);
+    expect(remapped.shots[0].cafeId).toBe(remapped.cafes[0].id);
+    expect(JSON.stringify(remapped)).not.toContain('bean-doc-id');
+    expect(JSON.stringify(remapped)).not.toContain('cafe-doc-id');
+  });
+
   it('collects photo ids from all entities', () => {
     const ids = collectPhotoIds(
       [{ photos: [{ id: 'p1' }] }],
