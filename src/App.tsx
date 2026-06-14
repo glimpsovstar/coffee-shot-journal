@@ -5,9 +5,8 @@ import { AuthScreen } from './components/AuthScreen';
 import { TestLoginScreen } from './components/TestLoginScreen';
 import { CloudImportPrompt } from './components/CloudImportPrompt';
 import { EditorialHeader } from './components/EditorialHeader';
-import { FloatingShotHero } from './components/FloatingShotHero';
+import { JournalHero } from './components/JournalHero';
 import { JournalBackupPanel } from './components/JournalBackupPanel';
-import { JournalDashboard } from './components/JournalDashboard';
 import { AccountSignInPanel } from './components/AccountSignInPanel';
 import { LogPage, type LogSection } from './components/LogPage';
 import { ShotList } from './components/ShotList';
@@ -84,17 +83,20 @@ function JournalApp({
     <div className="app app-shell">
       <EditorialHeader onSignOut={onSignOut} />
 
-      <AppNav page={page} onPageChange={setPage} />
-
       {page === 'journal' ? (
-        <JournalDashboard
+        <JournalHero
+          shots={shots}
+          beans={beans}
           shotCount={shots.length}
           homeShotCount={homeShotCount}
           cafeShotCount={cafeShotCount}
           currentBeanLabel={currentBeanLabel}
+          resolvePhotos={resolvePhotos}
           onLogClick={() => openLog('shot')}
         />
       ) : null}
+
+      <AppNav page={page} onPageChange={setPage} />
 
       {cloudUserId ? (
         <CloudImportPrompt userId={cloudUserId} onImported={() => reloadJournal()} />
@@ -103,18 +105,15 @@ function JournalApp({
       <div className="app-layout">
         <main className="app-main">
           {page === 'journal' ? (
-            <>
-              <FloatingShotHero shots={shots} beans={beans} resolvePhotos={resolvePhotos} />
-              <ShotList
-                shots={shots}
-                beans={beans}
-                cafes={cafes}
-                resolvePhotos={resolvePhotos}
-                heading="Past history"
-                intro="Newest first — your extraction log."
-                emptyMessage="No shots yet. Open Log to record your first pull."
-              />
-            </>
+            <ShotList
+              shots={shots}
+              beans={beans}
+              cafes={cafes}
+              resolvePhotos={resolvePhotos}
+              heading="Past history"
+              intro="Newest first — your extraction log."
+              emptyMessage="No shots yet. Open Log to record your first pull."
+            />
           ) : page === 'log' ? (
             <LogPage
               section={logSection}
