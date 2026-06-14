@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { formatAuthErrorMessage } from '../lib/authErrors';
 import { OAUTH_PROVIDERS, type OAuthProviderId } from '../lib/oauthProviders';
+import { isPasskeyOriginSupported, PASSKEY_APP_ORIGIN } from '../lib/passkeyOrigin';
 import { BrandedLogo } from './BrandedLogo';
 
 interface AuthScreenProps {
@@ -26,7 +28,7 @@ export function AuthScreen({
     try {
       await onSignInWithPasskey();
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Sign-in failed.');
+      setLocalError(formatAuthErrorMessage(err));
     } finally {
       setSubmittingPasskey(false);
     }
@@ -38,7 +40,7 @@ export function AuthScreen({
     try {
       await onSignInWithOAuth(provider);
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Sign-in failed.');
+      setLocalError(formatAuthErrorMessage(err));
       setSubmittingOAuth(null);
     }
   };
@@ -90,18 +92,25 @@ export function AuthScreen({
           <div className="auth-panel__actions">
             <button
               type="button"
-              className="btn-primary btn-primary--wide"
-              disabled={busy}
+              className="btn-secondary btn-primary--wide"
+              disabled={busy || !isPasskeyOriginSupported()}
               onClick={handlePasskey}
             >
               {submittingPasskey ? 'Signing in…' : 'Sign in with passkey'}
             </button>
           </div>
 
-          <p className="auth-panel__hint auth-panel__hint--compact">
-            After your first sign-in, open <strong>Backup &amp; restore</strong> to optionally add a
-            passkey for Face ID, Touch ID, or a security key on this device.
-          </p>
+          {!isPasskeyOriginSupported() ? (
+            <p className="auth-panel__hint auth-panel__hint--compact">
+              Passkeys only work on <strong>{PASSKEY_APP_ORIGIN}</strong>. Use Google above, or open
+              that URL to use a passkey.
+            </p>
+          ) : (
+            <p className="auth-panel__hint auth-panel__hint--compact">
+              Passkeys are optional. After your first Google sign-in, open <strong>Backup &amp;
+              restore</strong> to add Face ID / Touch ID on this device.
+            </p>
+          )}
 
           {message ? (
             <p className="auth-panel__error" role="alert">{message}</p>
