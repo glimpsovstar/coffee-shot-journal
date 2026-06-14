@@ -11,6 +11,18 @@ After both, Table Editor should list `beans`, `shots`, and `cafes`.
 
 Migrations use `drop policy if exists` before `create policy` so **Supabase Preview** branches can re-apply SQL without `42710` duplicate-policy errors.
 
+## GitHub — Supabase Preview check
+
+The **Supabase Preview** status on pull requests only runs when preview branches are enabled:
+
+1. Supabase Dashboard → **Project Settings** → **Integrations** → **GitHub** ([direct link](https://supabase.com/dashboard/project/rqkzobpqmfdxeliyohec/settings/integrations)).
+2. Turn on **Create preview branch for each pull request** (wording may vary).
+3. Re-run checks on the PR (empty commit or close/reopen) if needed.
+
+If the check shows **Skipped** with “preview branch per PR is disabled”, the integration is off — not a migration failure.
+
+**Manual idempotency check** (when Preview is skipped): in SQL Editor, run `001_journal.sql` twice, then `002_cafes.sql` twice — no errors.
+
 ## 2. Environment variables
 
 | Variable | Where |
