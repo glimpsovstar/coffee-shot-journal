@@ -2,13 +2,18 @@ import { describe, expect, it } from 'vitest';
 import type { Shot } from '../types';
 import {
   buildShotChartSeries,
+  buildHomeAnalyticsSeries,
+  enrichHomeSeriesForBeanAgeChart,
   extractionRatioValue,
   formatExtractionRatioLabel,
   formatHeroRecipeLine,
   FLOATING_HERO_PHOTO_LIMIT,
+  getBeanIdsWithAgeInSeries,
   getFeaturedShotWithPhoto,
   getRecentExtractionPhotos,
+  hasContextChartData,
 } from './analytics';
+import { seedBeans, seedShots } from '../data/seed';
 
 const baseShot: Shot = {
   id: 's1',
@@ -82,5 +87,64 @@ describe('analytics', () => {
     expect(points.map((p) => p.id)).toEqual(['b', 'a']);
     expect(points[1]?.extractionRatio).toBe(2);
     expect(points[1]?.durationSec).toBe(30);
+  });
+
+  it('builds home analytics series with bean age and humidity', () => {
+    const beans = [
+      {
+        id: 'b1',
+        name: 'Ethiopia',
+        roaster: 'Test',
+        kind: 'single_origin' as const,
+        originOrBlend: 'Ethiopia',
+        roastStyle: 'light' as const,
+        blendComponents: [],
+        roastDate: '2026-05-01',
+        purchaseDate: '2026-05-02',
+        bagSize: '250g' as const,
+        tastingNotes: '',
+        photos: [],
+      },
+    ];
+    const shots: Shot[] = [
+      {
+        ...baseShot,
+        id: 's1',
+        beanId: 'b1',
+        brewedAt: '2026-06-04T08:00:00',
+        grindSetting: '14',
+        weather: {
+          temperatureC: 18,
+          humidityPercent: 70,
+          description: 'Humid',
+          source: 'open-meteo',
+          observedAt: '2026-06-04T08:00:00.000Z',
+        },
+      },
+    ];
+    const points = buildHomeAnalyticsSeries(shots, beans);
+    expect(points[0]?.beanAgeDays).toBe(33);
+    expect(points[0]?.humidityPercent).toBe(70);
+    expect(points[0]?.grindSettingNumeric).toBe(14);
+    expect(hasContextChartData(points)).toBe(true);
+  });
+
+  it('draws one rising age line per bean instead of mixing bags on one line', () => {
+    const series = buildHomeAnalyticsSeries(seedShots, seedBeans);
+    const enriched = enrichHomeSeriesForBeanAgeChart(series);
+    const beanIds = getBeanIdsWithAgeInSeries(series);
+    expect(beanIds.length).toBeGreaterThan(1);
+
+    const ethiopiaShots = series.filter((point) => point.beanId === 'bean-ethiopia');
+    expect(ethiopiaShots[0]!.beanAgeDays).toBeLessThan(ethiopiaShots[1]!.beanAgeDays!);
+
+    const houseOnColombiaDay = enriched.find((point) => point.id === 'shot-3');
+    expect(houseOnColombiaDay?.['beanAgeLine_bean-house']).toBeNull();
+    expect(houseOnColombiaDay?.['beanAgeLine_bean-colombia']).toBe(11);
+
+    const ethiopiaFirst = enriched.find((point) => point.id === 'shot-1');
+    const ethiopiaSecond = enriched.find((point) => point.id === 'shot-5');
+    expect(ethiopiaFirst?.['beanAgeLine_bean-ethiopia']).toBe(13);
+    expect(ethiopiaSecond?.['beanAgeLine_bean-ethiopia']).toBe(16);
   });
 });

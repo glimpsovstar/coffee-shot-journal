@@ -15,6 +15,13 @@
     "src/services/labelScanOpenai.ts",
     "src/services/labelScanParse.ts",
     "src/services/labelScanRequest.ts",
+    "src/services/shotRecommendationContext.ts",
+    "src/services/shotRecommendationHeuristics.ts",
+    "src/services/shotRecommendationOpenai.ts",
+    "src/services/shotRecommendationParse.ts",
+    "src/services/shotRecommendationRequest.ts",
+    "src/services/shotRecommendationService.ts",
+    "src/services/shotRecommendationTypes.ts",
     "src/utils/beans.ts",
     "src/types/index.ts"
   ]

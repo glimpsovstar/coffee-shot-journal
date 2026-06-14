@@ -7,9 +7,11 @@ import {
   hasShotGrinder,
   hasShotRecipe,
   isCafeShot,
+  isHomeShot,
   ratio,
 } from '../utils/shots';
 import { PhotoGallery } from './PhotoGallery';
+import { ShotRecommendationPanel } from './ShotRecommendationPanel';
 import { StarRating } from './StarRating';
 import { WeatherDisplay } from './WeatherDisplay';
 
@@ -97,6 +99,9 @@ export function ShotCard({ shot, beans, cafes = [], photoItems }: ShotCardProps)
           </div>
         )}
       </dl>
+      {isHomeShot(shot) ? (
+        <ShotRecommendationPanel shot={shot} beans={beans} photoItems={photoItems} />
+      ) : null}
     </article>
   );
 }

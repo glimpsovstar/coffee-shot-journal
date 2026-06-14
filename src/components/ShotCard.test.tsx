@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { mockBeans, mockShot } from '../test/fixtures';
 import { ShotCard } from './ShotCard';
@@ -43,5 +43,23 @@ describe('ShotCard', () => {
 
     const labels = Array.from(container.querySelectorAll('dt')).map((dt) => dt.textContent);
     expect(labels).not.toContain('Tasting notes');
+  });
+
+  it('shows dial-in suggestions for home shots', () => {
+    render(<ShotCard shot={mockShot} beans={mockBeans} photoItems={[]} />);
+    expect(screen.getByRole('button', { name: 'Get dial-in suggestions' })).toBeInTheDocument();
+  });
+
+  it('hides dial-in suggestions for café shots', () => {
+    render(
+      <ShotCard
+        shot={{ ...mockShot, context: 'cafe_purchased', cafeId: 'cafe-1' }}
+        beans={mockBeans}
+        cafes={[{ id: 'cafe-1', name: 'Test Café', latitude: 0, longitude: 0, notes: '', photos: [] }]}
+        photoItems={[]}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'Get dial-in suggestions' })).not.toBeInTheDocument();
+    cleanup();
   });
 });
