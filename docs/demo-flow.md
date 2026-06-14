@@ -172,6 +172,7 @@ The script picks the user with the most journal rows as source (excluding the ta
 | Import banner keeps appearing | Cloud already has data → should not show; hard refresh after deploy; use Skip once (stored per user in local/session storage) |
 | Tab still shows Vercel favicon | Chrome caches favicons aggressively; site must serve `/favicon.ico` (not only SVG). Hard refresh or clear site data; redeploy without build cache if icon file changed on Vercel |
 | Stranger sees journal | Should not — unauthenticated users see landing / sign-in only |
+| `/test-login` or deep links 404 on Vercel | SPA rewrite — `vercel.json` must serve `index.html` for non-`/api` paths |
 
 ## Five-minute demo script (Vercel + Supabase audience)
 
