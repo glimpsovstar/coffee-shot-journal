@@ -9,6 +9,27 @@ In Supabase Dashboard → **SQL Editor**, paste and run **in order**:
 
 After both, Table Editor should list `beans`, `shots`, and `cafes`.
 
+Migrations use `drop policy if exists` before `create policy` so SQL can be re-applied safely (SQL Editor, or Supabase **Pro** preview branches).
+
+## GitHub — Supabase Preview check (optional, Pro plan)
+
+**Per-PR preview branches require Supabase Pro.** On the free plan the GitHub check shows **Skipped** — that is expected, not a failed migration.
+
+| Plan | What you get on PRs |
+|------|---------------------|
+| **Free** | Check skipped; use manual migration workflow below |
+| **Pro** | Preview branch per PR; migrations run automatically |
+
+You do **not** need Pro for production. One Supabase project + manual SQL when schema changes is enough for this app.
+
+**When you change `supabase/migrations/`:**
+
+1. Open **SQL Editor** on your production project.
+2. Run changed migration file(s) once (or twice to confirm idempotency).
+3. Merge the PR — ignore **Skipped** on Supabase Preview if Vercel is green.
+
+To stop the skipped check from appearing on every PR, disconnect GitHub branching in **Project Settings → Integrations** (your app still uses Supabase; you just lose the PR status line).
+
 ## 2. Environment variables
 
 | Variable | Where |
