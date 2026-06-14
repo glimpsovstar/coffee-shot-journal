@@ -94,8 +94,13 @@ export function parseJournalBackupFile(raw: string): JournalBackupFile {
   return parsed;
 }
 
-export function journalDataFromBackup(backup: JournalBackupFile): JournalData {
-  return { beans: backup.beans, shots: backup.shots, cafes: backup.cafes ?? [] };
+export function journalDataFromBackup(
+  backup: JournalBackupFile,
+  options?: { existingCafes?: Cafe[] },
+): JournalData {
+  const cafes =
+    backup.cafes !== undefined ? backup.cafes : (options?.existingCafes ?? []);
+  return { beans: backup.beans, shots: backup.shots, cafes };
 }
 
 export function photoBlobsFromBackup(backup: JournalBackupFile): Map<string, Blob> {
@@ -107,9 +112,13 @@ export function photoBlobsFromBackup(backup: JournalBackupFile): Map<string, Blo
 }
 
 export async function restoreJournalBackupToIndexedDb(backup: JournalBackupFile): Promise<void> {
+  const existing = await readJournalFromIndexedDb();
+  const cafes =
+    backup.cafes !== undefined ? backup.cafes : (existing?.cafes ?? []);
+
   await saveBeans(backup.beans);
   await saveShots(backup.shots);
-  await saveCafes(backup.cafes ?? []);
+  await saveCafes(cafes);
 
   for (const photo of backup.photos) {
     const blob = base64ToBlob(photo.base64, photo.mimeType);

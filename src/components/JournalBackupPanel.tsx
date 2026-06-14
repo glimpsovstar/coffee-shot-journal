@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { markCloudImportDone } from '../lib/cloudConfig';
 import { importJournalDataToCloud } from '../services/cloudImport';
+import { loadJournalFromCloud } from '../storage/supabaseJournalRepository';
 import {
   buildJournalBackupFromIndexedDb,
   downloadJournalBackupFile,
@@ -48,9 +49,10 @@ export function JournalBackupPanel({ cloudUserId, onRestored }: JournalBackupPan
       const backup = parseJournalBackupFile(text);
 
       if (cloudUserId) {
+        const cloud = await loadJournalFromCloud(cloudUserId);
         const summary = await importJournalDataToCloud(
           cloudUserId,
-          journalDataFromBackup(backup),
+          journalDataFromBackup(backup, { existingCafes: cloud.cafes }),
           photoBlobsFromBackup(backup),
         );
         markCloudImportDone(cloudUserId);

@@ -7,6 +7,7 @@ import {
   putPhotoBlob,
   readJournalFromIndexedDb,
   saveBeans,
+  saveCafes,
 } from '../storage/journalRepository';
 import {
   buildJournalBackupFromIndexedDb,
@@ -58,5 +59,33 @@ describe('journalBackup', () => {
     const blobs = photoBlobsFromBackup(parsed);
     expect(await blobs.get('photo-backup')?.text()).toBe('photo-bytes');
     expect(journalDataFromBackup(parsed).shots).toEqual([]);
+  });
+
+  it('preserves existing cafés when v1 backup omits cafes array', async () => {
+    const existingCafe = {
+      id: 'cafe-keep',
+      name: 'Keep Café',
+      latitude: -36.85,
+      longitude: 174.75,
+      notes: '',
+      photos: [],
+    };
+    await saveCafes([existingCafe]);
+
+    const v1Backup = parseJournalBackupFile(
+      JSON.stringify({
+        version: 1,
+        exportedAt: '2026-06-01T00:00:00.000Z',
+        beans: seedBeans.slice(0, 1),
+        shots: [],
+        photos: [],
+      }),
+    );
+
+    await restoreJournalBackupToIndexedDb(v1Backup);
+    const restored = await readJournalFromIndexedDb();
+    expect(restored?.cafes).toHaveLength(1);
+    expect(restored?.cafes[0]?.id).toBe('cafe-keep');
+    expect(restored?.cafes[0]?.name).toBe('Keep Café');
   });
 });

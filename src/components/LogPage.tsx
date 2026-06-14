@@ -22,7 +22,7 @@ interface LogPageProps {
   cafes: Cafe[];
   shots: Shot[];
   resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
-  onAddShot: (payload: AddShotPayload) => void;
+  onAddShot: (payload: AddShotPayload) => Promise<void>;
   onAddBean: (payload: AddBeanPayload) => void;
   onAddVisit: (payload: AddCafeVisitPayload) => Promise<Cafe>;
   onAddBeanPhotos: (beanId: string, inputs: PhotoBlobInput[]) => void;

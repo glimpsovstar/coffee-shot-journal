@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { SuburbEntry } from '../data/auNzSuburbs';
 import type { AddShotPayload, Bean, BeverageType, PhotoBlobInput } from '../types';
 import { milkCategoryForBeverage } from '../utils/drinks';
+import { formatUnknownError } from '../utils/errors';
 import { fetchWeatherAt } from '../services/weather';
 import { formatBeanChoiceLabel } from '../utils/beans';
 import { toDatetimeLocalValue } from '../utils/datetime';
@@ -17,7 +18,7 @@ import { HomeDrinkPicker } from './HomeDrinkPicker';
 
 interface AddShotFormProps {
   beans: Bean[];
-  onAddShot: (payload: AddShotPayload) => void;
+  onAddShot: (payload: AddShotPayload) => Promise<void>;
 }
 
 interface PendingPhoto extends PhotoBlobInput {
@@ -174,7 +175,7 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
         }
       }
 
-      onAddShot({
+      await onAddShot({
         shot: {
           context: 'home_pulled',
           beanId: form.beanId,
@@ -204,6 +205,8 @@ export function AddShotForm({ beans, onAddShot }: AddShotFormProps) {
       setSuburbQuery('');
       setForm(defaultHomeForm(beans));
       setStatusMessage(null);
+    } catch (err) {
+      setError(formatUnknownError(err, 'Failed to save shot.'));
     } finally {
       setSubmitting(false);
     }
