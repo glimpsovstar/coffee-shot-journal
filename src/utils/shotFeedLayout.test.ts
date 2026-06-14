@@ -3,9 +3,13 @@ import { mockShot } from '../test/fixtures';
 import { shotFeedSize } from './shotFeedLayout';
 
 describe('shotFeedSize', () => {
-  it('returns standard for every shot', () => {
-    expect(shotFeedSize({ ...mockShot, rating: 5 }, 0)).toBe('standard');
-    expect(shotFeedSize({ ...mockShot, rating: 4 }, 2)).toBe('standard');
+  it('widens early high-rated shots for bento layout', () => {
+    expect(shotFeedSize({ ...mockShot, rating: 5 }, 0)).toBe('wide');
+    expect(shotFeedSize({ ...mockShot, rating: 4 }, 2)).toBe('wide');
+    expect(shotFeedSize({ ...mockShot, rating: 4 }, 5)).toBe('standard');
+  });
+
+  it('uses standard size for lower ratings', () => {
     expect(shotFeedSize({ ...mockShot, rating: 3 }, 0)).toBe('standard');
   });
 });
