@@ -1372,7 +1372,7 @@ dl {
 
 .floating-hero--immersive .floating-hero__scroller {
   min-height: 300px;
-  padding: 1.5rem 0 2rem;
+  padding: 1.5rem 0.75rem 0.75rem;
 }
 
 .floating-hero--immersive .floating-hero__gallery {
@@ -1530,17 +1530,20 @@ dl {
   justify-content: center;
 }
 
-.floating-hero__scroller-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 30;
+.floating-hero__stage-cta {
   display: flex;
-  align-items: center;
   justify-content: center;
-  pointer-events: none;
+  padding: 0 1rem 0.35rem;
+  position: relative;
+  z-index: 30;
 }
 
-.floating-hero__scroller-overlay > * {
+.floating-hero--immersive .floating-hero__stage-cta {
+  margin-top: -0.25rem;
+  padding-bottom: 0.5rem;
+}
+
+.floating-hero__stage-cta > * {
   pointer-events: auto;
 }
 
