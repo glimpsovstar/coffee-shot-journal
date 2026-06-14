@@ -16,6 +16,7 @@ import { isTestLoginPath } from './lib/testLoginPath';
 import { formatBeanChoiceLabel } from './utils/beans';
 import { getCafeById } from './utils/cafes';
 import { getBeanById, isCafeShot, isHomeShot, sortShotsNewestFirst } from './utils/shots';
+import { startViewTransition } from './utils/viewTransition';
 
 function JournalApp({
   cloudUserId,
@@ -28,6 +29,10 @@ function JournalApp({
 }) {
   const [page, setPage] = useState<AppPage>('journal');
   const [logSection, setLogSection] = useState<LogSection>('shot');
+
+  const navigateTo = (next: AppPage) => {
+    startViewTransition(() => setPage(next));
+  };
   const {
     beans,
     shots,
@@ -49,8 +54,10 @@ function JournalApp({
   const cafeShotCount = shots.length - homeShotCount;
 
   const openLog = (section: LogSection = 'shot') => {
-    setLogSection(section);
-    setPage('log');
+    startViewTransition(() => {
+      setLogSection(section);
+      setPage('log');
+    });
   };
 
   const newestShot = sortShotsNewestFirst(shots)[0];
@@ -96,14 +103,12 @@ function JournalApp({
         />
       ) : null}
 
-      <AppNav page={page} onPageChange={setPage} />
-
       {cloudUserId ? (
         <CloudImportPrompt userId={cloudUserId} onImported={() => reloadJournal()} />
       ) : null}
 
       <div className="app-layout">
-        <main className="app-main">
+        <main className="app-main app-main--view" key={page}>
           {page === 'journal' ? (
             <ShotList
               shots={shots}
@@ -142,6 +147,8 @@ function JournalApp({
           )}
         </main>
       </div>
+
+      <AppNav page={page} onPageChange={navigateTo} />
     </div>
   );
 }

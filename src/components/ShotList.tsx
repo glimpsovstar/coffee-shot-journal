@@ -1,4 +1,5 @@
 import type { Bean, Cafe, PhotoDisplay, Shot } from '../types';
+import { shotFeedSize } from '../utils/shotFeedLayout';
 import { sortShotsNewestFirst } from '../utils/shots';
 import { ShotCard } from './ShotCard';
 
@@ -33,17 +34,21 @@ export function ShotList({
       {sorted.length === 0 ? (
         <p className="empty-state">{emptyMessage}</p>
       ) : (
-        <ul className="card-list">
-          {sorted.map((shot) => (
-            <li key={shot.id}>
-              <ShotCard
-                shot={shot}
-                beans={beans}
-                cafes={cafes}
-                photoItems={resolvePhotos(shot.photos)}
-              />
-            </li>
-          ))}
+        <ul className="shot-feed">
+          {sorted.map((shot, index) => {
+            const size = shotFeedSize(shot, index);
+            return (
+              <li key={shot.id} className={`shot-feed__item shot-feed__item--${size}`}>
+                <ShotCard
+                  shot={shot}
+                  beans={beans}
+                  cafes={cafes}
+                  photoItems={resolvePhotos(shot.photos)}
+                  size={size}
+                />
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

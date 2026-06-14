@@ -16,7 +16,7 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 - **Log tab** — home shot or **café coffee** (drink type, café picker), import past shot, bean catalogue, **café catalogue** with map
 - **Cloud journal** — when signed in on **[https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)** (Vercel), beans/shots/photos sync via **Supabase** (Google/Apple/GitHub on the landing page; optional passkey under **Account**). Local-only mode remains when Supabase env is unset.
 - **Branded landing** — coffee snob. sign-in page with logo assets in `public/branding/`; invited beta testers can use **`/test-login`** (email/password, operator-provisioned accounts)
-- **Editorial journal** — photo wave hero gallery, journal stats under the wave, past history cards, **Log** / **Analytics** / **Account** nav (bottom tabs on mobile)
+- **Editorial journal** — warm parchment palette, photo wave hero, bento shot feed, floating glass dock nav, **Log** / **Analytics** / **Account**
 
 ### Bean fields
 

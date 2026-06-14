@@ -20,9 +20,10 @@ interface ShotCardProps {
   beans: Bean[];
   cafes?: Cafe[];
   photoItems: PhotoDisplay[];
+  size?: 'featured' | 'wide' | 'standard';
 }
 
-export function ShotCard({ shot, beans, cafes = [], photoItems }: ShotCardProps) {
+export function ShotCard({ shot, beans, cafes = [], photoItems, size = 'standard' }: ShotCardProps) {
   const title = getShotCardTitle(shot, beans, cafes);
   const drinkSummary = formatDrinkSummary(shot);
   const cafeShot = isCafeShot(shot);
@@ -48,9 +49,25 @@ export function ShotCard({ shot, beans, cafes = [], photoItems }: ShotCardProps)
     shot.wouldOrderAgain !== undefined;
 
   return (
-    <article className="card shot-card">
+    <article className={`card shot-card tactile-surface shot-card--${size}`}>
+      {size === 'featured' && heroPhoto ? (
+        <div className="shot-card__banner">
+          <img
+            className="shot-card__banner-img"
+            src={heroPhoto.url}
+            alt={heroPhoto.photo.fileName}
+            loading="lazy"
+          />
+          {photoItems.length > 1 ? (
+            <span className="shot-card__thumb-count shot-card__thumb-count--banner">
+              +{photoItems.length - 1}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="shot-card__layout">
-        {heroPhoto ? (
+        {heroPhoto && size !== 'featured' ? (
           <div className="shot-card__thumb-wrap">
             <img
               className="shot-card__thumb"
