@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { Shot } from '../types';
 import {
   buildShotChartSeries,
+  buildHomeAnalyticsSeries,
   extractionRatioValue,
   formatExtractionRatioLabel,
   formatHeroRecipeLine,
   FLOATING_HERO_PHOTO_LIMIT,
   getFeaturedShotWithPhoto,
   getRecentExtractionPhotos,
+  hasContextChartData,
 } from './analytics';
 
 const baseShot: Shot = {
@@ -82,5 +84,45 @@ describe('analytics', () => {
     expect(points.map((p) => p.id)).toEqual(['b', 'a']);
     expect(points[1]?.extractionRatio).toBe(2);
     expect(points[1]?.durationSec).toBe(30);
+  });
+
+  it('builds home analytics series with bean age and humidity', () => {
+    const beans = [
+      {
+        id: 'b1',
+        name: 'Ethiopia',
+        roaster: 'Test',
+        kind: 'single_origin' as const,
+        originOrBlend: 'Ethiopia',
+        roastStyle: 'light' as const,
+        blendComponents: [],
+        roastDate: '2026-05-01',
+        purchaseDate: '2026-05-02',
+        bagSize: '250g' as const,
+        tastingNotes: '',
+        photos: [],
+      },
+    ];
+    const shots: Shot[] = [
+      {
+        ...baseShot,
+        id: 's1',
+        beanId: 'b1',
+        brewedAt: '2026-06-04T08:00:00',
+        grindSetting: '14',
+        weather: {
+          temperatureC: 18,
+          humidityPercent: 70,
+          description: 'Humid',
+          source: 'open-meteo',
+          observedAt: '2026-06-04T08:00:00.000Z',
+        },
+      },
+    ];
+    const points = buildHomeAnalyticsSeries(shots, beans);
+    expect(points[0]?.beanAgeDays).toBe(33);
+    expect(points[0]?.humidityPercent).toBe(70);
+    expect(points[0]?.grindSettingNumeric).toBe(14);
+    expect(hasContextChartData(points)).toBe(true);
   });
 });

@@ -1,5 +1,5 @@
-import type { Photo, Shot } from '../types';
-import { formatBrewedAt, hasShotRecipe, sortShotsNewestFirst } from './shots';
+import type { Bean, Photo, Shot } from '../types';
+import { formatBrewedAt, getBeanById, hasShotRecipe, isHomeShot, sortShotsNewestFirst } from './shots';
 
 /** Max extraction photos in the floating hero gallery (newest first). */
 export const FLOATING_HERO_PHOTO_LIMIT = 10;
@@ -15,6 +15,28 @@ export interface ShotChartPoint {
   brewedAt: string;
   extractionRatio: number | null;
   durationSec: number;
+}
+
+/** Home pull chart point with bean age, grind, and weather context. */
+export interface HomeAnalyticsPoint extends ShotChartPoint {
+  beanAgeDays: number | null;
+  grindSetting: string | null;
+  grindSettingNumeric: number | null;
+  humidityPercent: number | null;
+}
+
+function daysSinceRoast(roastDate: string, brewedAt: string): number | null {
+  const roast = new Date(roastDate + 'T12:00:00');
+  const brewed = new Date(brewedAt);
+  if (Number.isNaN(roast.getTime()) || Number.isNaN(brewed.getTime())) return null;
+  return Math.floor((brewed.getTime() - roast.getTime()) / 86400000);
+}
+
+export function parseGrindSettingNumeric(setting: string): number | null {
+  const trimmed = setting.trim();
+  if (!trimmed) return null;
+  const value = parseFloat(trimmed);
+  return Number.isNaN(value) ? null : value;
 }
 
 export function extractionRatioValue(doseIn: number, yieldOut: number): number | null {
@@ -86,4 +108,33 @@ export function buildShotChartSeries(shots: Shot[]): ShotChartPoint[] {
       durationSec: shot.extractionTime,
     }))
     .filter((point) => point.extractionRatio !== null || point.durationSec > 0);
+}
+
+/** Chronological home pulls with bean age, grind, and humidity for context charts. */
+export function buildHomeAnalyticsSeries(shots: Shot[], beans: Bean[]): HomeAnalyticsPoint[] {
+  const homeShots = shots.filter(isHomeShot);
+  const baseSeries = buildShotChartSeries(homeShots);
+
+  return baseSeries.map((point) => {
+    const shot = homeShots.find((item) => item.id === point.id);
+    const bean = shot ? getBeanById(beans, shot.beanId) : undefined;
+    const grindSetting = shot?.grindSetting?.trim() ? shot.grindSetting.trim() : null;
+
+    return {
+      ...point,
+      beanAgeDays: bean ? daysSinceRoast(bean.roastDate, point.brewedAt) : null,
+      grindSetting,
+      grindSettingNumeric: grindSetting ? parseGrindSettingNumeric(grindSetting) : null,
+      humidityPercent: shot?.weather?.humidityPercent ?? null,
+    };
+  });
+}
+
+export function hasContextChartData(points: HomeAnalyticsPoint[]): boolean {
+  return points.some(
+    (point) =>
+      point.beanAgeDays !== null ||
+      point.humidityPercent !== null ||
+      point.grindSettingNumeric !== null,
+  );
 }

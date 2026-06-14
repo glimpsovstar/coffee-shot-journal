@@ -47,3 +47,6 @@ export interface ShotRecommendationContext {
 
 export const SHOT_RECOMMENDATION_DISCLAIMER =
   'Suggestions are based on your logged recipe, bean age, weather, and photo analysis. Taste your espresso and adjust gradually—these are hints, not rules.';
+
+export const ANALYTICS_TREND_DISCLAIMER =
+  'Suggestions are based on logged extraction trends, bean age, grind settings, and weather when recorded. Taste your espresso and adjust gradually—these are hints, not rules.';

@@ -8,27 +8,30 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { Shot } from '../types';
+import type { Bean, Shot } from '../types';
 import {
+  buildHomeAnalyticsSeries,
   buildShotChartSeries,
   formatExtractionRatioLabel,
+  hasContextChartData,
 } from '../utils/analytics';
 import { buildAnalyticsTrendRecommendations } from '../utils/analyticsTrendRecommendations';
-import { isHomeShot } from '../utils/shots';
 import { AnalyticsDialInPanel } from './AnalyticsDialInPanel';
 
 interface AnalyticsPageProps {
   shots: Shot[];
+  beans: Bean[];
 }
 
-export function AnalyticsPage({ shots }: AnalyticsPageProps) {
+export function AnalyticsPage({ shots, beans }: AnalyticsPageProps) {
   const series = buildShotChartSeries(shots);
-  const homeChartPoints = series.filter((point) => {
-    const shot = shots.find((item) => item.id === point.id);
-    return shot ? isHomeShot(shot) : false;
-  });
+  const homeSeries = buildHomeAnalyticsSeries(shots, beans);
   const trendRecommendations =
-    homeChartPoints.length > 0 ? buildAnalyticsTrendRecommendations(homeChartPoints) : null;
+    homeSeries.length > 0 ? buildAnalyticsTrendRecommendations(homeSeries) : null;
+  const showContextChart = hasContextChartData(homeSeries);
+  const showBeanAgeLine = homeSeries.some((point) => point.beanAgeDays !== null);
+  const showHumidityLine = homeSeries.some((point) => point.humidityPercent !== null);
+  const showGrindLine = homeSeries.some((point) => point.grindSettingNumeric !== null);
 
   if (series.length === 0) {
     return (
@@ -49,7 +52,11 @@ export function AnalyticsPage({ shots }: AnalyticsPageProps) {
         Extraction ratio and shot duration over time — spot drift before taste changes.
       </p>
 
-      <div className="analytics-chart" role="img" aria-label="Line chart of extraction ratio and duration">
+      <div
+        className="analytics-chart"
+        role="img"
+        aria-label="Line chart of extraction ratio and duration"
+      >
         <ResponsiveContainer width="100%" height={360}>
           <LineChart data={series} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -129,6 +136,110 @@ export function AnalyticsPage({ shots }: AnalyticsPageProps) {
         </ResponsiveContainer>
       </div>
 
+      {showContextChart ? (
+        <div className="analytics-chart analytics-chart--context">
+          <h3 className="analytics-chart__heading">Bean age, grind &amp; humidity</h3>
+          <p className="panel__intro">
+            Context logged with home pulls — see how ageing, grind moves, and humidity line up with
+            extraction trends.
+          </p>
+          <div
+            role="img"
+            aria-label="Line chart of bean age, grind setting, and humidity"
+          >
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={homeSeries} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  yAxisId="context"
+                  orientation="left"
+                  tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                  domain={['auto', 'auto']}
+                  label={{
+                    value: 'Days / grind',
+                    angle: -90,
+                    position: 'insideLeft',
+                    fill: 'var(--text-muted)',
+                    fontSize: 11,
+                  }}
+                />
+                <YAxis
+                  yAxisId="humidity"
+                  orientation="right"
+                  tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                  unit="%"
+                  domain={[0, 100]}
+                  label={{
+                    value: 'Humidity',
+                    angle: 90,
+                    position: 'insideRight',
+                    fill: 'var(--text-muted)',
+                    fontSize: 11,
+                  }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                  }}
+                  formatter={(value, name) => {
+                    if (name === 'Bean age (days)') return [`${value}d`, name];
+                    if (name === 'Humidity') return [`${value}%`, name];
+                    if (name === 'Grind setting') return [String(value), name];
+                    return [String(value), name];
+                  }}
+                />
+                <Legend />
+                {showBeanAgeLine ? (
+                  <Line
+                    yAxisId="context"
+                    type="monotone"
+                    dataKey="beanAgeDays"
+                    name="Bean age (days)"
+                    stroke="var(--accent)"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    connectNulls
+                  />
+                ) : null}
+                {showGrindLine ? (
+                  <Line
+                    yAxisId="context"
+                    type="monotone"
+                    dataKey="grindSettingNumeric"
+                    name="Grind setting"
+                    stroke="var(--accent-dark)"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    connectNulls
+                  />
+                ) : null}
+                {showHumidityLine ? (
+                  <Line
+                    yAxisId="humidity"
+                    type="monotone"
+                    dataKey="humidityPercent"
+                    name="Humidity"
+                    stroke="#6b8f71"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    connectNulls
+                  />
+                ) : null}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ) : null}
+
       {trendRecommendations ? (
         <section
           className="analytics-recommendations"
@@ -136,7 +247,8 @@ export function AnalyticsPage({ shots }: AnalyticsPageProps) {
         >
           <h3 id="analytics-recommendations-heading">Dial-in suggestions</h3>
           <p className="panel__intro">
-            Based on extraction ratio and duration trends in the chart above (home pulls).
+            Based on extraction, bean age, grind, and humidity trends in the charts above (home
+            pulls).
           </p>
           <AnalyticsDialInPanel result={trendRecommendations} />
         </section>

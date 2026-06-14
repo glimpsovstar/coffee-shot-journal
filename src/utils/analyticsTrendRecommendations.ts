@@ -1,15 +1,17 @@
+import { ANALYTICS_TREND_DISCLAIMER } from '../services/shotRecommendationTypes';
 import type {
   ShotRecommendationResult,
   ShotRecommendationSuggestion,
 } from '../services/shotRecommendationTypes';
-import { SHOT_RECOMMENDATION_DISCLAIMER } from '../services/shotRecommendationTypes';
-import type { ShotChartPoint } from './analytics';
+import type { HomeAnalyticsPoint } from './analytics';
 import { formatExtractionRatioLabel } from './analytics';
 
 const RATIO_DRIFT_THRESHOLD = 0.15;
 const DURATION_DRIFT_THRESHOLD = 4;
 const RATIO_STD_THRESHOLD = 0.2;
 const DURATION_STD_THRESHOLD = 3;
+const HUMIDITY_DRIFT_THRESHOLD = 12;
+const GRIND_CHANGE_THRESHOLD = 0.3;
 
 function average(values: number[]): number {
   return values.reduce((sum, v) => sum + v, 0) / values.length;
@@ -22,9 +24,133 @@ function standardDeviation(values: number[]): number {
   return Math.sqrt(variance);
 }
 
-/** Dial-in hints from chart trend data (ratio + duration over time). */
+function buildContextSuggestions(points: HomeAnalyticsPoint[]): ShotRecommendationSuggestion[] {
+  const suggestions: ShotRecommendationSuggestion[] = [];
+
+  for (let index = 1; index < points.length; index += 1) {
+    const prev = points[index - 1]!;
+    const curr = points[index]!;
+    const grindChanged =
+      (prev.grindSettingNumeric !== null &&
+        curr.grindSettingNumeric !== null &&
+        Math.abs(curr.grindSettingNumeric - prev.grindSettingNumeric) >= GRIND_CHANGE_THRESHOLD) ||
+      (prev.grindSetting &&
+        curr.grindSetting &&
+        prev.grindSetting !== curr.grindSetting &&
+        (prev.grindSettingNumeric === null || curr.grindSettingNumeric === null));
+
+    if (!grindChanged) continue;
+
+    const grindLabel =
+      prev.grindSettingNumeric !== null && curr.grindSettingNumeric !== null
+        ? `${prev.grindSettingNumeric} → ${curr.grindSettingNumeric}`
+        : `${prev.grindSetting ?? '?'} → ${curr.grindSetting ?? '?'}`;
+
+    let detail = `Grind setting changed (${grindLabel}) between ${prev.label} and ${curr.label}.`;
+    if (
+      prev.extractionRatio !== null &&
+      curr.extractionRatio !== null &&
+      Math.abs(curr.extractionRatio - prev.extractionRatio) > 0.1
+    ) {
+      detail += ` Ratio moved from ${formatExtractionRatioLabel(prev.extractionRatio)} to ${formatExtractionRatioLabel(curr.extractionRatio)}—compare taste on those two pulls before chasing other variables.`;
+    } else if (Math.abs(curr.durationSec - prev.durationSec) >= 3) {
+      detail += ` Shot time shifted from ${prev.durationSec}s to ${curr.durationSec}s—note whether the grind change was intentional.`;
+    } else {
+      detail += ' Track whether the next pulls settle after this grind change.';
+    }
+
+    suggestions.push({
+      area: 'grind_change',
+      title: 'Grind setting changed',
+      detail,
+      priority: 'medium',
+    });
+  }
+
+  const beanAges = points
+    .map((point) => point.beanAgeDays)
+    .filter((value): value is number => value !== null);
+  const ratioValues = points
+    .map((point) => point.extractionRatio)
+    .filter((value): value is number => value !== null);
+
+  if (beanAges.length >= 2 && ratioValues.length >= 2) {
+    const ageDelta = beanAges[beanAges.length - 1]! - beanAges[0]!;
+    const ratioDelta = ratioValues[ratioValues.length - 1]! - ratioValues[0]!;
+    if (ageDelta >= 14 && ratioDelta < -RATIO_DRIFT_THRESHOLD) {
+      suggestions.push({
+        area: 'bean_age_trend',
+        title: 'Beans aged as ratio fell',
+        detail: `Bean age rose about ${ageDelta} days while extraction ratio trended down (${formatExtractionRatioLabel(ratioValues[0]!)} → ${formatExtractionRatioLabel(ratioValues[ratioValues.length - 1]!)}). Older coffee often needs a finer grind—staleness can taste flat or dry before bitterness shows.`,
+        priority: 'medium',
+      });
+    }
+    const latestAge = beanAges[beanAges.length - 1]!;
+    if (latestAge < 4 && standardDeviation(ratioValues) > RATIO_STD_THRESHOLD) {
+      suggestions.push({
+        area: 'bean_age_fresh',
+        title: 'Very fresh beans with variable shots',
+        detail: `Latest pulls are only ${latestAge} day(s) off roast with inconsistent ratios on the chart. Fresh coffee can be gassy—expect dial-in swings until the bag rests a few more days.`,
+        priority: 'low',
+      });
+    }
+    if (latestAge > 40) {
+      suggestions.push({
+        area: 'bean_age_stale',
+        title: 'Older roast on latest pulls',
+        detail: `Your most recent charted pull used beans about ${latestAge} days off roast. If flavour is muted, a slightly finer grind or fresher bag may help more than chasing time alone.`,
+        priority: 'medium',
+      });
+    }
+  }
+
+  const humidityValues = points
+    .map((point) => point.humidityPercent)
+    .filter((value): value is number => value !== null);
+  const durationValues = points
+    .filter((point) => point.durationSec > 0)
+    .map((point) => point.durationSec);
+
+  if (humidityValues.length >= 2 && durationValues.length >= 2) {
+    const humidityDelta = humidityValues[humidityValues.length - 1]! - humidityValues[0]!;
+    const durationDelta = durationValues[durationValues.length - 1]! - durationValues[0]!;
+
+    if (humidityDelta > HUMIDITY_DRIFT_THRESHOLD && durationDelta > DURATION_DRIFT_THRESHOLD) {
+      suggestions.push({
+        area: 'humidity_duration',
+        title: 'Humidity rose with longer shots',
+        detail: `Humidity climbed about ${humidityDelta}% while shot times lengthened across the chart. Moist air can slow flow—consider a slightly coarser grind or better chute cleaning on humid days.`,
+        priority: 'medium',
+      });
+    }
+
+    const avgHumidity = average(humidityValues);
+    if (avgHumidity > 75 && standardDeviation(durationValues) > DURATION_STD_THRESHOLD) {
+      suggestions.push({
+        area: 'humidity_variance',
+        title: 'Humid sessions with inconsistent times',
+        detail: `Logged humidity averaged ${avgHumidity.toFixed(0)}% with variable shot durations. High humidity often makes grounds clump—wipe the grinder chute and expect to grind slightly coarser than on dry days.`,
+        priority: 'low',
+      });
+    }
+
+    const lowHumidity = humidityValues.filter((value) => value < 30);
+    if (lowHumidity.length >= 2 && standardDeviation(durationValues) > DURATION_STD_THRESHOLD) {
+      suggestions.push({
+        area: 'humidity_dry',
+        title: 'Dry air with inconsistent times',
+        detail: 'Several pulls were logged below 30% humidity with varying shot times. Very dry air increases static and retention—consistent dosing helps more than large grind moves.',
+        priority: 'low',
+      });
+    }
+  }
+
+  return suggestions;
+}
+
+/** Dial-in hints from chart trends (ratio, duration, bean age, grind, humidity). */
 export function buildAnalyticsTrendRecommendations(
-  points: ShotChartPoint[],
+  points: HomeAnalyticsPoint[],
 ): ShotRecommendationResult {
   const suggestions: ShotRecommendationSuggestion[] = [];
   const warnings: string[] = [];
@@ -34,7 +160,7 @@ export function buildAnalyticsTrendRecommendations(
       summary: 'No home pulls with chart data yet.',
       suggestions: [],
       warnings,
-      disclaimer: SHOT_RECOMMENDATION_DISCLAIMER,
+      disclaimer: ANALYTICS_TREND_DISCLAIMER,
     };
   }
 
@@ -48,10 +174,17 @@ export function buildAnalyticsTrendRecommendations(
   if (points.length === 1) {
     const point = points[0]!;
     if (point.extractionRatio !== null) {
+      const contextParts: string[] = [];
+      if (point.beanAgeDays !== null) contextParts.push(`${point.beanAgeDays}d off roast`);
+      if (point.humidityPercent !== null) contextParts.push(`${point.humidityPercent}% humidity`);
+      if (point.grindSetting) contextParts.push(`grind ${point.grindSetting}`);
+      const contextSuffix =
+        contextParts.length > 0 ? ` Context: ${contextParts.join(', ')}.` : '';
+
       suggestions.push({
         area: 'snapshot',
         title: 'Latest pull snapshot',
-        detail: `Your pull charted at ${formatExtractionRatioLabel(point.extractionRatio)} over ${point.durationSec}s (${point.label}). Log a few more home pulls to see drift and consistency hints here.`,
+        detail: `Your pull charted at ${formatExtractionRatioLabel(point.extractionRatio)} over ${point.durationSec}s (${point.label}).${contextSuffix} Log more home pulls to see drift and consistency hints here.`,
         priority: 'low',
       });
     } else if (point.durationSec > 0) {
@@ -67,7 +200,7 @@ export function buildAnalyticsTrendRecommendations(
       summary: 'One point on the chart so far—snapshot below. More pulls unlock trend analysis.',
       suggestions,
       warnings,
-      disclaimer: SHOT_RECOMMENDATION_DISCLAIMER,
+      disclaimer: ANALYTICS_TREND_DISCLAIMER,
     };
   }
 
@@ -97,7 +230,7 @@ export function buildAnalyticsTrendRecommendations(
       suggestions.push({
         area: 'consistency_ratio',
         title: 'Ratios vary pull to pull',
-        detail: `Extraction ratios swing by about ${ratioStd.toFixed(1)} on this chart. Check dose consistency, puck prep, and whether bean or grind setting changed between sessions.`,
+        detail: `Extraction ratios swing by about ${ratioStd.toFixed(1)} on this chart. Check dose consistency, puck prep, and whether bean, grind, or humidity changed between sessions.`,
         priority: 'medium',
       });
     }
@@ -129,7 +262,7 @@ export function buildAnalyticsTrendRecommendations(
       suggestions.push({
         area: 'consistency_duration',
         title: 'Durations are inconsistent',
-        detail: `Shot times vary by about ${durationStd.toFixed(0)}s across pulls. Inconsistent timing often traces to distribution, tamping, or grinder retention rather than a single grind tweak.`,
+        detail: `Shot times vary by about ${durationStd.toFixed(0)}s across pulls. Inconsistent timing often traces to distribution, tamping, grinder retention, or humid/dry weather rather than a single grind tweak.`,
         priority: 'medium',
       });
     }
@@ -156,15 +289,17 @@ export function buildAnalyticsTrendRecommendations(
     }
   }
 
+  suggestions.push(...buildContextSuggestions(points));
+
   const summary =
     suggestions.length > 0
-      ? `Found ${suggestions.length} pattern(s) in ratio and duration trends from the chart above.`
-      : 'Ratio and duration look steady across your logged pulls—no strong drift or inconsistency in the chart data.';
+      ? `Found ${suggestions.length} pattern(s) in extraction, bean age, grind, and weather trends from the charts above.`
+      : 'Extraction, bean age, grind, and humidity look steady across your logged pulls—no strong drift or inconsistency in the chart data.';
 
   return {
     summary,
     suggestions,
     warnings,
-    disclaimer: SHOT_RECOMMENDATION_DISCLAIMER,
+    disclaimer: ANALYTICS_TREND_DISCLAIMER,
   };
 }
