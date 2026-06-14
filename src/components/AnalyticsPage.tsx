@@ -8,18 +8,24 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { Shot } from '../types';
+import type { Bean, PhotoDisplay, Shot } from '../types';
 import {
   buildShotChartSeries,
   formatExtractionRatioLabel,
+  getLatestChartableHomeShot,
 } from '../utils/analytics';
+import { formatBrewedAt } from '../utils/shots';
+import { ShotRecommendationPanel } from './ShotRecommendationPanel';
 
 interface AnalyticsPageProps {
   shots: Shot[];
+  beans: Bean[];
+  resolvePhotos: (photos: Shot['photos']) => PhotoDisplay[];
 }
 
-export function AnalyticsPage({ shots }: AnalyticsPageProps) {
+export function AnalyticsPage({ shots, beans, resolvePhotos }: AnalyticsPageProps) {
   const series = buildShotChartSeries(shots);
+  const recommendationShot = getLatestChartableHomeShot(shots);
 
   if (series.length === 0) {
     return (
@@ -119,6 +125,24 @@ export function AnalyticsPage({ shots }: AnalyticsPageProps) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {recommendationShot ? (
+        <section
+          className="analytics-recommendations"
+          aria-labelledby="analytics-recommendations-heading"
+        >
+          <h3 id="analytics-recommendations-heading">Dial-in suggestions</h3>
+          <p className="panel__intro">
+            Based on your most recent home pull in this chart (
+            {formatBrewedAt(recommendationShot.brewedAt)}).
+          </p>
+          <ShotRecommendationPanel
+            shot={recommendationShot}
+            beans={beans}
+            photoItems={resolvePhotos(recommendationShot.photos)}
+          />
+        </section>
+      ) : null}
     </section>
   );
 }

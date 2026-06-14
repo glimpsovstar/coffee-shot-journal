@@ -1217,7 +1217,14 @@ dl {
 }
 
 .analytics-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   max-width: 100%;
+}
+
+.analytics-recommendations {
+  margin-top: 0.5rem;
 }
 
 .analytics-chart {

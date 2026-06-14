@@ -7,6 +7,7 @@ import {
   formatHeroRecipeLine,
   FLOATING_HERO_PHOTO_LIMIT,
   getFeaturedShotWithPhoto,
+  getLatestChartableHomeShot,
   getRecentExtractionPhotos,
 } from './analytics';
 
@@ -82,5 +83,21 @@ describe('analytics', () => {
     expect(points.map((p) => p.id)).toEqual(['b', 'a']);
     expect(points[1]?.extractionRatio).toBe(2);
     expect(points[1]?.durationSec).toBe(30);
+  });
+
+  it('returns newest chartable home shot for recommendations', () => {
+    const cafeShot: Shot = {
+      ...baseShot,
+      id: 'cafe',
+      context: 'cafe_purchased',
+      cafeId: 'c1',
+      brewedAt: '2026-06-05T08:00:00',
+    };
+    const olderHome: Shot = { ...baseShot, id: 'home-old', brewedAt: '2026-06-01T08:00:00' };
+    const newerHome: Shot = { ...baseShot, id: 'home-new', brewedAt: '2026-06-04T08:00:00' };
+
+    expect(
+      getLatestChartableHomeShot([cafeShot, olderHome, newerHome])?.id,
+    ).toBe('home-new');
   });
 });
