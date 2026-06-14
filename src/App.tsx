@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnalyticsPage } from './components/AnalyticsPage';
 import { AuthScreen } from './components/AuthScreen';
+import { TestLoginScreen } from './components/TestLoginScreen';
 import { CloudImportPrompt } from './components/CloudImportPrompt';
 import { EditorialHeader } from './components/EditorialHeader';
 import { FloatingShotHero } from './components/FloatingShotHero';
@@ -11,6 +12,7 @@ import { LogPage, type LogSection } from './components/LogPage';
 import { ShotList } from './components/ShotList';
 import { useAuth } from './hooks/useAuth';
 import { useJournal } from './hooks/useJournal';
+import { isTestLoginPath } from './lib/testLoginPath';
 import { formatBeanChoiceLabel } from './utils/beans';
 import { getCafeById } from './utils/cafes';
 import { getBeanById, isCafeShot, sortShotsNewestFirst } from './utils/shots';
@@ -167,6 +169,13 @@ function JournalApp({
 
 function App() {
   const auth = useAuth();
+  const onTestLoginPath = isTestLoginPath();
+
+  useEffect(() => {
+    if (auth.session && onTestLoginPath) {
+      window.location.replace('/');
+    }
+  }, [auth.session, onTestLoginPath]);
 
   if (auth.cloudEnabled && auth.loading) {
     return (
@@ -177,6 +186,15 @@ function App() {
   }
 
   if (auth.cloudEnabled && !auth.session) {
+    if (onTestLoginPath) {
+      return (
+        <TestLoginScreen
+          error={auth.error}
+          onSignInWithPassword={auth.signInWithPassword}
+        />
+      );
+    }
+
     return (
       <AuthScreen
         error={auth.error}

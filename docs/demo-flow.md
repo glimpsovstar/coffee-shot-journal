@@ -108,6 +108,47 @@ No magic link, password, or recovery codes in the app.
 
 Validate **V-1** through **V-4** in the design spec (phone add → laptop sees data; RLS; label scan).
 
+### 3f — Beta testers (temporary email/password page)
+
+For invited testers while sign-ups stay disabled:
+
+1. Supabase → **Authentication → Providers** → enable **Email** (password on; public sign-ups still **off**).
+2. **Authentication → Users** → **Add user** with email + password (**Auto confirm**).
+3. Clone your cloud journal into the test user (beans/shots/cafes + `journal-photos` storage) — see **Clone journal to test user** below.
+4. Share **`https://coffeesnob.withdevo.net/test-login`** plus credentials (not linked from the public landing page).
+5. Tester signs in → redirected to **`/`** → normal journal (same session, same domain).
+6. Remove `/test-login` when beta ends ([#61](https://github.com/glimpsovstar/coffee-shot-journal/issues/61)).
+
+**Auto-confirm:** when you **Add user** in the dashboard, enable **Auto Confirm User** (or confirm the user manually). Without that, email/password sign-in returns an error even with the right password.
+
+#### Clone journal to test user (operator script)
+
+From this repo, with Supabase **service role** / **secret** key (Dashboard → Project Settings → API — never commit):
+
+```bash
+vercel env pull .env.vercel.clone --environment=production --yes
+cp .env.clone.local.example .env.clone.local
+# Edit .env.clone.local — paste secret key (sb_secret_…) from Supabase Dashboard → API
+npm run clone-journal -- --from-env .env.vercel.clone --target test@withdevo.net
+rm -f .env.vercel.clone
+```
+
+`vercel env pull` leaves **sensitive** keys empty (`SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`). The script auto-loads `.env.clone.local` for the secret key.
+
+Use `--from-env` (not `--env-file` — Node 25 treats `--env-file` as its own flag).
+
+Or set env vars manually:
+
+```bash
+export SUPABASE_URL='https://<ref>.supabase.co'
+export SUPABASE_SECRET_KEY='sb_secret_…'
+npm run clone-journal -- --target test@withdevo.net
+# optional: --source your-operator@gmail.com
+# inspect:  npm run clone-journal -- --dry-run --from-env .env.vercel.clone
+```
+
+The script picks the user with the most journal rows as source (excluding the target), replaces the target’s cloud data with a copy, and duplicates `journal-photos` storage files. Bean, shot, and café **row ids are regenerated** (Postgres primary key is global per `id`, not per user).
+
 ---
 
 ## P4 — iOS (later)

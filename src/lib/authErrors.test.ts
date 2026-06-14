@@ -20,4 +20,10 @@ describe('formatAuthErrorMessage', () => {
       /No passkey found/,
     );
   });
+
+  it('explains invalid email/password credentials', () => {
+    expect(formatAuthErrorMessage(new Error('Invalid login credentials'))).toMatch(
+      /Email or password is incorrect/,
+    );
+  });
 });
