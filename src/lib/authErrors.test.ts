@@ -20,4 +20,17 @@ describe('formatAuthErrorMessage', () => {
       /No passkey found/,
     );
   });
+
+  it('explains unable to exchange external code', () => {
+    expect(
+      formatAuthErrorMessage(new Error('Unable to exchange external code: 4/0A')),
+    ).toMatch(/same.*Google OAuth client/i);
+  });
+
+  it('explains signup_disabled from Supabase', () => {
+    const error = new Error('Signups not allowed for this instance', {
+      cause: new Error('signup_disabled'),
+    });
+    expect(formatAuthErrorMessage(error)).toMatch(/Enable sign-ups/i);
+  });
 });

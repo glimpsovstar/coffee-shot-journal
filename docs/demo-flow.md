@@ -66,7 +66,7 @@ P5:         Product backlog (filters, charts, export enhancements)
 | Setting | Value |
 |---------|--------|
 | **Site URL** | `https://coffeesnob.withdevo.net` |
-| **Redirect URLs** | `https://coffeesnob.withdevo.net` (add preview URLs if needed) |
+| **Redirect URLs** | `https://coffeesnob.withdevo.net/**` (required). For **Vercel preview** sign-in, also add `https://*.vercel.app/**` or the exact preview URL shown on the login screen (e.g. `https://your-preview.vercel.app/**`). |
 | **Relying Party ID** | `withdevo.net` (bare domain — do not change after enrollment) |
 | **Relying Party name** | e.g. `coffee snob.` |
 | **Allowed origins** | `https://coffeesnob.withdevo.net` only (localhost is incompatible with RP ID `withdevo.net`) |
@@ -124,6 +124,7 @@ Validate **V-1** through **V-4** in the design spec (phone add → laptop sees d
 |-------|--------|
 | Domain not resolving | DNS propagation; Vercel domain config |
 | Google login `missing OAuth secret` | Supabase → Auth → Providers → Google → paste **Client secret** from Google Cloud (not just Client ID) |
+| Google login `signup_disabled` / signups not allowed | Supabase → Auth → enable **Sign ups** (or create user in Authentication → Users first) |
 | Passkey / QR fails | Relying Party ID = `withdevo.net`; origins include prod URL; hybrid transport not stripped |
 | Label scan 401/500 | Vercel function logs; `OPENAI_API_KEY` set in Production |
 | Data not syncing | Supabase RLS policies; signed-in `auth.uid()` matches row `user_id` |

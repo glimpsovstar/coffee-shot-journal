@@ -828,6 +828,37 @@ dl {
   color: var(--text-muted);
 }
 
+.auth-panel__preview-notice {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.auth-panel__preview-notice strong {
+  color: var(--text);
+}
+
+.auth-panel__preview-notice p {
+  margin: 0.5rem 0 0;
+}
+
+.auth-panel__preview-notice p:first-of-type {
+  margin-top: 0.35rem;
+}
+
+.auth-panel__preview-url {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.auth-panel__preview-url code {
+  word-break: break-all;
+}
+
 .auth-panel__divider {
   display: flex;
   align-items: center;

@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { formatAuthErrorMessage } from '../lib/authErrors';
 import { OAUTH_PROVIDERS, type OAuthProviderId } from '../lib/oauthProviders';
-import { isPasskeyOriginSupported, PASSKEY_APP_ORIGIN } from '../lib/passkeyOrigin';
+import {
+  isPasskeyOriginSupported,
+  isVercelPreviewHost,
+  PASSKEY_APP_ORIGIN,
+  supabaseRedirectAllowlistEntry,
+} from '../lib/passkeyOrigin';
 import { BrandedLogo } from './BrandedLogo';
 
 interface AuthScreenProps {
@@ -67,6 +72,24 @@ export function AuthScreen({
             New here? Pick a provider below to create your journal. Returning users can use the same
             button or a passkey.
           </p>
+
+          {isVercelPreviewHost() ? (
+            <div className="auth-panel__preview-notice" role="note">
+              <strong>Vercel preview</strong>
+              <p>
+                Google sign-in on this URL only works if Supabase allows it. In{' '}
+                <strong>Authentication → URL Configuration → Redirect URLs</strong>, add:
+              </p>
+              <p className="auth-panel__preview-url">
+                <code>{supabaseRedirectAllowlistEntry()}</code>
+              </p>
+              <p>
+                Or sign in on{' '}
+                <a href={PASSKEY_APP_ORIGIN}>{PASSKEY_APP_ORIGIN}</a> (recommended). Passkeys are not
+                supported on preview URLs.
+              </p>
+            </div>
+          ) : null}
 
           <div className="oauth-buttons">
             {OAUTH_PROVIDERS.map((provider) => (
