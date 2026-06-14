@@ -1,10 +1,10 @@
 # Coffee Shot Journal — handoff & resume guide
 
-**Paused:** June 2026 (active development on other projects).  
+**Status:** **PARKED** — no active development (June 2026).  
 **Production:** [https://coffeesnob.withdevo.net](https://coffeesnob.withdevo.net)  
-**Repo:** `glimpsovstar/coffee-shot-journal` · default branch `main` (protected; merge via PR)
+**Repo:** [glimpsovstar/coffee-shot-journal](https://github.com/glimpsovstar/coffee-shot-journal) · `main` (protected; merge via PR)
 
-Use this doc when returning to the project after a break.
+Start here when you pick the project up again.
 
 ---
 
@@ -12,29 +12,53 @@ Use this doc when returning to the project after a break.
 
 1. `git checkout main && git pull origin main`
 2. `npm install`
-3. `npm run test:run` — expect **218+** tests green (see [Test map](#test-map) below)
+3. `npm run test:run` — expect **226** tests green ([test map](#test-map))
 4. `npm run build`
-5. Optional local cloud: copy `.env.example` → `.env.local` (Supabase + optional `VITE_GOOGLE_MAPS_API_KEY`)
-6. `npm run dev` → sign in or use `/test-login` on beta
-7. Read [Next work](#next-work-prioritized) and pick an issue or spec
+5. Optional: `.env.example` → `.env.local` (Supabase, optional `VITE_GOOGLE_MAPS_API_KEY`)
+6. `npm run dev` or test on prod with `/test-login`
+7. Read [Next work](#next-work-prioritized) and open/close GitHub issues as needed
 
-**Operator runbook:** [`docs/demo-flow.md`](docs/demo-flow.md)  
+**Operator runbook:** [`docs/demo-flow.md`](demo-flow.md)  
 **Architecture:** [`constitution.md`](constitution.md)
 
 ---
 
-## What shipped before pause
+## Production snapshot (at park)
 
-| Area | Status | Notes |
-|------|--------|--------|
-| Vercel + Supabase cloud journal | ✓ | OAuth, passkey optional, RLS |
-| Label scan + dial-in API | ✓ | `/api/label-scan`, `/api/shot-recommendations` |
-| Editorial UI + bento feed | ✓ | Hero wave, FAB dock, compact cards |
-| Café visits (one-step form) | ✓ | Places autocomplete, photos, weather |
-| Café → Google Maps (Phase 1) | ✓ | KML export, map preview, Open in Google Maps ([#76](https://github.com/glimpsovstar/coffee-shot-journal/pull/76)) |
-| In-app café map (Phase 2) | **Not started** | Spec: [`2026-06-14-cafe-google-maps-export-design.md`](superpowers/specs/2026-06-14-cafe-google-maps-export-design.md) § Phase 2 |
+| Item | Detail |
+|------|--------|
+| **URL** | https://coffeesnob.withdevo.net |
+| **Hosting** | Vercel (auto-deploy from `main`) |
+| **Data** | Supabase Postgres + Storage + Auth |
+| **Beta login** | `/test-login` → `test@withdevo.net` (journal cloned from operator account) |
+| **Tests on `main`** | 226 (`npm run test:run`) |
 
-Recent merged PR themes: interaction layer (#69), bento grid (#71–#73), hero CTA center (#74), café KML (#76).
+**Clone test journal again** (operator): see `docs/demo-flow.md` § Clone journal to test user — needs `.env.clone.local` + `npm run clone-journal`.
+
+---
+
+## What shipped (session summary)
+
+| Area | Status | PR / notes |
+|------|--------|------------|
+| Interaction layer (FAB, flavor dial, bento feed) | ✓ | #69–#73 |
+| Hero **Log a shot** on extraction wave | ✓ | #74, #79 (bottom-centre + spacing) |
+| Café → Google Maps Phase 1 (KML, deep links) | ✓ | #76 |
+| Handoff doc + café map tests | ✓ | #77 |
+| Vercel `tsc` build fix (journalCloneRemap) | ✓ | #78 |
+| Journal clone script (global id remap) | ✓ | on `main` |
+| In-app café map (Phase 2) | **Not started** | [`2026-06-14-cafe-google-maps-export-design.md`](superpowers/specs/2026-06-14-cafe-google-maps-export-design.md) |
+
+---
+
+## Open when parked (optional cleanup)
+
+| Item | Notes |
+|------|--------|
+| [PR #60](https://github.com/glimpsovstar/coffee-shot-journal/pull/60) | OAuth error copy — stale branch; review or close before merge |
+| [Issue #75](https://github.com/glimpsovstar/coffee-shot-journal/issues/75) | Café Google Maps — close if Phase 1 acceptance is done |
+
+No known production blockers after #78 (build) and #79 (hero CTA).
 
 ---
 
@@ -42,46 +66,44 @@ Recent merged PR themes: interaction layer (#69), bento grid (#71–#73), hero C
 
 | Priority | Item | Where to start |
 |----------|------|----------------|
-| **P1** | In-app **My café map** page (pins, stars, reviews) | New spec slice or Phase 2 in café-maps design → `writing-plans` |
-| **P2** | KML export nudge when journal changed since last export | `cafeMapKml.ts` + localStorage timestamp |
-| **P3** | README “later” items: filters, CSV export, edit/retire beans | GitHub issues per `sdlc-for-features` |
-| **P4** | iOS client (program P4) | [`vercel-supabase-single-user-design.md`](superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md) |
+| **P1** | In-app **My café map** (pins, stars, reviews) | Phase 2 in café-maps design spec → `writing-plans` |
+| **P2** | KML export nudge when journal changed | `cafeMapKml.ts` + localStorage |
+| **P3** | README backlog: filters, CSV export, edit beans | GitHub issues per SDLC |
+| **P4** | iOS client | `vercel-supabase-single-user-design.md` |
 
-**Parked permanently (unless program pivots):** AWS / ECS / Vault path — see `constitution.md` § Parked.
+**Parked permanently:** AWS / ECS / Vault — `constitution.md` § Parked.
 
 ---
 
 ## Test map
 
-Run: `npm run test:run`
+```bash
+npm run test:run
+```
 
 | Feature / module | Test file(s) |
 |------------------|--------------|
 | Café KML export | `src/utils/cafeMapKml.test.ts` |
 | Google Maps URLs | `src/lib/mapsConfig.test.ts` |
+| Journal clone remap | `src/utils/journalCloneRemap.test.ts` |
 | Add café visit form | `src/components/AddCafeForm.test.tsx` |
 | Backup + KML button | `src/components/JournalBackupPanel.test.tsx` |
-| Café catalogue shell | `src/components/CafeCatalogue.test.tsx` |
-| Log café coffee | `src/components/LogCafeCoffeeForm.test.tsx` |
-| Google Places service | `src/services/googlePlaces.test.ts` |
-| Journal clone remap | `src/utils/journalCloneRemap.test.ts`, `src/utils/journalCloneRemap.ts` |
-| Journal / cloud / backup | `src/hooks/useJournal.test.ts`, `src/utils/journalBackup.test.ts` |
-| Shot feed / cards | `src/components/ShotCard.test.tsx`, `src/utils/shotFeedLayout.test.ts` |
 | Hero / journal shell | `src/components/JournalHero.test.tsx`, `src/App.test.tsx` |
+| Journal / cloud | `src/hooks/useJournal.test.ts`, `src/utils/journalBackup.test.ts` |
 
-**Adding behavior:** extend the matching test file; follow `.cursor/rules/require-tests.mdc`.  
-**Fixtures:** `src/test/fixtures.ts` (`mockBeans`, `mockCafe`, `mockShot`, …).
+**Fixtures:** `src/test/fixtures.ts` (`mockBeans`, `mockCafe`, `mockShot`).
 
 ---
 
-## Key product flows (manual smoke)
+## Key smoke flows
 
 | Flow | Path |
 |------|------|
-| Log home shot | Journal → FAB / Log → Home shot |
-| Log café visit | Log → Café → pick Places name → map preview → Save visit → Open in Google Maps |
-| Export café map | Backup & restore → Download café map (KML) → import in Google My Maps |
-| Cloud sync | Sign in on prod → add shot → second device same account |
+| Log home shot | Journal → FAB or Log → Home shot |
+| Extraction wave CTA | Journal hero → **Log a shot** below photo row |
+| Log café visit | Log → Café → Places → Save → Open in Google Maps |
+| Export café map | Backup & restore → Download café map (KML) |
+| Test account | `/test-login` |
 
 ---
 
@@ -89,26 +111,24 @@ Run: `npm run test:run`
 
 | Doc | Purpose |
 |-----|---------|
-| [`README.md`](../../README.md) | User-facing features, quick start, testing |
-| [`constitution.md`](../../constitution.md) | Platform direction, phases |
-| [`demo-flow.md`](demo-flow.md) | Vercel, Supabase, OAuth, KML on Google Maps |
+| [`README.md`](../../README.md) | Features, quick start |
+| [`constitution.md`](../../constitution.md) | Platform direction |
+| [`demo-flow.md`](demo-flow.md) | Vercel, Supabase, OAuth, clone, KML |
 | [`superpowers/specs/`](superpowers/specs/) | Approved designs |
-| [`superpowers/plans/`](superpowers/plans/) | Implementation plans |
-| [`.prompts-history.md`](../../.prompts-history.md) | AI prompt log (demo workflow) |
 | [`CONTRIBUTING.md`](../../CONTRIBUTING.md) | Issue → branch → PR |
 
 ---
 
 ## Environment (production)
 
-| Variable | Where | Purpose |
-|----------|-------|---------|
-| `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | Vercel | Cloud journal |
-| `OPENAI_API_KEY` | Vercel (server) | Label scan, dial-in API |
-| `VITE_GOOGLE_MAPS_API_KEY` | Vercel | Places autocomplete, map embed, KML-friendly coords |
+| Variable | Purpose |
+|----------|---------|
+| `VITE_SUPABASE_*` | Cloud journal |
+| `OPENAI_API_KEY` | Label scan, dial-in API (server) |
+| `VITE_GOOGLE_MAPS_API_KEY` | Places, map embed |
 
-See `.env.example` for local names.
+See `.env.example` and `.env.clone.local.example` for local operator scripts.
 
 ---
 
-*Update the “What shipped” table and “Paused” date when you resume or ship again.*
+*Last updated when project was parked (June 2026). Bump this doc when you resume.*

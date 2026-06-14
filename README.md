@@ -62,7 +62,7 @@ I pull espresso at home and wanted a lightweight way to remember what worked. Sm
 
 **Platform roadmap** (Vercel + Supabase + future iOS): **`https://coffeesnob.withdevo.net`**, Supabase Postgres + Storage, passkey auth, `/api/label-scan` on Vercel. See [`constitution.md`](constitution.md) and [`docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md`](docs/superpowers/specs/2026-06-05-vercel-supabase-single-user-design.md). The earlier AWS/ECS/Vault plan is **parked** — [`docs/public-hosting-plan.md`](docs/public-hosting-plan.md).
 
-**Paused / resume:** Development paused June 2026. To pick up again: [`docs/handoff.md`](docs/handoff.md) (checklist, test map, next priorities).
+**Paused / resume:** Project **parked** (June 2026) — production stays live; no active dev. Resume: [`docs/handoff.md`](docs/handoff.md).
 
 ## AI-assisted development workflow
 

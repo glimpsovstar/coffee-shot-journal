@@ -42,7 +42,7 @@ Read this before platform work, Supabase schema/auth, or mobile clients.
 
 **Phases:** P1 Vercel deploy ✓ · P2 `/api/label-scan` ✓ · P3 Supabase + cloud CRUD + auth ✓ · P4 iOS · P5 product backlog.
 
-**Development paused (June 2026):** active feature work parked; production remains live. Resume guide: [`docs/handoff.md`](docs/handoff.md).
+**Development paused (June 2026):** production remains live; no active feature work. Resume guide: [`docs/handoff.md`](docs/handoff.md).
 
 **Branding:** `public/branding/` — coffee snob. logo assets; favicon at `public/favicon.svg`.
 
